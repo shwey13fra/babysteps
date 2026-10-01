@@ -92,11 +92,12 @@
     offset_days: -14
     kind: soft
     note_en: >
-      The window opens, it does not run forever. The certificate of the expected
-      date of delivery may be issued at the earliest seven weeks before that date,
-      and the payment is tied to the protection period that begins six weeks
-      before. Applying after the period has started delays money you are already
-      entitled to.
+      SGB V §24i(3) ties the certificate of the expected date of delivery to the
+      start of the protection period. It does not state a seven-week figure. The
+      seven weeks used by this timeline is derived arithmetic, not statutory
+      wording: the protection period begins six weeks before the expected date, and
+      the certificate may be issued one week before that period starts. Applying
+      after the period has begun delays money you are already entitled to.
   applies_if:
     all:
       - insurance: [gkv]
@@ -126,23 +127,30 @@
     kind: hard
     note_en: >
       BEEG §16(1) requires the request to reach the employer at least seven weeks
-      before the leave starts, in writing with an original signature — an e-mail
-      does not satisfy the form requirement. The seven weeks count back from the
+      before the leave starts, in strict Schriftform under BGB §126(1): a
+      handwritten signature on paper. Fax and e-mail are void, not merely
+      irregular (BAG 10.05.2016, 9 AZR 145/15). The seven weeks count back from the
       start of the LEAVE, not from the birth, and this timeline models the
-      conservative case where leave begins at the birth. See docs/adr/010.
+      conservative case where leave begins at the birth. For a mother moving
+      straight from the eight-week Mutterschutz into Elternzeit the deadline falls
+      INSIDE the Mutterschutz period, roughly a week after the birth. Filing earlier
+      than eight weeks before the leave starts gains nothing: the BEEG §18
+      protection against dismissal begins at most eight weeks before the leave
+      starts. See docs/adr/010.
   applies_if:
     all:
       - employment_status: [employed]
   authority_en: Your employer
   consequence_en: >
-    Miss the seven weeks and the start of the leave shifts later, which cascades
-    into which months your Elterngeld covers.
+    A request that misses the deadline or the form requirement is void. That means
+    no Elternzeit at all and no BEEG §18 protection against dismissal — not merely a
+    start date that shifts later.
   documents:
     - Written request, signed by hand, stating which months of leave you are taking
   source_ref: BEEG §16(1)
   source_url: https://www.gesetze-im-internet.de/beeg/__16.html
-  verified_on: null
-  source_status: needs_manual_verification
+  verified_on: 2026-10-01
+  source_status: verified
   review_after: 2027-10-01
 
 - id: vaterschaftsanerkennung
@@ -283,10 +291,10 @@
     offset_days: 183
     kind: soft
     note_en: >
-      Not a statutory cut-off. Kindergeld is paid retroactively for a limited number
-      of months before the application arrives, so a late application loses the
-      months outside that window. Confirm the current retroactivity period — it was
-      shortened in recent years and the offset here reflects six months.
+      Not a statutory cut-off, and not a limit on the entitlement. EStG §70(1) S.2
+      caps the PAYMENT of benefit already assessed at the six months before the
+      month the application reaches the Familienkasse. The claim itself is still
+      assessed for the whole period. You lose the money, not the claim.
   authority_en: Familienkasse of the Bundesagentur für Arbeit
   consequence_en: >
     Months outside the retroactivity window are lost permanently, even though the
@@ -295,8 +303,8 @@
     - Birth certificate for Kindergeld purposes
     - The child's tax identification number, which arrives by post after registration
     - Kindergeld application form
-  source_ref: EStG §66(3)
-  source_url: https://www.gesetze-im-internet.de/estg/__66.html
+  source_ref: EStG §70(1) S.2
+  source_url: https://www.gesetze-im-internet.de/estg/__70.html
   verified_on: null
   source_status: needs_manual_verification
   review_after: 2027-10-01

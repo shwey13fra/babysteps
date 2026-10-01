@@ -10,6 +10,9 @@ Add a row below in the same commit that adds the ADR.
 | ADR | Title | Status |
 | --- | --- | --- |
 | 000 | Template — not a decision | — |
+| 010 | Elternzeit notice anchored to the due date at −49 days | accepted |
+| 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
+| 012 | Ingest gesetze-im-internet via official downloads, never by scraping | accepted, blocks Phase 2 |
 
 ## Reserved numbers
 
@@ -27,9 +30,8 @@ Assigned by the source documents before the work started. Keep these free.
 | 008 | Switch match_chunks to reciprocal rank fusion | playbook Phase 2 |
 | 009 | Refusal threshold, with both cosine distributions | playbook Phase 3 |
 
-## Unresolved
+## Resolved
 
-**Numbering collision on 002.** Brief §1 reserves ADRs 001–006 for the six architecture
-decisions. Playbook Phase 1 separately instructs "write ADR-002" for the `elternzeit_notify_employer`
-anchor ambiguity (BEEG §16 counts seven weeks from the start of leave, not the birth). Both claim 002.
-Not resolved here — decide before Phase 1 writes it, and record the choice in this file.
+**Numbering collision on 002.** Brief §1 reserves ADRs 001–006 for the six architecture decisions;
+playbook Phase 1 separately instructed "write ADR-002" for the `elternzeit_notify_employer` anchor
+ambiguity. Resolved 2026-10-01: the Elternzeit anchor is **ADR-010**, and 001–006 stay reserved.

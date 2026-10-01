@@ -23,3 +23,11 @@ A mother starting leave after Mutterschutz sees a date earlier than she needs, w
 imprecise. If beta shows users confused by it, the fix is the eighth question, not a different
 anchor. Numbering: this is ADR-010, not ADR-002 as the Phase 1 prompt said — 001–006 are reserved
 for the brief §1 architecture decisions.
+
+## Addendum 2026-10-01 — ambiguity confirmed against the statute
+Practitioner guidance confirms it: for a mother moving straight from the eight-week Mutterschutz
+into Elternzeit, the seven-week deadline falls INSIDE the Mutterschutz period, roughly a week after
+the birth. The conservative due-date anchor therefore shows her a date around two months early.
+BEEG §16(1) also carries strict Schriftform under BGB §126(1) — fax and e-mail are void (BAG
+10.05.2016, 9 AZR 145/15) — and a void request costs the BEEG §18 dismissal protection as well as
+the leave. Both now stated in the item's note_en. Rule verified 2026-10-01.
