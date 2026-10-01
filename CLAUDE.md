@@ -60,18 +60,22 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 
 | Task | Command | Status |
 | --- | --- | --- |
-| Typecheck | `npx tsc --noEmit` | TBD — Phase 1 |
-| Run tests | `npx vitest run` | TBD — Phase 1 |
-| Single test file | `npx vitest run tests/<name>.test.ts` | TBD — Phase 1 |
-| Lint | TBD | TBD — Phase 1 |
-| Dev server | `npm run dev` | TBD — Phase 1 |
+| Typecheck | `npm run typecheck` | works |
+| Run tests | `npm test` | works |
+| Single test file | `npx vitest run tests/timeline/dates.test.ts` | works |
+| Lint | `npm run lint` | works |
+| Dev server | `npm run dev` | works |
+| Production build | `npm run build` | works |
+| Engine output | `/dev/timeline?birth=YYYY-MM-DD&diff=1&today=YYYY-MM-DD` | works |
 | Run ingestion | `npx tsx scripts/ingest/push.ts` | TBD — Phase 2 |
 | Inspect corpus | `npx tsx scripts/ingest/query.ts "<query>"` | TBD — Phase 2 |
 | Calibrate refusal threshold | `npx tsx scripts/eval/calibrate.ts` | TBD — Phase 3 |
 | Run eval | `npx tsx scripts/eval/run.ts` | TBD — Phase 4 |
 
-Nothing is runnable yet: there is no package.json until Phase 1. Replace each TBD with the real
-command in the phase that creates it, and correct any command above that turns out wrong.
+Replace each TBD with the real command in the phase that creates it. Every dependency is pinned
+exactly, no carets: `typescript` is held at 6.x (typescript-eslint rejects TS 7) and `eslint` at
+9.x (eslint-config-next bundles eslint-plugin-react 7.37.5, which crashes on eslint 10). Both are
+upstream constraints — check before bumping either.
 
 ## Repo map
 

@@ -1,0 +1,82 @@
+# data/rules/consular_india.yaml
+#
+# The Indian consular track. Two items, both marked needs_manual_verification and
+# both with no source_url, deliberately.
+#
+# Consular pages are not statute. They move without notice, they differ between
+# the Frankfurt and Berlin missions, and much of the real process runs through an
+# appointed outsourcing provider rather than the mission itself. A plausible URL
+# invented here would be worse than no URL: it would acquire a verified_on date in
+# some later session and become a citation the product shows to a family.
+#
+# review_after is 90 days, not 365, per the addendum: consular sources are the
+# volatile ones.
+#
+# Neither rule carries term_de. These are Indian procedures and there is no German
+# term for them; CLAUDE.md rule 14 forbids inventing a gloss, so authority_local
+# names the office instead.
+
+- id: consular_birth_registration
+  track: consular
+  jurisdiction: consular-india
+  title_en: Register the birth with the Indian mission
+  anchor: birth
+  window_open:
+    offset_days: 0
+  deadline:
+    offset_days: 365
+    kind: hard
+    note_en: >
+      Registration within one year of the birth is the standard rule for a birth
+      abroad to Indian nationals. After one year the route changes and requires
+      additional permissions, which is why this is modelled as hard rather than
+      money-losing. NEEDS CONFIRMATION with the mission covering your city: the
+      one-year rule, what the late route actually requires, and whether the
+      acknowledgement of paternity is accepted where the parents are unmarried.
+  authority_en: The Indian mission covering your place of residence
+  authority_local: Consulate General of India, Frankfurt
+  consequence_en: >
+    Without the birth registered on the Indian side the child has no Indian
+    documentation, which blocks the passport and any later OCI application.
+  documents:
+    - German birth certificate, in an internationally usable form
+    - Both parents' Indian passports and German residence permits
+    - Completed birth registration form from the mission
+    - Proof of the parents' marriage, or the acknowledgement of paternity if unmarried
+  source_ref: Indian consular procedure — not statute
+  source_url: TBD — no verified source yet
+  verified_on: null
+  source_status: needs_manual_verification
+  review_after: 2026-12-30
+
+- id: indian_passport_newborn
+  track: consular
+  jurisdiction: consular-india
+  title_en: Apply for the baby's Indian passport
+  anchor: birth
+  window_open:
+    offset_days: 30
+  deadline:
+    offset_days: 365
+    kind: advisory
+    note_en: >
+      There is no published deadline for the passport itself; it follows the birth
+      registration and cannot be applied for before it. The window here opens a
+      month after the birth as a practical default, and the advisory date mirrors
+      the registration year. NEEDS CONFIRMATION: the actual sequencing, the current
+      provider handling appointments, and processing times, all of which change.
+  authority_en: The Indian mission covering your place of residence
+  authority_local: Consulate General of India, Frankfurt, via its appointed service provider
+  consequence_en: >
+    Without an Indian passport the child cannot travel, and the German residence
+    permit for the child is normally issued into the passport.
+  documents:
+    - Completed passport application for a minor
+    - The consular birth registration, completed first
+    - Both parents' passports and residence permits
+    - Photographs to the mission's specification
+  source_ref: Indian consular procedure — not statute
+  source_url: TBD — no verified source yet
+  verified_on: null
+  source_status: needs_manual_verification
+  review_after: 2026-12-30

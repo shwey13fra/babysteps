@@ -1,0 +1,43 @@
+# tests/fixtures/state-scoped.rule.yaml
+#
+# Test-only. Loaded by tests/timeline/engine.test.ts, never by the engine.
+#
+# None of the twelve canonical rules is Hessen-only or Berlin-only — they are all
+# federal statute or Indian consular — so a "hessen vs berlin" assertion against
+# data/rules/ would pass while testing nothing. These two rules exist so the
+# jurisdiction filter is exercised against something that can actually be filtered
+# out. See docs/adr/011-jurisdiction-filter.md for why the filter exists at all.
+
+- id: fixture_hesse_only
+  track: german
+  jurisdiction: hesse
+  title_en: Fixture item scoped to Hesse
+  term_de: Elterngeldstelle
+  anchor: due_date
+  window_open:
+    offset_days: 0
+  authority_en: Fixture authority, Hesse
+  consequence_en: Fixture rule. Not real guidance and never shown to a user.
+  documents: []
+  source_ref: Fixture
+  source_url: TBD — no verified source yet
+  verified_on: null
+  source_status: needs_manual_verification
+  review_after: 2027-10-01
+
+- id: fixture_berlin_only
+  track: german
+  jurisdiction: berlin
+  title_en: Fixture item scoped to Berlin
+  term_de: Elterngeldstelle
+  anchor: due_date
+  window_open:
+    offset_days: 0
+  authority_en: Fixture authority, Berlin
+  consequence_en: Fixture rule. Not real guidance and never shown to a user.
+  documents: []
+  source_ref: Fixture
+  source_url: TBD — no verified source yet
+  verified_on: null
+  source_status: needs_manual_verification
+  review_after: 2027-10-01

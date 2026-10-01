@@ -60,6 +60,15 @@ terms:
     en_triggers: [birth certificate, certificate of birth, geburtsurkunde]
     expand_with: [Geburtsurkunde, Beurkundung, Standesamt, Abschrift]
 
+  # Pre-booking a place to give birth. Deliberately shares no trigger with
+  # Standesamt: "register at the hospital" and "register the birth" are different
+  # steps, months apart, at different offices.
+  - de: Geburtsanmeldung
+    en_gloss: registering in advance at the hospital where you plan to give birth
+    en_triggers: [register at the hospital, hospital registration, book a hospital,
+                  which hospital, maternity unit registration, geburtsanmeldung]
+    expand_with: [Geburtsanmeldung, Geburtsklinik, Kreißsaal, Anmeldung, Entbindung]
+
   - de: Hebamme
     en_gloss: midwife
     en_triggers: [midwife, hebamme, postnatal care at home, home visits after birth]
