@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+.vercel/
+coverage/
+*.tsbuildinfo
+.DS_Store
+data/raw/
+data/cache/
+beta/participants*
+beta/responses*
+*.private.*
