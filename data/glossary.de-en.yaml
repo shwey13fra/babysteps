@@ -1,0 +1,124 @@
+# data/glossary.de-en.yaml
+#
+# One file, two jobs:
+#   1. lib/rag/expand.ts appends the German terms to the query string before the
+#      lexical half of match_chunks runs. Without this the tsvector half is dead
+#      weight, because users type English and the corpus is German.
+#   2. The UI renders `de` with `en_gloss` wherever a German term appears in an
+#      answer, so the gloss the user sees and the term the retriever matched are
+#      guaranteed to be the same string.
+#
+# Rules for editing: `en_triggers` are matched case-insensitively on word
+# boundaries, longest phrase first. Keep triggers to phrases a user would
+# actually type. Never add a trigger that could fire on an unrelated question.
+
+version: 1
+
+terms:
+  - de: Elterngeld
+    en_gloss: parental allowance
+    en_triggers: [parental allowance, parental benefit, parental pay, parent money, elterngeld]
+    expand_with: [Elterngeld, Basiselterngeld, ElterngeldPlus, Bezugszeitraum]
+
+  - de: Elternzeit
+    en_gloss: parental leave (unpaid job-protected leave)
+    en_triggers: [parental leave, time off after birth, leave from work, elternzeit]
+    expand_with: [Elternzeit, Anmeldung, Arbeitgeber, Schriftform]
+
+  - de: Mutterschutz
+    en_gloss: statutory maternity protection period
+    en_triggers: [maternity leave, maternity protection, stop working before birth, mutterschutz]
+    expand_with: [Mutterschutz, Mutterschutzfrist, Schutzfrist, Entbindung]
+
+  - de: Mutterschaftsgeld
+    en_gloss: maternity pay from the health insurer
+    en_triggers: [maternity pay, maternity benefit, paid during maternity leave, mutterschaftsgeld]
+    expand_with: [Mutterschaftsgeld, Zuschuss, Krankenkasse, Arbeitgeberzuschuss]
+
+  - de: Kündigungsschutz
+    en_gloss: protection against dismissal
+    en_triggers: [fired while pregnant, dismissed while pregnant, lose my job, redundancy, protection from dismissal]
+    expand_with: [Kündigungsverbot, Kündigungsschutz, Schwangerschaft, Arbeitsverhältnis]
+
+  - de: Kindergeld
+    en_gloss: child benefit
+    en_triggers: [child benefit, child allowance, monthly payment for the child, kindergeld]
+    expand_with: [Kindergeld, Familienkasse, Antrag, Kind]
+
+  - de: Familienkasse
+    en_gloss: the office that pays child benefit
+    en_triggers: [where do i apply for child benefit, child benefit office, familienkasse]
+    expand_with: [Familienkasse, Bundesagentur für Arbeit, Antrag]
+
+  - de: Standesamt
+    en_gloss: civil registry office
+    en_triggers: [register the birth, birth certificate, civil registry, registry office, standesamt]
+    expand_with: [Standesamt, Geburtsanzeige, Beurkundung, Geburtenregister, Geburtsurkunde]
+
+  - de: Geburtsurkunde
+    en_gloss: birth certificate
+    en_triggers: [birth certificate, certificate of birth, geburtsurkunde]
+    expand_with: [Geburtsurkunde, Beurkundung, Standesamt, Abschrift]
+
+  - de: Hebamme
+    en_gloss: midwife
+    en_triggers: [midwife, hebamme, postnatal care at home, home visits after birth]
+    expand_with: [Hebamme, Hebammenhilfe, Wochenbett, Nachsorge, Schwangerschaft]
+
+  - de: Krankenkasse
+    en_gloss: statutory health insurer
+    en_triggers: [health insurance, health insurer, insurance cover, krankenkasse, does insurance pay]
+    expand_with: [Krankenkasse, gesetzliche Krankenversicherung, Leistung, Kostenübernahme]
+
+  - de: Familienversicherung
+    en_gloss: free family cover for dependants
+    en_triggers: [insure the baby, insurance for newborn, add baby to insurance, family insurance]
+    expand_with: [Familienversicherung, beitragsfrei, Kind, Mitversicherung, Anmeldung]
+
+  - de: Vaterschaftsanerkennung
+    en_gloss: acknowledgement of paternity
+    en_triggers: [acknowledge paternity, legal father, unmarried father, father on birth certificate]
+    expand_with: [Vaterschaftsanerkennung, Vaterschaft, Anerkennung, Jugendamt, Zustimmung]
+
+  - de: Sorgeerklärung
+    en_gloss: declaration of joint custody
+    en_triggers: [joint custody, shared custody, custody unmarried, parental responsibility]
+    expand_with: [Sorgeerklärung, gemeinsame elterliche Sorge, Jugendamt]
+
+  - de: Aufenthaltserlaubnis
+    en_gloss: residence permit
+    en_triggers: [residence permit for the baby, visa for newborn, does the baby need a permit]
+    expand_with: [Aufenthaltserlaubnis, Aufenthaltstitel, Ausländerbehörde, Kind, Geburt]
+
+  - de: Staatsangehörigkeit
+    en_gloss: citizenship
+    en_triggers: [citizenship, will the baby be german, nationality of the baby, passport for the baby]
+    expand_with: [Staatsangehörigkeit, Erwerb, Geburt, Inland, Elternteil]
+
+  - de: Elterngeldstelle
+    en_gloss: the state office that decides parental allowance
+    en_triggers: [where do we apply for elterngeld, parental allowance office, which office]
+    expand_with: [Elterngeldstelle, zuständige Behörde, Antrag]
+
+  - de: Vorsorgeuntersuchung
+    en_gloss: routine preventive check-up
+    en_triggers: [check ups for the baby, u1, u2, u3, well baby visits, screening appointments]
+    expand_with: [Früherkennungsuntersuchung, Kinder-Richtlinie, U1, U2, U3, Toleranzzeitraum]
+
+  - de: Steuer-Identifikationsnummer
+    en_gloss: tax identification number
+    en_triggers: [tax id, tax number for the baby, steuer id]
+    expand_with: [Steuer-Identifikationsnummer, steuerliche Identifikationsnummer, Kind]
+
+# Terms that must NEVER trigger expansion, because they belong to the medical
+# classifier's territory or to an out-of-scope corpus. Listed here so that a
+# future editor does not "helpfully" add them.
+excluded:
+  - Ultraschall
+  - Blutwerte
+  - Medikament
+  - Dosierung
+  - Kita
+  - Krippe
+  - Mietrecht
+  - Steuerklasse

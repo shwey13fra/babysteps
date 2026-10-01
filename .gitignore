@@ -12,3 +12,10 @@ data/cache/
 beta/participants*
 beta/responses*
 *.private.*
+
+# Strategy docs — held out of the public repo.
+# Patterns, not exact names, so new versions are held by default.
+/babysteps-execution-playbook*
+/babysteps-build-brief*
+/PRD-*.docx
+/PRD-*.pdf

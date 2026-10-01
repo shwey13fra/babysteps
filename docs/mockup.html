@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BabySteps Germany — calm-clinical mockup</title>
+<style>
+/* ------------------------------------------------------------------
+   Tokens — design-system.md §2/§3. In production these live in
+   app/globals.css and the fonts are self-hosted via next/font/local.
+   ------------------------------------------------------------------ */
+:root{
+  --paper:#F4F7F7; --surface:#FFFFFF;
+  --ink:#15242B; --ink-2:#4C5F68; --ink-3:#7B8F96;
+  --rule:#DCE4E4;
+  --de:#0B6B60; --de-soft:#E4EFED;
+  --in:#4A3D8F; --in-soft:#EAE8F5;
+  --warn:#8A5300; --warn-soft:#FBF1DC;
+  --stop:#96282A; --stop-soft:#FAEAE9;
+  --done:#93A6AB;
+  --gutter:56px;
+  --sans:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:#E7ECEC; color:var(--ink);
+  font:400 15px/24px var(--sans);
+  font-variant-numeric:tabular-nums;
+  padding:24px 16px 64px;
+}
+:focus-visible{outline:2px solid var(--de); outline-offset:2px; border-radius:2px}
+
+/* --- mockup chrome (not part of the product) --- */
+.harness{max-width:1180px;margin:0 auto}
+.harness h1{font:600 17px/24px var(--sans);margin:0 0 4px;color:#2D3E45}
+.harness p.note{font:400 13px/20px var(--sans);color:#5F7178;margin:0 0 20px;max-width:62ch}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px}
+.tabs button{
+  font:500 13px/18px var(--sans);padding:7px 12px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink-2);border-radius:999px;cursor:pointer;
+}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.stage{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+.phone{width:380px;flex:0 0 380px;background:var(--paper);border:1px solid #CFD8D8;
+  border-radius:20px;overflow:hidden;box-shadow:0 1px 0 #fff inset}
+.phone-cap{height:26px;background:var(--paper);border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;justify-content:center}
+.phone-cap span{width:52px;height:5px;border-radius:3px;background:#D3DCDC}
+.screen{display:none;padding:0 0 26px}
+.screen.on{display:block}
+.caption{font:400 13px/19px var(--sans);color:#5F7178;margin:8px 2px 0}
+
+/* ------------------------------------------------------------------
+   Product styles
+   ------------------------------------------------------------------ */
+.head{padding:18px 18px 14px;border-bottom:1px solid var(--rule);background:var(--paper)}
+.head .state{font:500 15px/22px var(--sans)}
+.head .sub{font:400 13px/18px var(--sans);color:var(--ink-3);margin-top:2px}
+.pad{padding:0 18px}
+
+h2.title{font:600 27px/32px var(--sans);margin:20px 0 6px;letter-spacing:-0.01em}
+h3.sub-title{font:500 17px/24px var(--sans);margin:26px 0 8px}
+p{margin:0 0 12px}
+p.lede{color:var(--ink-2)}
+.meta{font:400 13px/18px var(--sans);color:var(--ink-3)}
+[lang="de"]{hyphens:auto;-webkit-hyphens:auto}
+.term{border-bottom:1px dotted var(--ink-3)}
+.gloss{color:var(--ink-2)}
+
+/* do-next card: the only filled card in the product */
+.donext{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+  padding:14px 16px 6px;margin:16px 0 20px}
+.donext h3{font:500 13px/18px var(--sans);color:var(--ink-3);margin:0 0 10px}
+.donext ol{margin:0;padding:0;list-style:none;counter-reset:d}
+.donext li{counter-increment:d;display:flex;gap:10px;padding:0 0 12px}
+.donext li::before{content:counter(d);font:500 13px/20px var(--sans);color:var(--ink-3);
+  width:18px;flex:0 0 18px}
+.donext li b{font:500 15px/20px var(--sans);display:block}
+.donext li span{font:400 13px/18px var(--sans);color:var(--ink-3)}
+
+.legend{display:flex;gap:16px;font:400 13px/18px var(--sans);color:var(--ink-2);
+  padding:0 18px 14px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;
+  vertical-align:1px;font-style:normal}
+.legend .de i{background:var(--de)} .legend .in i{background:var(--in)}
+
+/* timeline */
+.tl{position:relative;padding:0 18px}
+.row{display:grid;grid-template-columns:var(--gutter) 22px 1fr;align-items:start;
+  padding:0 0 22px}
+.date{font:400 13px/18px var(--sans);color:var(--ink-3);padding-top:2px}
+.date b{display:block;font:500 15px/18px var(--sans);color:var(--ink-2)}
+.rail{position:relative;justify-self:center;width:1px;background:var(--rule);
+  min-height:100%;align-self:stretch}
+.dot{position:absolute;left:50%;top:4px;transform:translateX(-50%);
+  width:9px;height:9px;border-radius:50%;background:var(--de);border:1px solid var(--de)}
+.dot.hollow{background:var(--paper)}
+.dot.consular{background:var(--in);border-color:var(--in)}
+.dot.consular.hollow{background:var(--paper)}
+.dot.done{background:var(--paper);border-color:var(--done)}
+.item h4{font:500 17px/23px var(--sans);margin:0 0 3px}
+.item .line{font:400 13px/19px var(--sans);color:var(--ink-3)}
+.item.consular{border-left:3px solid var(--in);padding-left:11px;margin-left:-14px}
+.item.consular.est{border-left-style:dashed}
+.item.est{border-left:3px dashed var(--rule);padding-left:11px;margin-left:-14px}
+.item.done h4{color:var(--done);font-weight:400}
+.item.done .line{color:var(--done)}
+.item.current{background:var(--surface);border:1px solid var(--de);border-radius:12px;
+  padding:12px 14px;margin-left:-14px}
+
+.chip{display:inline-block;font:500 13px/18px var(--sans);padding:2px 8px;border-radius:6px;
+  margin-top:6px}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.stop{background:var(--stop-soft);color:var(--stop)}
+
+/* the one bold moment */
+.today{display:grid;grid-template-columns:var(--gutter) 1fr;align-items:center;
+  margin:0 0 22px;padding:0 18px}
+.today .lbl{font:500 13px/18px var(--sans);color:var(--ink)}
+.today .bar{height:2px;background:var(--ink)}
+.today .cap{font:500 13px/18px var(--sans);color:var(--ink);padding-left:10px;white-space:nowrap}
+.today-inner{display:flex;align-items:center}
+
+/* prompt to record birth */
+.prompt{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--de);
+  border-radius:10px;padding:13px 15px;margin:0 18px 20px}
+.prompt b{font:500 15px/22px var(--sans);display:block}
+.prompt span{font:400 13px/19px var(--sans);color:var(--ink-2)}
+.prompt button{margin-top:10px}
+
+button.primary{font:500 15px/20px var(--sans);background:var(--de);color:#fff;border:0;
+  border-radius:10px;padding:11px 16px;cursor:pointer;width:100%}
+button.ghost{font:500 15px/20px var(--sans);background:transparent;color:var(--de);
+  border:1px solid var(--rule);border-radius:10px;padding:10px 14px;cursor:pointer}
+
+/* source chip */
+.src{display:inline-flex;align-items:baseline;gap:7px;text-decoration:none;
+  border:1px solid var(--rule);background:var(--surface);border-radius:7px;
+  padding:3px 9px;margin:4px 6px 0 0}
+.src code{font:400 13px/18px var(--mono);color:var(--de)}
+.src em{font:400 13px/18px var(--sans);font-style:normal;color:var(--ink-3)}
+.src.consular code{color:var(--in)}
+
+/* answer / deflect / refuse */
+.qa{margin:0 0 6px}
+.question{font:500 15px/22px var(--sans);background:var(--de-soft);border-radius:12px;
+  padding:11px 14px;margin:0 0 14px}
+.answer{background:var(--surface);border-radius:12px;padding:15px 16px 13px;margin:0 0 8px}
+.answer .scope{font:400 13px/18px var(--sans);color:var(--ink-3);margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--rule)}
+.aside{border-left:2px solid var(--rule);padding:2px 0 2px 14px;margin:0 0 8px;color:var(--ink-2)}
+.aside b{display:block;font:500 15px/22px var(--sans);color:var(--ink);margin-bottom:4px}
+.skeleton{background:var(--surface);border-radius:12px;padding:15px 16px}
+.skeleton i{display:block;height:11px;border-radius:3px;background:#EDF1F1;margin-bottom:9px}
+.skeleton i:nth-child(2){width:88%} .skeleton i:nth-child(3){width:64%}
+.skeleton p{font:400 13px/18px var(--sans);color:var(--ink-3);margin:6px 0 0}
+
+/* birth diff */
+.diff{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+  padding:6px 16px;margin:0 0 16px}
+.diff .r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  padding:11px 0;border-bottom:1px solid var(--rule)}
+.diff .r:last-child{border-bottom:0}
+.diff .n{font:400 15px/20px var(--sans)}
+.diff .v{font:400 13px/20px var(--sans);color:var(--ink-3);white-space:nowrap}
+.diff .v s{color:var(--ink-3);text-decoration:line-through}
+.diff .v b{color:var(--ink);font-weight:500}
+.field{display:block;margin:0 0 16px}
+.field span{display:block;font:400 13px/18px var(--sans);color:var(--ink-3);margin-bottom:6px}
+.field input{width:100%;font:400 17px/24px var(--sans);padding:12px 14px;
+  border:1px solid var(--rule);border-radius:10px;background:var(--surface);color:var(--ink)}
+
+/* intake */
+.dots{display:flex;gap:6px;padding:16px 18px 0}
+.dots i{height:3px;flex:1;background:var(--rule);border-radius:2px}
+.dots i.on{background:var(--de)}
+.choice{display:block;width:100%;text-align:left;background:var(--surface);
+  border:1px solid var(--rule);border-radius:10px;padding:14px 15px;margin:0 0 9px;
+  font:400 15px/21px var(--sans);color:var(--ink);cursor:pointer}
+.choice b{font-weight:500;display:block}
+.choice em{font-style:normal;font-size:13px;color:var(--ink-3)}
+.choice[aria-pressed="true"]{border-color:var(--de);box-shadow:inset 0 0 0 1px var(--de)}
+
+.foot{border-top:1px solid var(--rule);margin:26px 18px 0;padding:12px 0 0;
+  font:400 13px/18px var(--sans);color:var(--ink-3)}
+.foot a{color:var(--ink-3)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="harness">
+  <h1>BabySteps Germany — calm-clinical direction</h1>
+  <p class="note">Six screens at 380px. Structure borrowed from a German Fristenkalender — date gutter, hairline rail, § reference, checked-on date — with the density removed. Fonts fall back to your system UI face here; production self-hosts IBM Plex Sans and Plex Mono.</p>
+
+  <div class="tabs" role="tablist">
+    <button aria-pressed="true" data-t="timeline">Timeline</button>
+    <button aria-pressed="false" data-t="birth">Birth date (F2b)</button>
+    <button aria-pressed="false" data-t="item">Item detail</button>
+    <button aria-pressed="false" data-t="qa">Q&amp;A — answer</button>
+    <button aria-pressed="false" data-t="guards">Deflect &amp; refuse</button>
+    <button aria-pressed="false" data-t="intake">Intake</button>
+  </div>
+
+  <div class="stage">
+  <div class="phone">
+    <div class="phone-cap"><span></span></div>
+
+    <!-- ============ TIMELINE ============ -->
+    <section class="screen on" id="timeline">
+      <div class="head">
+        <div class="state">Week 32 · due 15 November</div>
+        <div class="sub">Hessen · India · statutory insurance</div>
+      </div>
+
+      <div class="pad">
+        <div class="donext">
+          <h3>Do next</h3>
+          <ol>
+            <li><div><b>Register at the hospital</b><span>Frankfurt clinics take bookings from week 30</span></div></li>
+            <li><div><b>Acknowledge paternity</b><span>Free at the <span lang="de" class="term">Jugendamt</span>, and easier before the birth</span></div></li>
+            <li><div><b>Ask for <span lang="de">Elternzeit</span> in writing</b><span>Seven weeks before it starts — a signed letter, not e-mail</span></div></li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="de"><i></i>German offices</span>
+        <span class="in"><i></i>Indian consulate</span>
+      </div>
+
+      <div class="tl">
+        <div class="row">
+          <div class="date"><b>4 Oct</b>week 26</div>
+          <div class="rail"><span class="dot done"></span></div>
+          <div class="item done">
+            <h4>Start looking for a <span lang="de">Hebamme</span></h4>
+            <div class="line">Marked done · midwives are booked months ahead</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="date"><b>4 Oct</b>week 26</div>
+          <div class="rail"><span class="dot done"></span></div>
+          <div class="item done">
+            <h4>Tell your employer you are pregnant</h4>
+            <div class="line">Marked done · starts your protection from dismissal</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="today">
+        <div class="lbl">10 Sep</div>
+        <div class="today-inner"><div class="bar" style="flex:1"></div><div class="cap">today · week 32</div></div>
+      </div>
+
+      <div class="tl">
+        <div class="row">
+          <div class="date"><b>12 Oct</b>week 36</div>
+          <div class="rail"><span class="dot"></span></div>
+          <div class="item current">
+            <h4>Register at the hospital</h4>
+            <div class="line">German offices · counted from your due date</div>
+            <span class="chip warn">in 9 days</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="date"><b>27 Sep</b>week 34</div>
+          <div class="rail"><span class="dot"></span></div>
+          <div class="item">
+            <h4>Ask your employer for <span lang="de">Elternzeit</span></h4>
+            <div class="line">Seven weeks before the leave starts · written form required</div>
+            <span class="chip warn">in 17 days</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="date"><b>22 Nov</b>est.</div>
+          <div class="rail"><span class="dot hollow"></span></div>
+          <div class="item est">
+            <h4>Register the birth at the <span lang="de">Standesamt</span></h4>
+            <div class="line">Estimated · one week after the birth</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="date"><b>15 Feb</b>est.</div>
+          <div class="rail"><span class="dot hollow"></span></div>
+          <div class="item est">
+            <h4>Apply for <span lang="de">Elterngeld</span></h4>
+            <div class="line">Estimated · three months after the birth</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="date"><b>15 Nov</b>2027</div>
+          <div class="rail"><span class="dot consular hollow"></span></div>
+          <div class="item consular est">
+            <h4>Register the birth with the Indian consulate</h4>
+            <div class="line">Estimated · one year after the birth</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">BabySteps is a navigator to official sources — not legal, tax or medical advice. The decision in your case always lies with the responsible authority. <a href="#">Impressum</a> · <a href="#">Datenschutz</a></div>
+    </section>
+
+    <!-- ============ BIRTH DATE (F2b) ============ -->
+    <section class="screen" id="birth">
+      <div class="head">
+        <div class="state">Record the birth</div>
+        <div class="sub">Six deadlines are counted from this date</div>
+      </div>
+      <div class="pad">
+        <h2 class="title">When was the baby born?</h2>
+        <p class="lede">Until now these dates were estimated from your due date of 15 November. Once you set the real date they become exact, and your reminders move with them.</p>
+
+        <label class="field"><span>Date of birth</span><input type="date" value="2026-11-09"></label>
+
+        <h3 class="sub-title">Nine dates will move</h3>
+        <div class="diff">
+          <div class="r"><span class="n">Register the birth</span><span class="v"><s>22 Nov</s> → <b>16 Nov</b></span></div>
+          <div class="r"><span class="n">Insure the baby</span><span class="v"><s>29 Nov</s> → <b>23 Nov</b></span></div>
+          <div class="r"><span class="n">Apply for <span lang="de">Elterngeld</span></span><span class="v"><s>15 Feb</s> → <b>9 Feb</b></span></div>
+          <div class="r"><span class="n">Apply for <span lang="de">Kindergeld</span></span><span class="v"><s>15 May</s> → <b>9 May</b></span></div>
+          <div class="r"><span class="n">Register with the consulate</span><span class="v"><s>15 Nov 27</s> → <b>9 Nov 27</b></span></div>
+        </div>
+        <p class="meta">Your <span lang="de">Mutterschutz</span> period after the birth stays at eight weeks — the baby arrived six days early, which is inside the normal range.</p>
+        <button class="primary" style="margin-top:8px">Save the birth date</button>
+      </div>
+      <div class="foot">Nothing here is sent anywhere. Your answers stay on this phone unless you subscribe to reminders.</div>
+    </section>
+
+    <!-- ============ ITEM DETAIL ============ -->
+    <section class="screen" id="item">
+      <div class="head">
+        <div class="state">German offices</div>
+        <div class="sub">Counted from your due date · in 9 days</div>
+      </div>
+      <div class="pad">
+        <h2 class="title">Register at the hospital</h2>
+        <p class="lede">Frankfurt maternity units take bookings from around week 30 and fill up. Registering is an appointment where they take your details and your <span lang="de" class="term">Mutterpass</span> <span class="gloss">(maternity record)</span>, so the ward has your file when you arrive in labour.</p>
+
+        <h3 class="sub-title">If you leave it too late</h3>
+        <p class="lede">You are not turned away in an emergency, but unregistered arrivals are more often redirected to another clinic. Several Frankfurt units close their lists for a given month once they are full.</p>
+
+        <h3 class="sub-title">Take with you</h3>
+        <p class="lede">
+          <span lang="de" class="term">Mutterpass</span><br>
+          Health insurance card<br>
+          Passport or ID<br>
+          Referral from your <span lang="de" class="term">Frauenarzt</span> <span class="gloss">(gynaecologist)</span>, if the clinic asks for one
+        </p>
+
+        <h3 class="sub-title">Where this comes from</h3>
+        <a class="src" href="#"><code>SGB V §24f</code><em>checked 12 Aug 2026</em></a>
+        <a class="src" href="#"><code>Klinikum Frankfurt</code><em>checked 2 Sep 2026</em></a>
+        <p class="meta" style="margin-top:12px">This is hospital practice, not a legal deadline. Dates and lists vary between clinics — the clinic decides.</p>
+
+        <button class="ghost" style="width:100%;margin-top:14px">Add to calendar</button>
+      </div>
+      <div class="foot">BabySteps is a navigator to official sources — not legal, tax or medical advice.</div>
+    </section>
+
+    <!-- ============ Q&A ANSWER ============ -->
+    <section class="screen" id="qa">
+      <div class="head">
+        <div class="state">Ask a question</div>
+        <div class="sub">Answers come only from official sources</div>
+      </div>
+      <div class="pad">
+        <div class="qa">
+          <div class="question">How long after the birth can we apply for <span lang="de">Elterngeld</span> without losing money?</div>
+          <div class="answer">
+            <p><span lang="de" class="term">Elterngeld</span> <span class="gloss">(parental allowance)</span> is paid for at most three months back from the month your application arrives at the <span lang="de" class="term">Elterngeldstelle</span>.</p>
+            <p>There is no date after which you can no longer apply. What you lose is money: apply in the fifth month after the birth and the first month is gone for good. Applying in the first weeks after the birth is the only way to claim everything.</p>
+            <a class="src" href="#"><code>BEEG §7(1)</code><em>checked 12 Aug 2026</em></a>
+            <div class="scope">Applies across Germany. Your application goes to the <span lang="de">Elterngeldstelle</span> in Hessen — only that office decides your case.</div>
+          </div>
+          <p class="meta">Not legal advice. <a href="#" style="color:var(--ink-3)">How we source answers</a></p>
+        </div>
+
+        <h3 class="sub-title">Wait state</h3>
+        <div class="skeleton">
+          <i></i><i></i><i></i>
+          <p>Checking the official sources</p>
+        </div>
+        <p class="meta" style="margin-top:8px">Nothing renders until the answer has a valid citation, so there is a real wait instead of text that might be retracted.</p>
+      </div>
+      <div class="foot">BabySteps is a navigator to official sources — not legal, tax or medical advice.</div>
+    </section>
+
+    <!-- ============ DEFLECT & REFUSE ============ -->
+    <section class="screen" id="guards">
+      <div class="head">
+        <div class="state">When we don't answer</div>
+        <div class="sub">Two different reasons, two different replies</div>
+      </div>
+      <div class="pad">
+        <div class="qa">
+          <div class="question">The baby has been moving much less than usual today. What should I do?</div>
+          <div class="aside">
+            <b>This one is for your midwife or doctor, now.</b>
+            <p>Call your <span lang="de" class="term">Frauenarzt</span> or <span lang="de" class="term">Hebamme</span>, or the maternity unit where you are registered — they would rather hear from you than not. Outside surgery hours the on-call medical service is 116117. In an emergency, 112.</p>
+            <p style="margin:0">We don't answer medical questions at all, however small they seem.</p>
+          </div>
+        </div>
+
+        <div class="qa" style="margin-top:22px">
+          <div class="question">My landlord won't let me install a baby gate. What are my rights?</div>
+          <div class="aside">
+            <b>We don't cover tenancy law.</b>
+            <p>Our sources are the federal family laws, the Hessen and Berlin family offices, and the Indian consulate — nothing about rented housing, so anything we said here would be guesswork.</p>
+            <p style="margin:0">A local <span lang="de" class="term">Mieterverein</span> <span class="gloss">(tenants' association)</span> answers this kind of question for a small membership fee.</p>
+          </div>
+        </div>
+
+        <p class="meta" style="margin-top:20px">Both replies use the same quiet treatment — a rule and grey text. A medical deflection in red would make an anxious person feel they had done something wrong.</p>
+      </div>
+      <div class="foot">BabySteps is a navigator to official sources — not legal, tax or medical advice.</div>
+    </section>
+
+    <!-- ============ INTAKE ============ -->
+    <section class="screen" id="intake">
+      <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="pad">
+        <p class="meta" style="margin-top:14px">Question 4 of 7</p>
+        <h2 class="title">Which passports do you and your partner hold?</h2>
+        <p class="lede">This decides which consulate steps appear on your timeline. Right now we cover Indian citizenship in full.</p>
+
+        <button class="choice" aria-pressed="true"><b>Both Indian</b><em>German and Indian steps, both tracks</em></button>
+        <button class="choice" aria-pressed="false"><b>One Indian, one German</b><em>German steps, plus the parts of the Indian track that still apply</em></button>
+        <button class="choice" aria-pressed="false"><b>One Indian, one other</b><em>We'll tell you which parts we can't cover yet</em></button>
+        <button class="choice" aria-pressed="false"><b>Neither is Indian</b><em>German steps only for now</em></button>
+
+        <p class="meta" style="margin-top:18px">No account, no e-mail. Your answers stay on this phone.</p>
+      </div>
+      <div class="foot"><a href="#">Impressum</a> · <a href="#">Datenschutz</a> · <a href="#">How this works</a></div>
+    </section>
+
+  </div>
+
+  <div style="flex:1;min-width:240px;max-width:360px">
+    <p class="caption" id="cap"></p>
+  </div>
+  </div>
+</div>
+
+<script>
+const caps = {
+  timeline:"The hero. The 56px date gutter with tabular figures is what makes this read as a deadline instrument rather than a task list — dates align on one axis and the eye scans a single column. The today band is the only full-bleed element and the only 2px rule on the screen. Hollow dots and dashed borders mark dates that are still estimated from the due date; they turn solid when the birth is recorded.",
+  birth:"F2b. The diff is the point: it turns an anxious moment into the product visibly doing its job, and it lets the user catch a wrong date before you do. This is the only screen with motion — the changed dates animate from old to new.",
+  item:"Every claim carries a source chip with the date it was checked. The last line does the RDG work: it names this as hospital practice rather than law, and says who actually decides.",
+  qa:"The answer states the rule and refuses to state an entitlement. Citations are loud rather than tap-to-reveal, because your survey found a respondent who trusts only official sites — the chip is the reason the answer is believable. The scope line names the jurisdiction on every answer.",
+  guards:"Deflections and refusals share one quiet treatment. The medical one carries urgency in words, not colour. The refusal names what the corpus actually covers, which teaches the boundary instead of just declining, and hands off to a real human channel.",
+  intake:"Seven screens, one question each, no account. The nationality question is written to be honest about coverage rather than to hide the MVP's edges — and the 'neither is Indian' answer is the demand signal that decides which consular track gets built next."
+};
+const btns=[...document.querySelectorAll('.tabs button')];
+function show(id){
+  btns.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===id)));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+  document.getElementById('cap').textContent=caps[id];
+}
+btns.forEach(b=>b.addEventListener('click',()=>show(b.dataset.t)));
+document.querySelectorAll('.choice').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.choice').forEach(o=>o.setAttribute('aria-pressed','false'));
+  c.setAttribute('aria-pressed','true');
+}));
+show('timeline');
+</script>
+</body>
+</html>
