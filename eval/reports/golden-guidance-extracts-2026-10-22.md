@@ -11,7 +11,7 @@ For each row: ✅ means the keyword appears in the ingested text, ❌ means it d
 A missing keyword is not proof the claim is wrong — it may mean the detail lives on a
 page or PDF we did not ingest, which is itself worth knowing.
 
-## A-17 — G-BA Kinder-Richtlinie
+## A-17 — G-BA Kinder-Richtlinie §2 (Zeiträume und Toleranzgrenzen)
 
 **Question:** When are the first check-ups for the baby?
 
@@ -468,65 +468,3 @@ Unabhängig vom Angebot ElterngeldDigital können Sie in Baden-Württemberg, Bay
 ```
 
 </details>
-
----
-
-# What the evidence shows
-
-Read against the ingested pages, 2026-10-22. These are findings for a human to confirm,
-not changes — `verify_priority` on all four is unchanged.
-
-## A-17 — NOT supported by what we ingested
-
-The ingested page is `g-ba.de/richtlinien/15/`, a **landing page**. It confirms the
-Richtlinie governs U1–U9 and names the screening programmes, but carries **no timings at
-all**: no "U2 between the 3rd and 10th day", no "U3 in the 4th to 5th week". The annotation
-cannot be supported from the corpus.
-
-Worse, the page says of itself: *"Die geltende Fassung der Richtlinie wird in Kürze zur
-Verfügung gestellt. In der angebotenen Fassung ist der am 20. August 2026 in Kraft getretene
-Beschluss noch nicht berücksichtigt."* So the authoritative text is a PDF that is itself
-behind a Beschluss.
-
-**To close it:** ingest the Kinder-Richtlinie PDF. `g-ba.de` robots permits it and
-`pdf-parse` is already an approved dependency. Until then A-17 is unanswerable and any
-answer about U-examination timing would be uncited.
-
-## A-21 — supported, and can be made more precise
-
-The annotation asks that the answer "names the authority". The ingested Hessen page names it
-exactly: **the six Hessische Ämter für Versorgung und Soziales (HÄVS)**, with the Fachaufsicht
-for Elterngeld at the Regierungspräsidium Gießen. The page also carries a
-"Welches Versorgungsamt ist für mich zuständig?" finder.
-
-**Suggested:** replace the generic "Elterngeldstelle" with the actual authority name, so the
-eval checks for something the source really says.
-
-## A-22 — partially supported; one element is not in our source
-
-`Elterngeldstelle`, `Bezirk`, `zuständig` and `Wohnsitz` are all present. But **`Jugendamt`
-and `Bezirksamt` appear nowhere** in any ingested Berlin page. The annotation's "the
-Elterngeldstelle of the district **Jugendamt**" is not supported by the source we hold.
-
-Either the claim needs a Berlin page that states it, or the annotation should say what
-service.berlin.de actually says. Not resolvable from the corpus as it stands.
-
-## A-23 — fully supported, and the corpus is richer than the annotation
-
-The ElterngeldDigital page lists the covered states explicitly: Berlin, Brandenburg, Bremen,
-Hamburg, Mecklenburg-Vorpommern, Niedersachsen, Rheinland-Pfalz, Sachsen-Anhalt,
-Schleswig-Holstein, Thüringen. **Hessen is not among them.** The same page continues:
-*"Unabhängig vom Angebot ElterngeldDigital können Sie in Baden-Württemberg, Bayern, Hessen,
-Nordrhein-Westfalen, Saarland und Sachsen Elterngeld online beantragen."* And the Hessen page
-carries its own "Onlineantrag Elterngeld" portal.
-
-This row's jurisdiction is `hesse`, so it is exactly the trap the annotation describes — "states
-whether it covers the user's state". A correct answer must say ElterngeldDigital does **not**
-cover Hessen while Hessen has its own online route. The corpus now supports both halves.
-
-## Extraction note
-
-The ElterngeldDigital page's only section came through with the heading
-`Sie befinden sich hier:` — a breadcrumb. The body text is correct, but the heading is wrong,
-so that chunk's label is misleading. Minor, and worth a look if more familienportal
-`rechner-antraege` pages are added.

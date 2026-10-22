@@ -48,14 +48,24 @@ function statuteRefs(source: string): string[] {
   const re = /\b(MuSchG|BEEG|BKGG|SGB V|BGB|StAG|AufenthG|PStG|EStG)\s*§\s*(\d+[a-z]?)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(source))) out.push(`${m[1]} §${m[2]}`);
+  // The Kinder-Richtlinie is §-structured authoritative text, ingested from the PDF. It is
+  // cited by name rather than by §, so expand it to the sections carrying the examination
+  // schedule: §2 holds the Zeitraum/Toleranzgrenze table and §3–§12 are U1–U9.
+  if (/Kinder-Richtlinie|Kinder-RL/i.test(source)) {
+    for (let n = 2; n <= 12; n++) out.push(`Kinder-RL §${n}`);
+  }
   return [...new Set(out)];
 }
 
 /** Numbers an annotation asserts, normalised so "175000" matches the statute's "175 000". */
 function numbersIn(text: string): string[] {
   const out = new Set<string>();
-  for (const m of text.matchAll(/\b(\d[\d .,]{0,12}\d|\d)\b/g)) {
-    const digits = m[1].replace(/[^\d]/g, "");
+  // No \b anchors. English ordinals ("3rd", "10th") and attached labels ("U1") put a
+  // letter straight after the digit, so a trailing boundary match silently extracts
+  // nothing and every such row passes vacuously — which is how A-17 first "confirmed"
+  // with zero numbers checked.
+  for (const m of text.matchAll(/\d[\d.,\s]*\d|\d/g)) {
+    const digits = m[0].replace(/[^\d]/g, "");
     if (digits.length >= 1 && Number(digits) > 0) out.add(digits);
   }
   return [...out];

@@ -8,10 +8,10 @@ to check against the corpus. That leaves 20 ANSWER rows.
 
 | verdict | n | meaning |
 | --- | --- | --- |
-| OK | 12 | cited § is in the corpus and the question retrieves it |
-| RETRIEVAL | 5 | § is in the corpus but the question does not surface it in top-8 |
+| OK | 13 | cited § is in the corpus and the question retrieves it |
+| RETRIEVAL | 3 | § is in the corpus but the question does not surface it in top-8 |
 | MISSING | 0 | cited § is not in the corpus at all |
-| OK-GUIDANCE | 1 | non-statute source; the expected domain is retrieved |
+| OK-GUIDANCE | 2 | non-statute source; the expected domain is retrieved |
 | NOT-INGESTABLE | 2 | consular source; cannot be ingested (ADR-014/016) |
 
 ## Rows
@@ -26,16 +26,16 @@ to check against the corpus. That leaves 20 ANSWER rows.
 | A-10 | federal | EStG §66(1) | OK +HUMAN | retrieved EStG §66 |
 | A-13 | hesse | PStG §18 + Hessen Standesamt guidance | OK | retrieved PStG §18 |
 | A-15 | federal | SGB V §24d | OK +HUMAN | retrieved SGB V §24d |
-| A-17 | federal | G-BA Kinder-Richtlinie | RETRIEVAL | top: SGB V §24d |
+| A-17 | federal | G-BA Kinder-Richtlinie | OK-GUIDANCE | non-statute |
 | A-18 | federal | MuSchG §19 SGB V §24i | OK +HUMAN | retrieved MuSchG §19, SGB V §24i |
 | A-19 | federal | BGB §1592 BGB §1594 | OK | retrieved BGB §1592, BGB §1594 |
-| A-21 | hesse | Hessen Elterngeld guidance | RETRIEVAL | top: BEEG §12, BEEG §7, BEEG §8, BEEG §22 |
+| A-21 | hesse | Hessen Elterngeld guidance | RETRIEVAL | top: BEEG §7, BEEG §12, BEEG §8, BEEG §22 |
 | A-22 | berlin | Berlin Elterngeldstelle guidance | OK-GUIDANCE | non-statute |
 | A-23 | hesse | ElterngeldDigital guidance | RETRIEVAL | top: BEEG §7, BEEG §8, BEEG §22, BEEG §1 |
 | A-24 | consular-india | Citizenship Act 1955 §4(1) proviso | NOT-INGESTABLE | non-statute |
 | A-25 | federal | StAG §4(3) | OK | retrieved StAG §4 |
 | A-26 | consular-india | Indian mission passport guidance | NOT-INGESTABLE | non-statute |
-| A-27 | federal | AufenthG §33 | RETRIEVAL | top: BKGG §1, BEEG §4, BEEG §28, BKGG §2 |
+| A-27 | federal | AufenthG §33 | OK | retrieved AufenthG §33 |
 | A-28 | federal | BEEG §3 | OK | retrieved BEEG §3 |
 | A-29 | federal | BEEG §1(6) | OK | retrieved BEEG §1 |
 

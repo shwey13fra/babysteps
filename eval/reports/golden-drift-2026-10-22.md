@@ -11,7 +11,7 @@ This report does not adjudicate entitlement (CLAUDE.md rule 13). Rows marked **D
 assert an amount or threshold and need a human.
 | confirmed | drift? | unverifiable |
 | --- | --- | --- |
-| 13 | 1 | 6 |
+| 14 | 1 | 5 |
 
 
 ### A-02 — BEEG §7(1) — **CONFIRMED**
@@ -27,7 +27,7 @@ assert an amount or threshold and need a human.
 *How much notice do I have to give my employer for Elternzeit?*
 
 - annotation: at least 7 weeks before Elternzeit begins for periods before the child's 3rd birthday; 13 weeks for periods between the 3rd and 8th birthday; written form with original signature; must declare which periods within the first 2 years
-- numbers found in the §: 7, 13, 2
+- numbers found in the §: 7, 3, 13, 8, 2
 - **numbers NOT in the §: none**
 
 ### A-06 — BEEG §1(8) — **DRIFT?**
@@ -78,9 +78,13 @@ assert an amount or threshold and need a human.
 - numbers found in the §: 12
 - **numbers NOT in the §: none**
 
-### A-17 — G-BA Kinder-Richtlinie
+### A-17 — G-BA Kinder-Richtlinie — **CONFIRMED**
 
-**UNVERIFIABLE (non-statute source).** When are the first check-ups for the baby?
+*When are the first check-ups for the baby?*
+
+- annotation: U1 immediately after birth; U2 between the 3rd and 10th day of life; U3 in the 4th to 5th week; each has a tolerance window
+- numbers found in the §: 1, 2, 3, 10, 4, 5
+- **numbers NOT in the §: none**
 
 ### A-18 — MuSchG §19 SGB V §24i — **CONFIRMED**
 

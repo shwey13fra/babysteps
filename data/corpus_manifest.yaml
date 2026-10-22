@@ -198,6 +198,20 @@ sources:
     robots: { allows: true, rule: "User-agent: * / allow: /", checked: 2026-10-22 }
     blocked_by: bot-protection-403
 
+
+  - id: gba_kinder_richtlinie_pdf
+    title_de: Richtlinie über die Früherkennung von Krankheiten bei Kindern (Kinder-Richtlinie)
+    format: pdf
+    domain: www.g-ba.de
+    # The landing page at /richtlinien/15/ carries no U-examination timings at all - it only
+    # states that the Richtlinie governs U1-U9. The timings live in this PDF, which is the
+    # authoritative text. Golden row A-17 cannot be answered without it.
+    urls:
+      - https://www.g-ba.de/downloads/62-492-3998/Kinder-RL_2025-05-15_iK-2026-01-01.pdf
+    fetch: auto
+    review_after_days: 180
+    robots: { allows: true, rule: "only /styleguide/ and /sys/suche disallowed", checked: 2026-10-22 }
+
   # ---- Consular India. NEVER auto-fetched. ----
 
   - id: cgi_frankfurt

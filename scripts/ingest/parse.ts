@@ -23,6 +23,7 @@ import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { unzipSync, strFromU8 } from "fflate";
 import * as cheerio from "cheerio";
+import pdfParse from "pdf-parse";
 
 const MANIFEST = "data/corpus_manifest.yaml";
 const RAW_DIR = "data/raw";
@@ -142,6 +143,77 @@ function parseStatute(src: Source, corpusVersion: string): Section[] {
   return out;
 }
 
+/**
+ * The Kinder-Richtlinie is a PDF, but it is §-structured authoritative text, not prose
+ * guidance: §3 is U1, §4 is U2, and so on. So its chunks carry a section_ref
+ * ("Kinder-RL §4") and are ranked in the statute pool (ADR-017) — an answer about U2
+ * timing must cite the Richtlinie, not somebody's summary of it.
+ *
+ * The landing page at /richtlinien/15/ carries no timings at all; this file is where
+ * "U2 3.-10. Lebenstag, Toleranzgrenze 3.-14. Lebenstag" actually lives.
+ */
+async function parsePdfSource(src: Source, corpusVersion: string): Promise<Section[]> {
+  const out: Section[] = [];
+  for (const url of src.urls ?? []) {
+    const file = join(RAW_DIR, src.id, `${pageName(url)}.pdf`);
+    if (!existsSync(file)) {
+      console.log(`  ${src.id}: missing ${file} — run fetch.ts`);
+      continue;
+    }
+    const parsed = await pdfParse(readFileSync(file));
+
+    const text = parsed.text
+      // Table-of-contents lines are "§ 4 U2 ..................... 10" — drop them, or the
+      // TOC entry for every § would be mistaken for that §'s body.
+      .split(/\r?\n/)
+      .filter((l: string) => !/\.{5,}\s*\d+\s*$/.test(l))
+      .join("\n")
+      // The PDF's justified text leaves runs of spaces inside sentences.
+      .replace(/[ \t ]{2,}/g, " ")
+      .replace(/\n{3,}/g, "\n\n");
+
+    const headings = [...text.matchAll(/^\s*§\s*(\d+[a-z]?)\s+(.{0,80}?)\s*$/gm)];
+    if (!headings.length) {
+      console.log(`  ${src.id}: no § headings found in ${pageName(url)}`);
+      continue;
+    }
+
+    for (let i = 0; i < headings.length; i++) {
+      const m = headings[i];
+      const start = (m.index ?? 0) + m[0].length;
+      const end = i + 1 < headings.length ? headings[i + 1].index : text.length;
+      const body = text.slice(start, end).trim();
+      if (body.length < 80) continue;
+
+      // Skip the documentation annex. §69 "Dokumentation" is the blank examination-booklet
+      // forms: 138,795 of the Richtlinie's 260,811 characters — 53% — made of field labels
+      // and "______" placeholders. It is not normative text, and because it repeats every
+      // U-number it swamped retrieval: "U2 Untersuchung" returned four §69 chunks before
+      // §2, which carries the actual Zeitraum/Toleranzgrenze table. Underscore density
+      // separates a form from prose cleanly here (§69 4.1%, every other section 0.0%).
+      const underscoreRatio = (body.match(/_/g)?.length ?? 0) / body.length;
+      if (underscoreRatio > 0.02) {
+        console.log(`  ${src.id}: skipping §${m[1]} "${m[2].trim().slice(0, 30)}" — ${(underscoreRatio * 100).toFixed(1)}% underscores, a blank form`);
+        continue;
+      }
+      out.push({
+        source_id: src.id,
+        section_ref: `Kinder-RL §${m[1]}`,
+        number: m[1],
+        heading: m[2].trim(),
+        text: body,
+        doc_title: src.title_de ?? src.id,
+        source_url: url,
+        jurisdiction: src.jurisdiction ?? "federal",
+        track: src.track ?? "german",
+        corpus_version: corpusVersion,
+        valid_from: null,
+      });
+    }
+  }
+  return out;
+}
+
 /** Same slug rule as fetch.ts, so a manifest URL maps to the file it was saved as. */
 function pageName(url: string): string {
   const u = new URL(url);
@@ -229,6 +301,18 @@ function isLinkList(text: string): boolean {
   return sentences === 0 && text.length / Math.max(1, lines.length) < 70;
 }
 
+/**
+ * Postgres `text` cannot hold a NUL byte: an insert carrying one fails with 22P05
+ * "unsupported Unicode escape sequence". PDF extraction produces them (the Kinder-
+ * Richtlinie did, and the push aborted at row 750 of 833). Strip every C0 control
+ * except tab and newline, from every source — the cost is nil and the failure mode is
+ * a half-written corpus.
+ */
+function stripControls(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+}
+
 /** Exact-duplicate text across pages is boilerplate (one block recurs on 31 pages). */
 function dedupe(sections: Section[]): { kept: Section[]; dropped: { dup: number; listy: number } } {
   const seen = new Set<string>();
@@ -236,6 +320,8 @@ function dedupe(sections: Section[]): { kept: Section[]; dropped: { dup: number;
   let dup = 0;
   let listy = 0;
   for (const s of sections) {
+    s.text = stripControls(s.text);
+    s.heading = stripControls(s.heading);
     if (s.section_ref === null && isLinkList(s.text)) {
       listy++;
       continue;
@@ -250,7 +336,7 @@ function dedupe(sections: Section[]): { kept: Section[]; dropped: { dup: number;
   return { kept, dropped: { dup, listy } };
 }
 
-function main() {
+async function main() {
   const manifest = parseYaml(readFileSync(MANIFEST, "utf8")) as { corpus_version: string; sources: Source[] };
   mkdirSync(CACHE_DIR, { recursive: true });
 
@@ -261,10 +347,12 @@ function main() {
 
   for (const src of manifest.sources) {
     if (src.fetch !== "auto") continue;
-    if (src.format !== "xml" && src.format !== "html") continue;
+    if (!["xml", "html", "pdf"].includes(src.format)) continue;
     const secs = src.format === "xml"
       ? parseStatute(src, manifest.corpus_version)
-      : parseHtmlSource(src, manifest.corpus_version);
+      : src.format === "pdf"
+        ? await parsePdfSource(src, manifest.corpus_version)
+        : parseHtmlSource(src, manifest.corpus_version);
     all.push(...secs);
     const chars = secs.reduce((a, s) => a + s.text.length, 0);
     const sample = secs.slice(0, 3).map((s) => s.section_ref).join(", ");
@@ -286,4 +374,7 @@ function main() {
   console.log(`written: ${OUT}`);
 }
 
-main();
+main().catch((e) => {
+  console.error(e?.message ?? e);
+  process.exit(1);
+});
