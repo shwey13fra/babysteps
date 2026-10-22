@@ -10,9 +10,11 @@ Add a row below in the same commit that adds the ADR.
 | ADR | Title | Status |
 | --- | --- | --- |
 | 000 | Template — not a decision | — |
+| 007 | Embedding model choice, with the cross-lingual comparison table | accepted |
 | 010 | Elternzeit notice anchored to the due date at −49 days | accepted |
 | 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
 | 012 | Ingest gesetze-im-internet via official downloads, never by scraping | accepted, blocks Phase 2 |
+| 013 | robots.txt permits fetching; XML ingestion kept for structure | proposed — would supersede 012 |
 
 ## Reserved numbers
 
@@ -26,7 +28,6 @@ Assigned by the source documents before the work started. Keep these free.
 | 004 | Deterministic dates, generative language | brief §1.4 |
 | 005 | No accounts at MVP | brief §1.5 |
 | 006 | Ingestion is offline | brief §1.6 |
-| 007 | Embedding model choice, with the cross-lingual comparison table | playbook Phase 2 |
 | 008 | Switch match_chunks to reciprocal rank fusion | playbook Phase 2 |
 | 009 | Refusal threshold, with both cosine distributions | playbook Phase 3 |
 
