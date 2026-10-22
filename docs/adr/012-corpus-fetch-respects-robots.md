@@ -1,6 +1,7 @@
 # ADR-012: Ingest gesetze-im-internet via its official downloads, never by scraping
 
-Date: 2026-10-01 · Status: accepted — blocks Phase 2, not implemented yet
+Date: 2026-10-01 · Status: **superseded by ADR-013** (2026-10-22) — its robots.txt premise
+was factually wrong; the XML ingestion decision survives on the structural argument
 
 ## Context
 Phase 2 ingests MuSchG, BEEG, BKGG, BGB, StAG, AufenthG and SGB V from gesetze-im-internet.de.

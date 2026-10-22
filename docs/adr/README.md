@@ -14,8 +14,8 @@ Add a row below in the same commit that adds the ADR.
 | 008 | Reciprocal rank fusion replaces the weighted-sum hybrid | accepted |
 | 010 | Elternzeit notice anchored to the due date at −49 days | accepted |
 | 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
-| 012 | Ingest gesetze-im-internet via official downloads, never by scraping | accepted, blocks Phase 2 |
-| 013 | robots.txt permits fetching; XML ingestion kept for structure | proposed — would supersede 012 |
+| 012 | Ingest gesetze-im-internet via official downloads, never by scraping | superseded by 013 |
+| 013 | robots.txt permits fetching; XML ingestion kept for structure | accepted, supersedes 012 |
 
 ## Reserved numbers
 
