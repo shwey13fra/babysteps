@@ -82,6 +82,9 @@ async function main() {
     source_url: r.source_url,
     doc_title: r.doc_title,
     section_ref: r.section_ref,
+    // ADR-017: retrieval ranks statute and guidance in separate pools, so the kind has
+    // to be a column. A chunk is statute exactly when it carries a § reference.
+    source_kind: r.section_ref ? "statute" : "guidance",
     jurisdiction: r.jurisdiction,
     track: r.track,
     valid_from: r.valid_from,
@@ -121,8 +124,10 @@ async function main() {
   console.log("chunks per jurisdiction:");
   for (const [j, n] of counts) console.log(`  ${j.padEnd(16)} ${n}`);
   console.log(`\ntotal rows in corpus_chunks : ${totalCount}`);
-  console.log(`rows with null section_ref  : ${nullRefCount}  <-- must be 0 for statute text`);
-  console.log(`Phase 2 gate wants > 500 total; statute sources alone give ${totalCount}.`);
+  const statuteLocal = rows.filter((r) => r.section_ref).length;
+  console.log(`rows with null section_ref  : ${nullRefCount} (explanatory HTML; statute chunks all carry one)`);
+  console.log(`statute / guidance          : ${statuteLocal} / ${rows.length - statuteLocal}`);
+  console.log(`Phase 2 gate wants > 500 total: ${totalCount} ${totalCount > 500 ? "PASS" : "FAIL"}`);
 }
 
 main().catch((e) => {

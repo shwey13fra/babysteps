@@ -114,6 +114,7 @@ sources:
   - id: familienportal
     format: html
     domain: familienportal.de
+    content_selector: "main"
     urls:
       - https://familienportal.de/familienportal/familienleistungen/elterngeld
       - https://familienportal.de/familienportal/familienleistungen/elterngeld/faq
@@ -142,6 +143,7 @@ sources:
   - id: familienkasse
     format: html
     domain: www.arbeitsagentur.de
+    content_selector: "main"
     urls:
       - https://www.arbeitsagentur.de/familie-und-kinder/infos-rund-um-kindergeld
       - https://www.arbeitsagentur.de/ueber-uns/familienkasse-der-ba
@@ -152,6 +154,7 @@ sources:
   - id: gba_kinder_richtlinie
     format: html
     domain: www.g-ba.de
+    content_selector: "main"
     urls:
       - https://www.g-ba.de/richtlinien/15/
     fetch: auto
@@ -161,6 +164,7 @@ sources:
     jurisdiction: berlin
     format: html
     domain: service.berlin.de
+    content_selector: "#layout-grid__area--maincontent"
     urls:
       - https://service.berlin.de/dienstleistung/326079/
       - https://service.berlin.de/dienstleistung/318957/
@@ -173,6 +177,7 @@ sources:
     jurisdiction: hesse
     format: html
     domain: rp-giessen.hessen.de
+    content_selector: "main"
     urls:
       - https://rp-giessen.hessen.de/Elterngeld
     fetch: auto

@@ -31,7 +31,10 @@ const CHARS_PER_TOKEN = 3.5; // German estimate; documented, not measured per-mo
 
 export type Chunk = {
   content: string;
-  section_ref: string;
+  /** null for explanatory HTML pages: not statute, so no §. */
+  section_ref: string | null;
+  /** The in-page heading. For HTML chunks this is what prefixes the content. */
+  heading: string;
   doc_title: string;
   source_url: string;
   jurisdiction: string;
@@ -73,7 +76,13 @@ function packUnits(units: string[], budget: number): string[] {
 }
 
 function chunkSection(s: Section): Chunk[] {
-  const header = s.heading ? `${s.section_ref} — ${s.heading}` : s.section_ref;
+  // Statute: "<§ ref> — <heading>". HTML page: the heading alone, since there is no §.
+  // Either way every chunk opens with the label its text belongs to.
+  const header = s.section_ref
+    ? s.heading
+      ? `${s.section_ref} — ${s.heading}`
+      : s.section_ref
+    : s.heading || s.doc_title;
   const headerCost = estTokens(header) + 2;
   const budget = MAX_TOKENS - headerCost;
 
@@ -85,6 +94,7 @@ function chunkSection(s: Section): Chunk[] {
     return {
       content,
       section_ref: s.section_ref,
+      heading: header,
       doc_title: s.doc_title,
       source_url: s.source_url,
       jurisdiction: s.jurisdiction,
@@ -116,7 +126,7 @@ function main() {
   console.log("-".repeat(60));
   for (const [src, n] of bySource) {
     const secs = sections.filter((s) => s.source_id === src).length;
-    const split = new Set(chunks.filter((c) => c.source_id === src && c.of > 1).map((c) => c.section_ref)).size;
+    const split = new Set(chunks.filter((c) => c.source_id === src && c.of > 1).map((c) => c.heading)).size;
     console.log(`${src.padEnd(11)} ${String(secs).padStart(8)} ${String(n).padStart(7)}   ${split}`);
   }
 
@@ -127,13 +137,13 @@ function main() {
   const pct = (p: number) => toks[Math.floor((toks.length - 1) * p)];
   const over = chunks.filter((c) => c.est_tokens > MAX_TOKENS);
   const under = chunks.filter((c) => c.est_tokens < MIN_TOKENS);
-  const orphan = chunks.filter((c) => !c.content.startsWith(c.section_ref));
+  const orphan = chunks.filter((c) => !c.content.startsWith(c.heading));
 
   console.log(`\ntotal chunks: ${chunks.length}`);
   console.log(`est tokens  min ${toks[0]}  p50 ${pct(0.5)}  p90 ${pct(0.9)}  max ${toks[toks.length - 1]}`);
   console.log(`over ${MAX_TOKENS}: ${over.length}${over.length ? " — " + over.map((c) => `${c.section_ref}(${c.est_tokens})`).join(", ") : ""}`);
   console.log(`under ${MIN_TOKENS}: ${under.length} (short §§ left unmerged on purpose — one chunk, one §)`);
-  console.log(`chunks not starting with their section_ref: ${orphan.length}  <-- must be 0`);
+  console.log(`chunks not starting with their heading/section label: ${orphan.length}  <-- must be 0`);
   console.log(`written: ${OUT}`);
 }
 

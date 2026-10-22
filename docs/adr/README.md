@@ -19,6 +19,7 @@ Add a row below in the same commit that adds the ADR.
 | 014 | Consular sources are hand-curated because crawling them is forbidden | accepted, facts amended by 016 |
 | 015 | The lexical half ORs its terms; AND made it return nothing | accepted |
 | 016 | Permission is checked live at fetch time, not recorded in the manifest | accepted |
+| 017 | Statute and guidance are ranked in separate pools | accepted |
 
 ## Reserved numbers
 

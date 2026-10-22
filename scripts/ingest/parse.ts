@@ -22,6 +22,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { unzipSync, strFromU8 } from "fflate";
+import * as cheerio from "cheerio";
 
 const MANIFEST = "data/corpus_manifest.yaml";
 const RAW_DIR = "data/raw";
@@ -32,6 +33,9 @@ type Source = {
   id: string;
   format: string;
   url?: string;
+  urls?: string[];
+  domain?: string;
+  content_selector?: string;
   fetch: string;
   ref_prefix?: string;
   only_sections?: string[];
@@ -43,8 +47,9 @@ type Source = {
 
 export type Section = {
   source_id: string;
-  section_ref: string;
-  number: string;
+  /** null for explanatory HTML pages: they are not statute and have no §. */
+  section_ref: string | null;
+  number: string | null;
   heading: string;
   text: string;
   doc_title: string;
@@ -137,6 +142,114 @@ function parseStatute(src: Source, corpusVersion: string): Section[] {
   return out;
 }
 
+/** Same slug rule as fetch.ts, so a manifest URL maps to the file it was saved as. */
+function pageName(url: string): string {
+  const u = new URL(url);
+  const slug = (u.pathname + u.search).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "index";
+  return slug.slice(-80);
+}
+
+// Site furniture that is not content. Removed before the content selector is applied so a
+// cookie banner or share bar inside <main> cannot end up embedded and cited as a source.
+const CHROME = [
+  "script", "style", "noscript", "nav", "header", "footer", "aside", "form",
+  "[role=navigation]", "[class*=cookie]", "[id*=cookie]", "[class*=breadcrumb]",
+  "[class*=share]", "[class*=social]", "[class*=skip]", "[class*=languageswitch]",
+  "[class*=sprachwahl]", "[class*=metanav]", "[class*=teaser-list]",
+].join(",");
+
+function parseHtmlSource(src: Source, corpusVersion: string): Section[] {
+  const out: Section[] = [];
+  const selector = src.content_selector ?? "main";
+
+  for (const url of src.urls ?? []) {
+    const file = join(RAW_DIR, src.id, `${pageName(url)}.html`);
+    if (!existsSync(file)) {
+      console.log(`  ${src.id}: missing ${file} — run fetch.ts`);
+      continue;
+    }
+    const $ = cheerio.load(readFileSync(file, "utf8"));
+    const pageTitle = $("title").first().text().replace(/\s+/g, " ").trim().split("|")[0].trim();
+    $(CHROME).remove();
+    const root = $(selector).first();
+    if (!root.length) {
+      console.log(`  ${src.id}: selector "${selector}" matched nothing in ${pageName(url)}`);
+      continue;
+    }
+
+    // Walk the content in document order, starting a new section at each h2/h3.
+    let heading = pageTitle;
+    let buf: string[] = [];
+    const flush = () => {
+      const text = buf.join("\n\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+      buf = [];
+      if (text.length < 80) return; // nav remnants and one-line stubs are not content
+      out.push({
+        source_id: src.id,
+        section_ref: null,
+        number: null,
+        heading,
+        text,
+        doc_title: pageTitle || src.id,
+        source_url: url,
+        jurisdiction: src.jurisdiction ?? "federal",
+        track: src.track ?? "german",
+        corpus_version: corpusVersion,
+        valid_from: null,
+      });
+    };
+
+    root.find("h2, h3, p, li, dd, dt, td").each((_i, el) => {
+      const tag = (el as any).tagName?.toLowerCase();
+      const t = $(el).text().replace(/\s+/g, " ").trim();
+      if (!t) return;
+      if (tag === "h2" || tag === "h3") {
+        flush();
+        heading = t;
+      } else {
+        buf.push(t);
+      }
+    });
+    flush();
+  }
+  return out;
+}
+
+/**
+ * A section with NO sentence-ending punctuation and short lines is a list of link labels
+ * — site furniture that survived the chrome selectors — not prose. Deliberately the most
+ * conservative of the rules measured: a looser one (sentences < 2, or length < 400) also
+ * dropped real content such as "Einnahmen, die kein Erwerbseinkommen sind", which is one
+ * explanatory sentence followed by examples. Dropping a genuine source is worse than
+ * embedding a little navigation.
+ */
+function isLinkList(text: string): boolean {
+  const lines = text.split(/\n{2,}/).filter(Boolean);
+  const sentences = (text.match(/[.!?](\s|$)/g) ?? []).length;
+  return sentences === 0 && text.length / Math.max(1, lines.length) < 70;
+}
+
+/** Exact-duplicate text across pages is boilerplate (one block recurs on 31 pages). */
+function dedupe(sections: Section[]): { kept: Section[]; dropped: { dup: number; listy: number } } {
+  const seen = new Set<string>();
+  const kept: Section[] = [];
+  let dup = 0;
+  let listy = 0;
+  for (const s of sections) {
+    if (s.section_ref === null && isLinkList(s.text)) {
+      listy++;
+      continue;
+    }
+    if (seen.has(s.text)) {
+      dup++;
+      continue;
+    }
+    seen.add(s.text);
+    kept.push(s);
+  }
+  return { kept, dropped: { dup, listy } };
+}
+
 function main() {
   const manifest = parseYaml(readFileSync(MANIFEST, "utf8")) as { corpus_version: string; sources: Source[] };
   mkdirSync(CACHE_DIR, { recursive: true });
@@ -147,19 +260,29 @@ function main() {
   console.log("-".repeat(78));
 
   for (const src of manifest.sources) {
-    if (src.format !== "xml" || src.fetch !== "auto") continue;
-    const secs = parseStatute(src, manifest.corpus_version);
+    if (src.fetch !== "auto") continue;
+    if (src.format !== "xml" && src.format !== "html") continue;
+    const secs = src.format === "xml"
+      ? parseStatute(src, manifest.corpus_version)
+      : parseHtmlSource(src, manifest.corpus_version);
     all.push(...secs);
     const chars = secs.reduce((a, s) => a + s.text.length, 0);
     const sample = secs.slice(0, 3).map((s) => s.section_ref).join(", ");
     console.log(`${src.id.padEnd(11)} ${String(secs.length).padStart(8)} ${String(chars).padStart(9)}  ${sample}${secs.length > 3 ? " …" : ""}`);
   }
 
+  const { kept, dropped } = dedupe(all);
+  console.log(`\ndropped: ${dropped.listy} link-list sections, ${dropped.dup} exact duplicates (boilerplate recurring across pages)`);
+  all.length = 0;
+  all.push(...kept);
+
   writeFileSync(OUT, JSON.stringify(all, null, 2));
   const noHeading = all.filter((s) => !s.heading).length;
-  const noRef = all.filter((s) => !s.section_ref || /undefined/.test(s.section_ref)).length;
+  const statutes = all.filter((s) => s.source_id !== "" && s.section_ref !== null);
+  const noRef = statutes.filter((s) => /undefined/.test(String(s.section_ref))).length;
   console.log(`\ntotal sections: ${all.length}   total chars: ${all.reduce((a, s) => a + s.text.length, 0)}`);
-  console.log(`sections with no heading: ${noHeading}   with a bad section_ref: ${noRef}`);
+  console.log(`statute sections: ${statutes.length} (bad section_ref: ${noRef})   html sections: ${all.length - statutes.length} (section_ref null by design)`);
+  console.log(`sections with no heading: ${noHeading}`);
   console.log(`written: ${OUT}`);
 }
 
