@@ -1,0 +1,178 @@
+# data/corpus_manifest.yaml
+#
+# Drives scripts/ingest. One entry per source. Nothing is fetched that is not listed here.
+#
+# robots: every entry records the robots.txt verdict AND the date it was read. ADR-013 requires
+# the date; an undated robots claim is what ADR-012 got wrong. Re-read before any later ingest.
+#
+# fetch: auto     - scripts/ingest/fetch.ts may download it
+#        manual   - a human curates the text; the fetcher must skip it, always
+#
+# Statutes are authoritative and structurally parseable (XML <norm>/<enbez>), so they carry
+# section_ref directly. HTML sources are explanatory, not statute, and their chunks get
+# section_ref: null - which is why the Phase 2 gate only requires non-null section_ref on
+# statute text.
+
+version: 1
+corpus_version: "2026-10"
+
+defaults:
+  track: german
+  jurisdiction: federal
+  review_after_days: 365
+
+sources:
+
+  # ---- Statutes: gesetze-im-internet official XML. robots.txt read 2026-10-22: "Disallow:" (empty) ----
+  # All nine slugs returned HTTP 200 at /<slug>/xml.zip on 2026-10-22.
+
+  - id: muschg
+    title_de: Gesetz zum Schutz von Müttern bei der Arbeit, in der Ausbildung und im Studium
+    format: xml
+    url: https://www.gesetze-im-internet.de/muschg_2018/xml.zip
+    fetch: auto
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: beeg
+    title_de: Gesetz zum Elterngeld und zur Elternzeit
+    format: xml
+    url: https://www.gesetze-im-internet.de/beeg/xml.zip
+    fetch: auto
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: bkgg
+    title_de: Bundeskindergeldgesetz
+    format: xml
+    url: https://www.gesetze-im-internet.de/bkgg_1996/xml.zip
+    fetch: auto
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: sgb_5
+    title_de: Sozialgesetzbuch Fünftes Buch — Gesetzliche Krankenversicherung
+    format: xml
+    url: https://www.gesetze-im-internet.de/sgb_5/xml.zip
+    fetch: auto
+    only_sections: ["10", "24d", "24i"]   # per the playbook; SGB V entire is far too large
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: bgb
+    title_de: Bürgerliches Gesetzbuch
+    format: xml
+    url: https://www.gesetze-im-internet.de/bgb/xml.zip
+    fetch: auto
+    only_sections: ["1592", "1594", "1626a"]   # parentage and custody
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: stag
+    title_de: Staatsangehörigkeitsgesetz
+    format: xml
+    url: https://www.gesetze-im-internet.de/stag/xml.zip
+    fetch: auto
+    only_sections: ["4"]
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: aufenthg
+    title_de: Aufenthaltsgesetz
+    format: xml
+    url: https://www.gesetze-im-internet.de/aufenthg_2004/xml.zip
+    fetch: auto
+    only_sections: ["33"]
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  # ---- Beyond the playbook's list; approved 2026-10-22. ----
+  # Both are cited by rules that already exist, so the golden-set pass needs their text:
+  #   standesamt_birth_registration -> PStG §18 ; kindergeld_application -> EStG §70(1) S.2
+
+  - id: pstg
+    title_de: Personenstandsgesetz
+    format: xml
+    url: https://www.gesetze-im-internet.de/pstg/xml.zip
+    fetch: auto
+    only_sections: ["18"]
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: estg
+    title_de: Einkommensteuergesetz
+    format: xml
+    url: https://www.gesetze-im-internet.de/estg/xml.zip
+    fetch: auto
+    only_sections: ["70"]
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  # ---- HTML sources. Domains and robots verified 2026-10-22; exact page URLs still to be
+  # ---- confirmed one by one before fetching. No URL is invented here.
+
+  - id: familienportal
+    format: html
+    domain: familienportal.de
+    urls: []                      # to be filled from the site's own sitemap, then shown to you
+    fetch: pending_urls
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+
+  - id: familienkasse
+    format: html
+    domain: www.arbeitsagentur.de
+    urls: []
+    fetch: pending_urls
+    robots: { allows: true, rule: "Disallow: (empty) + Allow: /", checked: 2026-10-22 }
+
+  - id: gba_kinder_richtlinie
+    format: html
+    domain: www.g-ba.de
+    urls: []
+    fetch: pending_urls
+    robots: { allows: true, rule: "only /styleguide/ and /sys/suche disallowed", checked: 2026-10-22 }
+
+  - id: berlin_service
+    jurisdiction: berlin
+    format: html
+    domain: service.berlin.de
+    urls: []
+    fetch: pending_urls
+    # NOTE: PDF paths are disallowed. HTML pages only.
+    robots: { allows: true, rule: "Disallow: /dienstleistung/*/pdf/ and similar — HTML permitted, PDF NOT", checked: 2026-10-22 }
+
+  - id: hessen_rp
+    jurisdiction: hesse
+    format: html
+    domain: rp-giessen.hessen.de
+    urls: []
+    fetch: pending_urls
+    robots: { allows: true, rule: "infrastructure paths only (/core/, /admin/, …); content permitted", checked: 2026-10-22 }
+
+  - id: frankfurt_standesamt
+    jurisdiction: hesse
+    format: html
+    domain: www.frankfurt.de
+    urls: []
+    fetch: manual
+    # robots.txt itself returns HTTP 403, so permission CANNOT be established. Treated as
+    # disallowed until proven otherwise - the conservative reading, per ADR-013's lesson.
+    robots: { allows: unknown, rule: "robots.txt returned HTTP 403 - unverifiable", checked: 2026-10-22 }
+
+  # ---- Consular India. NEVER auto-fetched. ----
+
+  - id: cgi_frankfurt
+    jurisdiction: consular-india
+    track: consular
+    format: html
+    domain: www.cgifrankfurt.gov.in
+    urls: []
+    fetch: manual
+    manual_review: true
+    review_after_days: 90
+    # robots.txt contains "User-agent: * / Disallow: /". Automated fetching is forbidden
+    # outright. This text must be curated by hand or not ingested at all.
+    robots: { allows: false, rule: "User-agent: * / Disallow: /", checked: 2026-10-22 }
+
+  - id: indian_embassy_berlin
+    jurisdiction: consular-india
+    track: consular
+    format: html
+    domain: www.indianembassyberlin.gov.in
+    urls: []
+    fetch: manual
+    manual_review: true
+    review_after_days: 90
+    # robots.txt does not resolve (302 to an error page), so permission is unverifiable.
+    robots: { allows: unknown, rule: "robots.txt 302s to an error page - unverifiable", checked: 2026-10-22 }
