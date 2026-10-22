@@ -114,30 +114,58 @@ sources:
   - id: familienportal
     format: html
     domain: familienportal.de
-    urls: []                      # to be filled from the site's own sitemap, then shown to you
-    fetch: pending_urls
+    urls:
+      - https://familienportal.de/familienportal/familienleistungen/elterngeld
+      - https://familienportal.de/familienportal/familienleistungen/elterngeld/faq
+      - https://familienportal.de/familienportal/familienleistungen/elterngeld/familiensituation
+      - https://familienportal.de/familienportal/familienleistungen/elterngeld/arbeitssituation
+      - https://familienportal.de/familienportal/familienleistungen/elternzeit
+      - https://familienportal.de/familienportal/familienleistungen/elternzeit/arbeit-versicherung
+      - https://familienportal.de/familienportal/familienleistungen/elternzeit/faq
+      - https://familienportal.de/familienportal/familienleistungen/kindergeld
+      - https://familienportal.de/familienportal/familienleistungen/kindergeld/familiensituation
+      - https://familienportal.de/familienportal/familienleistungen/kindergeld/faq
+      - https://familienportal.de/familienportal/familienleistungen/mutterschutz
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/staatliche-leistungen
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/anmeldung-standesamt
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/vaterschaftanerkennung
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/namensrecht-sorgerecht
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/fruehgeborene
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/zwillinge-mehrlinge
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/gesundheit-und-beratung
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/checklisten
+      - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/fruehe-hilfen
+    fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
 
   - id: familienkasse
     format: html
     domain: www.arbeitsagentur.de
-    urls: []
-    fetch: pending_urls
+    urls:
+      - https://www.arbeitsagentur.de/familie-und-kinder/infos-rund-um-kindergeld
+      - https://www.arbeitsagentur.de/ueber-uns/familienkasse-der-ba
+      - https://www.arbeitsagentur.de/familie-und-kinder/infos-rund-um-kindergeld/nachweise-einreichen
+    fetch: auto
     robots: { allows: true, rule: "Disallow: (empty) + Allow: /", checked: 2026-10-22 }
 
   - id: gba_kinder_richtlinie
     format: html
     domain: www.g-ba.de
-    urls: []
-    fetch: pending_urls
+    urls:
+      - https://www.g-ba.de/richtlinien/15/
+    fetch: auto
     robots: { allows: true, rule: "only /styleguide/ and /sys/suche disallowed", checked: 2026-10-22 }
 
   - id: berlin_service
     jurisdiction: berlin
     format: html
     domain: service.berlin.de
-    urls: []
-    fetch: pending_urls
+    urls:
+      - https://service.berlin.de/dienstleistung/326079/
+      - https://service.berlin.de/dienstleistung/318957/
+      - https://service.berlin.de/dienstleistung/318960/
+    fetch: auto
     # NOTE: PDF paths are disallowed. HTML pages only.
     robots: { allows: true, rule: "Disallow: /dienstleistung/*/pdf/ and similar — HTML permitted, PDF NOT", checked: 2026-10-22 }
 
@@ -145,8 +173,9 @@ sources:
     jurisdiction: hesse
     format: html
     domain: rp-giessen.hessen.de
-    urls: []
-    fetch: pending_urls
+    urls:
+      - https://rp-giessen.hessen.de/Elterngeld
+    fetch: auto
     robots: { allows: true, rule: "infrastructure paths only (/core/, /admin/, …); content permitted", checked: 2026-10-22 }
 
   - id: frankfurt_standesamt
@@ -155,9 +184,13 @@ sources:
     domain: www.frankfurt.de
     urls: []
     fetch: manual
-    # robots.txt itself returns HTTP 403, so permission CANNOT be established. Treated as
-    # disallowed until proven otherwise - the conservative reading, per ADR-013's lesson.
-    robots: { allows: unknown, rule: "robots.txt returned HTTP 403 - unverifiable", checked: 2026-10-22 }
+    # CORRECTED 2026-10-22 (ADR-016). robots.txt reads "User-agent: * / allow: /" - it
+    # permits everything. The earlier "403 unverifiable" came from a probe sent with no
+    # User-Agent. But the site's bot protection returns 403 to our client for robots.txt
+    # and content alike, under every header combination tried. Unfetchable, not forbidden.
+    # We will not spoof a browser fingerprint to get around an access control.
+    robots: { allows: true, rule: "User-agent: * / allow: /", checked: 2026-10-22 }
+    blocked_by: bot-protection-403
 
   # ---- Consular India. NEVER auto-fetched. ----
 
@@ -183,5 +216,8 @@ sources:
     fetch: manual
     manual_review: true
     review_after_days: 90
-    # robots.txt does not resolve (302 to an error page), so permission is unverifiable.
-    robots: { allows: unknown, rule: "robots.txt 302s to an error page - unverifiable", checked: 2026-10-22 }
+    # CORRECTED 2026-10-22 (ADR-016). Not a permission question: the host itself is gone.
+    # https://www.indianembassyberlin.gov.in/ returns 404 and robots.txt 404s via /error.
+    # Needs the mission's current official URL, which must be confirmed by a human.
+    robots: { allows: unknown, rule: "host returns 404 - site moved or retired", checked: 2026-10-22 }
+    blocked_by: host-404

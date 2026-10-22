@@ -16,8 +16,9 @@ Add a row below in the same commit that adds the ADR.
 | 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
 | 012 | Ingest gesetze-im-internet via official downloads, never by scraping | superseded by 013 |
 | 013 | robots.txt permits fetching; XML ingestion kept for structure | accepted, supersedes 012 |
-| 014 | Consular sources are hand-curated because crawling them is forbidden | accepted |
+| 014 | Consular sources are hand-curated because crawling them is forbidden | accepted, facts amended by 016 |
 | 015 | The lexical half ORs its terms; AND made it return nothing | accepted |
+| 016 | Permission is checked live at fetch time, not recorded in the manifest | accepted |
 
 ## Reserved numbers
 
