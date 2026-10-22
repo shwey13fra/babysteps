@@ -105,7 +105,7 @@ sources:
     ref_prefix: "EStG"
     url: https://www.gesetze-im-internet.de/estg/xml.zip
     fetch: auto
-    only_sections: ["70"]
+    only_sections: ["66", "70"]   # 66(1) carries the Kindergeld amount (golden A-10)
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
 
   # ---- HTML sources. Domains and robots verified 2026-10-22; exact page URLs still to be
@@ -137,6 +137,7 @@ sources:
       - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/gesundheit-und-beratung
       - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/checklisten
       - https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/fruehe-hilfen
+      - https://familienportal.de/familienportal/rechner-antraege/elterngeld-digital
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
 
