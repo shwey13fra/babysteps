@@ -29,6 +29,7 @@ sources:
   - id: muschg
     title_de: Gesetz zum Schutz von Müttern bei der Arbeit, in der Ausbildung und im Studium
     format: xml
+    ref_prefix: "MuSchG"
     url: https://www.gesetze-im-internet.de/muschg_2018/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
@@ -36,6 +37,7 @@ sources:
   - id: beeg
     title_de: Gesetz zum Elterngeld und zur Elternzeit
     format: xml
+    ref_prefix: "BEEG"
     url: https://www.gesetze-im-internet.de/beeg/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
@@ -43,6 +45,7 @@ sources:
   - id: bkgg
     title_de: Bundeskindergeldgesetz
     format: xml
+    ref_prefix: "BKGG"
     url: https://www.gesetze-im-internet.de/bkgg_1996/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
@@ -50,6 +53,7 @@ sources:
   - id: sgb_5
     title_de: Sozialgesetzbuch Fünftes Buch — Gesetzliche Krankenversicherung
     format: xml
+    ref_prefix: "SGB V"
     url: https://www.gesetze-im-internet.de/sgb_5/xml.zip
     fetch: auto
     only_sections: ["10", "24d", "24i"]   # per the playbook; SGB V entire is far too large
@@ -58,6 +62,7 @@ sources:
   - id: bgb
     title_de: Bürgerliches Gesetzbuch
     format: xml
+    ref_prefix: "BGB"
     url: https://www.gesetze-im-internet.de/bgb/xml.zip
     fetch: auto
     only_sections: ["1592", "1594", "1626a"]   # parentage and custody
@@ -66,6 +71,7 @@ sources:
   - id: stag
     title_de: Staatsangehörigkeitsgesetz
     format: xml
+    ref_prefix: "StAG"
     url: https://www.gesetze-im-internet.de/stag/xml.zip
     fetch: auto
     only_sections: ["4"]
@@ -74,6 +80,7 @@ sources:
   - id: aufenthg
     title_de: Aufenthaltsgesetz
     format: xml
+    ref_prefix: "AufenthG"
     url: https://www.gesetze-im-internet.de/aufenthg_2004/xml.zip
     fetch: auto
     only_sections: ["33"]
@@ -86,6 +93,7 @@ sources:
   - id: pstg
     title_de: Personenstandsgesetz
     format: xml
+    ref_prefix: "PStG"
     url: https://www.gesetze-im-internet.de/pstg/xml.zip
     fetch: auto
     only_sections: ["18"]
@@ -94,6 +102,7 @@ sources:
   - id: estg
     title_de: Einkommensteuergesetz
     format: xml
+    ref_prefix: "EStG"
     url: https://www.gesetze-im-internet.de/estg/xml.zip
     fetch: auto
     only_sections: ["70"]
