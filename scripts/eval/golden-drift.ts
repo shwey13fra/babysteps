@@ -16,9 +16,11 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 
-const CSV = "data/golden/golden_set_v1.csv";
+import { todayISO } from "../../lib/timeline/dates";
+
+const CSV = "data/golden/golden_set_v1.1.csv";
 const PARSED = "data/cache/parsed.json";
-const REPORT = "eval/reports/golden-drift-2026-10-22.md";
+const REPORT = "eval/reports/golden-drift-2026-10-23.md";
 
 type Section = { section_ref: string | null; text: string; heading: string; source_url: string };
 
@@ -97,12 +99,39 @@ function main() {
   const byRef = new Map<string, Section>();
   for (const s of sections) if (s.section_ref && !byRef.has(s.section_ref)) byRef.set(s.section_ref, s);
 
-  const rows = readCsv(readFileSync(CSV, "utf8")).filter((r) => r.verify_priority === "high" && r.category === "ANSWER");
+  const allRows = readCsv(readFileSync(CSV, "utf8"));
+  const rows = allRows.filter((r) => r.verify_priority === "high" && r.category === "ANSWER");
+
+  // Derived, not hardcoded. This header used to read "v1 ... 675 chunks" while the tool was
+  // pointed at v1.1 and the corpus had grown to 770 - a gate artifact stating two wrong
+  // numbers about itself. A literal in a report is a fact that rots (past-mistakes 2026-10-21).
+  const setName = CSV.replace(/^.*golden_set_/, "").replace(/\.csv$/, "");
+  const chunkCount = (() => {
+    try {
+      return (JSON.parse(readFileSync("data/cache/chunks.json", "utf8")) as unknown[]).length;
+    } catch {
+      return null;
+    }
+  })();
+  const priorities = allRows.reduce<Record<string, number>>((acc, r) => {
+    if (r.verify_priority) acc[r.verify_priority] = (acc[r.verify_priority] ?? 0) + 1;
+    return acc;
+  }, {});
+  const mix = Object.entries(priorities)
+    .sort()
+    .map(([k, n]) => `${k} ${n}`)
+    .join(" · ");
 
   const lines: string[] = [
-    "# Golden set v1 — annotation drift against ingested text",
+    `# Golden set ${setName} — annotation drift against ingested text`,
     "",
-    "Date: 2026-10-22 · corpus_version 2026-10 · 675 chunks",
+    `Date: ${todayISO()} · corpus_version 2026-10 · ${chunkCount ?? "?"} chunks`,
+    "",
+    `Rows in ${CSV}: ${allRows.length} (${mix}). This tool examines the **${rows.length}** still`,
+    "marked `high` in the ANSWER category — the ones whose ground truth nobody has signed off.",
+    "A row already at `verified` was checked in an earlier run and is listed in that run's report;",
+    "re-verifying it would overwrite a human sign-off with a tool's opinion. **0 confirmed here",
+    "means 0 rows were awaiting verification, not 0 rows checked ever** — read the count above.",
     "",
     "Each row's `required_answer_elements` is checked against the **ingested text of the §**",
     "it cites, not against retrieval. Numbers asserted by the annotation are looked for in the",
@@ -111,6 +140,8 @@ function main() {
     "",
     "This report does not adjudicate entitlement (CLAUDE.md rule 13). Rows marked **DECIDE**",
     "assert an amount or threshold and need a human.",
+    "",
+    "<!-- summary -->",
     "",
   ];
 
@@ -153,7 +184,19 @@ function main() {
     console.log(`${verdict.padEnd(10)} ${r.id.padEnd(6)} ${r.ground_truth_source.slice(0, 34).padEnd(35)} absent: ${absent.join(", ") || "-"}`);
   }
 
-  lines.splice(11, 0, `| confirmed | drift? | unverifiable |`, `| --- | --- | --- |`, `| ${confirmed} | ${drifted} | ${unverifiable} |`, "");
+  // Anchored, not indexed. A fixed splice index spliced the summary into the middle of a
+  // sentence the moment the preamble changed length.
+  const marker = "<!-- summary -->";
+  const at = lines.indexOf(marker);
+  if (at === -1) throw new Error("preamble lost its summary marker");
+  lines.splice(
+    at,
+    1,
+    `| confirmed | drift? | unverifiable |`,
+    `| --- | --- | --- |`,
+    `| ${confirmed} | ${drifted} | ${unverifiable} |`,
+    "",
+  );
   writeFileSync(REPORT, lines.join("\n"));
   console.log(`\nconfirmed ${confirmed} · drift? ${drifted} · unverifiable ${unverifiable}`);
   console.log(`report: ${REPORT}`);

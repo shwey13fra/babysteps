@@ -20,8 +20,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { expandQuery } from "../../lib/rag/expand";
 
-const CSV = "data/golden/golden_set_v1.csv";
-const REPORT = "eval/reports/golden-verification-2026-10-22.md";
+const CSV = "data/golden/golden_set_v1.1.csv";
+const REPORT = "eval/reports/golden-verification-2026-10-23.md";
 
 function env(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -66,7 +66,7 @@ function statuteRefs(source: string): string[] {
 /**
  * Non-statute sources cannot be matched by section_ref, so they are checked by the domain
  * the answer must come from. null means the source is not in the corpus and cannot be —
- * the two consular rows, which ADR-014/016 leave hand-curated.
+ * the two consular rows, which ADR-014/016/019 leave hand-curated.
  */
 const GUIDANCE_DOMAIN: Array<[RegExp, string | null]> = [
   [/G-?BA|Kinder-Richtlinie/i, "g-ba.de"],
@@ -142,7 +142,7 @@ async function main() {
       maxCos: hits.length ? Math.max(...hits.map((h) => Number(h.cosine))) : 0,
       question: r.question, elements: r.required_answer_elements,
     });
-    console.log(`${verdict.padEnd(10)}${needsHuman ? "+HUMAN " : "       "}${r.id.padEnd(6)} ${r.ground_truth_source.slice(0, 40).padEnd(41)} ${verdict === "OK" ? "retrieved " + retrieved.join(", ") : verdict === "MISSING" ? "not in corpus: " + missing.join(", ") : verdict === "OK-GUIDANCE" ? "guidance domain retrieved" : verdict === "NOT-INGESTABLE" ? "consular - not in corpus, cannot be (ADR-014/016)" : "top: " + (hitRefs.slice(0, 3).join(", ") || hits.slice(0,2).map((h)=>new URL(h.source_url).hostname).join(", "))}`);
+    console.log(`${verdict.padEnd(10)}${needsHuman ? "+HUMAN " : "       "}${r.id.padEnd(6)} ${r.ground_truth_source.slice(0, 40).padEnd(41)} ${verdict === "OK" ? "retrieved " + retrieved.join(", ") : verdict === "MISSING" ? "not in corpus: " + missing.join(", ") : verdict === "OK-GUIDANCE" ? "guidance domain retrieved" : verdict === "NOT-INGESTABLE" ? "consular - not in corpus, cannot be (ADR-019)" : "top: " + (hitRefs.slice(0, 3).join(", ") || hits.slice(0,2).map((h)=>new URL(h.source_url).hostname).join(", "))}`);
   }
 
   const by = (v: string) => results.filter((r) => r.verdict === v);
@@ -161,7 +161,7 @@ async function main() {
     `| RETRIEVAL | ${by("RETRIEVAL").length} | § is in the corpus but the question does not surface it in top-${k} |`,
     `| MISSING | ${by("MISSING").length} | cited § is not in the corpus at all |`,
     `| OK-GUIDANCE | ${by("OK-GUIDANCE").length} | non-statute source; the expected domain is retrieved |`,
-    `| NOT-INGESTABLE | ${by("NOT-INGESTABLE").length} | consular source; cannot be ingested (ADR-014/016) |`,
+    `| NOT-INGESTABLE | ${by("NOT-INGESTABLE").length} | consular source; substance unreachable, hand-curated (ADR-019) |`,
     "",
     "## Rows",
     "",
