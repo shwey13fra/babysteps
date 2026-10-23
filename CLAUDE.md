@@ -67,8 +67,10 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 | Dev server | `npm run dev` | works |
 | Production build | `npm run build` | works |
 | Engine output | `/dev/timeline?birth=YYYY-MM-DD&diff=1&today=YYYY-MM-DD` | works |
-| Run ingestion | `npx tsx scripts/ingest/push.ts` | TBD — Phase 2 |
-| Inspect corpus | `npx tsx scripts/ingest/query.ts "<query>"` | TBD — Phase 2 |
+| Run ingestion | `fetch.ts [--force]` → `parse.ts` → `chunk.ts` → `embed.ts [--force]` → `push.ts [--replace]`, each `npx tsx scripts/ingest/<name>` | works |
+| Inspect corpus | `npx tsx scripts/ingest/query.ts "<query>" [--jurisdictions federal,hesse] [--k 5]` | works |
+| Verify golden annotations | `npx tsx scripts/eval/golden-drift.ts` | works |
+| Check golden retrieval | `npx tsx scripts/eval/verify-golden.ts` | works |
 | Calibrate refusal threshold | `npx tsx scripts/eval/calibrate.ts` | TBD — Phase 3 |
 | Run eval | `npx tsx scripts/eval/run.ts` | TBD — Phase 4 |
 
