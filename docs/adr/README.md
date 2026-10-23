@@ -16,10 +16,12 @@ Add a row below in the same commit that adds the ADR.
 | 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
 | 012 | Ingest gesetze-im-internet via official downloads, never by scraping | superseded by 013 |
 | 013 | robots.txt permits fetching; XML ingestion kept for structure | accepted, supersedes 012 |
-| 014 | Consular sources are hand-curated because crawling them is forbidden | accepted, facts amended by 016 |
+| 014 | Consular sources are hand-curated because crawling them is forbidden | accepted, facts amended by 016, reasoning corrected by 019 |
 | 015 | The lexical half ORs its terms; AND made it return nothing | accepted |
 | 016 | Permission is checked live at fetch time, not recorded in the manifest | accepted |
 | 017 | Statute and guidance are ranked in separate pools | accepted |
+| 018 | The BEEG §28 cohort boundary is asserted by neither the golden set nor an answer | accepted |
+| 019 | Consular text is hand-curated because it is unreachable, not because it is forbidden | accepted, corrects 014 |
 
 ## Reserved numbers
 
