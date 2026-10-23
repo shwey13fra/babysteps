@@ -38,7 +38,7 @@ claim being cited, the inverse of past-mistakes 2026-10-23. Relax the 403 policy
 
 ## Consequence
 The consular track stays mute until a human transcribes the pages in
-`knowledge/consular-curation-worklist.md`, and A-24 and A-26 stay unanswerable until then; the
+`docs/consular-curation-worklist.md`, and A-24 and A-26 stay unanswerable until then; the
 timeline dates are unaffected, since the engine never depended on retrieval. Staleness is now
 detectable rather than invisible: `scripts/eval/consular-staleness.ts` exits 1 on an overdue
 entry. If the mission answers the permission letter, this ADR is superseded and the YAML becomes

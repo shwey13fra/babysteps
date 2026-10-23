@@ -1,0 +1,45 @@
+# data/consular/india.yaml
+#
+# Hand-curated Indian consular sources for the answer layer. Schema, invariants and the
+# reason this file exists instead of a crawl: lib/rag/consular.ts.
+#
+# Two things every entry must respect:
+#   1. Assert only what the cited page says on checked_on. Not what we believe, however
+#      confident — an unsourced claim here grades a correctly-cited answer as wrong.
+#   2. Never state what this family is entitled to or will receive. State the rule, then
+#      name the office that decides (CLAUDE.md rule 13).
+#
+# review_after is capped at 90 days from checked_on, enforced in the loader. Consular
+# pages move without notice and nothing here re-reads them.
+#
+# STATUS 2026-10-23: one entry, fetched under live robots permission. The substance A-24
+# and A-26 need is NOT here yet and cannot be fetched — it needs a human with a browser.
+# The exact pages to read are listed in docs/consular-curation-worklist.md.
+
+- id: mea_consular_services_birth_registration
+  mission: federal
+  topic: birth_registration
+  title_en: Indian missions register the births of Indian citizens abroad
+  text_en: >
+    From the Ministry of External Affairs' Guide to Consular Services, on what an Indian
+    mission may do for Indian nationals abroad: "Every case is unique and our assistance,
+    including through the appropriate Indian Embassy/Consulate, will depend on the
+    circumstances and availability of consular resources. We may be able to: Register the
+    births and deaths of Indian citizens, in accordance with the relevant Indian laws."
+    The Guide states the mission's role and that Indian law governs it. It does NOT state
+    a registration deadline, the documents required, or any passport procedure.
+  source_url: https://www.mea.gov.in/guide-to-consular-services-menu
+  source_title: Guide to Consular Services — Ministry of External Affairs, Government of India
+  method: permitted_fetch
+  robots_checked_on: 2026-10-23
+  checked_on: 2026-10-23
+  checked_by: BabyStepsBot/0.1 (live robots check, mea.gov.in robots 200, no matching rule)
+  review_after: 2027-01-21
+  authority_en: The Indian Embassy or Consulate General covering your place of residence
+  notes: >
+    Deliberately narrow. This entry is the authority-naming half of an answer about Indian
+    birth registration and nothing more: it establishes that the mission does this and that
+    Indian law sets the terms, which is what rule 13 requires an answer to say. The
+    one-year rule A-24 asserts comes from the Citizenship Act 1955 §4(1) proviso, which is
+    not in the corpus — indiacode.nic.in serves robots.txt HTTP 403 and our policy refuses
+    on anything but 200/404/410. Do not extend this entry to cover the deadline.
