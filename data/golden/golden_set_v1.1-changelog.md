@@ -67,3 +67,74 @@ Five do not: A-06, A-17, A-21, A-23, A-27. The sources are present in the corpus
 not surface them in top-8. That is a retrieval-quality finding for the Phase 4 baseline and the
 Session 5 tuning loop, not a reason to change an annotation. Recorded here so it is not
 rediscovered as drift later.
+
+---
+
+# Second pass — 2026-10-23
+
+## A-17 — now verified (Kinder-Richtlinie PDF ingested)
+
+The landing page carried no timings, so the Richtlinie PDF was added to the manifest
+(`g-ba.de/downloads/62-492-3998/Kinder-RL_2025-05-15_iK-2026-01-01.pdf`, robots-permitted).
+It is §-structured authoritative text, so its chunks carry refs (`Kinder-RL §4` is U2) and
+rank in the statute pool. §2 holds the table, extracted intact:
+
+```
+U1  Unmittelbar nach der Geburt
+U2  3.-10. Lebenstag     Toleranz 3.-14. Lebenstag
+U3  4.-5. Lebenswoche    Toleranz 3.-8. Lebenswoche
+```
+
+Matches the annotation exactly. `ground_truth_source` narrowed to `§2`.
+
+`§69 Dokumentation` is excluded from ingestion — blank examination-booklet forms, 138,795 of
+the Richtlinie's 260,811 characters, which swamped retrieval because they repeat every
+U-number. Underscore density separates form from prose cleanly (§69 4.1%, all others 0.0%).
+
+## A-21 — verified, authority named
+
+Was "the Elterngeldstelle". The ingested rp-giessen page names it: *"welches der sechs
+hessischen Ämter für Versorgung und Soziales (HÄVS) in Hessen für Sie zuständig ist"*, with
+the Fachaufsicht for Elterngeld at the Regierungspräsidium Gießen. Annotation now checks for
+what the source actually says.
+
+## A-22 — corrected, Jugendamt removed
+
+Was "the Elterngeldstelle of the district **Jugendamt**". Neither `Jugendamt` nor `Bezirksamt`
+appears in **any** ingested Berlin page. service.berlin.de says *"Ihrer Elterngeldstelle im
+Bezirk"*. The Jugendamt attribution may well be right in practice, but it is not sourced, so
+it is removed rather than cited.
+
+Noted but deliberately **not** written into the annotation: the page currently says the digital
+portal is being rebuilt and new applications must go by post. That is an operational state that
+will change, and a golden annotation should not encode it.
+
+## A-23 — verified, and sharper than before
+
+The ElterngeldDigital page names the ten Länder it covers — Berlin, Brandenburg, Bremen,
+Hamburg, Mecklenburg-Vorpommern, Niedersachsen, Rheinland-Pfalz, Sachsen-Anhalt,
+Schleswig-Holstein, Thüringen — and **Hessen is not among them**. It then states:
+*"Unabhängig vom Angebot ElterngeldDigital können Sie in Baden-Württemberg, Bayern, Hessen,
+Nordrhein-Westfalen, Saarland und Sachsen Elterngeld online beantragen."* The Hessen page
+carries its own "Onlineantrag Elterngeld" portal.
+
+This row's jurisdiction is `hesse`, so it is precisely the trap the annotation describes. Both
+halves of a correct answer are now in the corpus.
+
+## Tooling defect found in this pass
+
+The drift checker was passing rows **vacuously**. Its number extractor required a word boundary
+after the digit, so `U1`, `3rd` and `10th` matched nothing — A-17 first "confirmed" with zero
+numbers actually checked. Fixed; it now extracts 1, 2, 3, 10, 4, 5 and confirms them against §2.
+Every row was re-run after the fix.
+
+## State
+
+| verify_priority | n |
+| --- | --- |
+| verified | 17 |
+| high | 17 (14 DEFLECT/REFUSE with no ground_truth_source + A-06, A-24, A-26) |
+| medium | 14 |
+
+**ANSWER rows still open: A-06, A-24, A-26.** A-06 needs a legal call on the commencement date;
+A-24 and A-26 need consular text that ADR-014/016 make unfetchable.
