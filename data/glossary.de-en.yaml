@@ -20,6 +20,16 @@ terms:
     en_triggers: [parental allowance, parental benefit, parental pay, parent money, elterngeld]
     expand_with: [Elterngeld, Basiselterngeld, ElterngeldPlus, Bezugszeitraum]
 
+  # Added 2026-10-24 (rule 14): golden row A-08 asks about the Partnerschaftsbonus by name and
+  # matched nothing, because it is a distinct benefit from Elterngeld and had no entry.
+  # The gloss is deliberately descriptive and asserts no condition — who qualifies is the
+  # answer layer's job, from the statute, cited.
+  # expand_with is taken from the ingested familienportal text, not invented.
+  - de: Partnerschaftsbonus
+    en_gloss: partnership bonus months
+    en_triggers: [partnerschaftsbonus, partnership bonus, partner bonus]
+    expand_with: [Partnerschaftsbonus, ElterngeldPlus, Lebensmonate]
+
   - de: Elternzeit
     en_gloss: parental leave (unpaid job-protected leave)
     en_triggers: [parental leave, time off after birth, leave from work, elternzeit]
@@ -37,7 +47,11 @@ terms:
 
   - de: Kündigungsschutz
     en_gloss: protection against dismissal
-    en_triggers: [fired while pregnant, dismissed while pregnant, lose my job, redundancy, protection from dismissal]
+    # 'dismiss me' / 'employer dismiss' added 2026-10-24: golden row A-05 asks "Can my employer
+    # dismiss me while I am pregnant?" and matched nothing, because every trigger was in the
+    # past participle. The lexical half ran that row with no German stems at all.
+    en_triggers: [fired while pregnant, dismissed while pregnant, lose my job, redundancy, protection from dismissal,
+                  employer dismiss, employer fire, dismiss me, fire me, kündigung, kündigungsschutz]
     expand_with: [Kündigungsverbot, Kündigungsschutz, Schwangerschaft, Arbeitsverhältnis]
 
   - de: Kindergeld
@@ -69,6 +83,17 @@ terms:
                   which hospital, maternity unit registration, geburtsanmeldung]
     expand_with: [Geburtsanmeldung, Geburtsklinik, Kreißsaal, Anmeldung, Entbindung]
 
+  # Gloss-only entry: job 2 of this file, not job 1. The medical deflection in
+  # lib/rag/guards.ts names Frauenarzt, and rule 14 forbids inventing a gloss
+  # inline, so the term has to live here. Deliberately no triggers and no
+  # expansion: a question mentioning a gynaecologist is a medical question, which
+  # the guard deflects before lib/rag/expand.ts ever runs. Giving it triggers
+  # could only pull clinical German into a query that must never reach retrieval.
+  - de: Frauenarzt
+    en_gloss: gynaecologist
+    en_triggers: []
+    expand_with: []
+
   - de: Hebamme
     en_gloss: midwife
     en_triggers: [midwife, hebamme, postnatal care at home, home visits after birth]
@@ -96,12 +121,21 @@ terms:
 
   - de: Aufenthaltserlaubnis
     en_gloss: residence permit
-    en_triggers: [residence permit for the baby, visa for newborn, does the baby need a permit]
+    # Plain 'residence permit' added: A-27 asks "Does our newborn need a residence permit?",
+    # which matched none of the three longer phrasings.
+    en_triggers: [residence permit for the baby, residence permit, residence title, visa for newborn,
+                  does the baby need a permit, aufenthaltserlaubnis, aufenthaltstitel]
     expand_with: [Aufenthaltserlaubnis, Aufenthaltstitel, Ausländerbehörde, Kind, Geburt]
 
   - de: Staatsangehörigkeit
     en_gloss: citizenship
-    en_triggers: [citizenship, will the baby be german, nationality of the baby, passport for the baby]
+    # 'citizens' added because \bcitizenship\b does not match "both Indian citizens" (A-25).
+    # Deliberately NOT adding 'passport for my baby': that phrasing is golden row R-03, a Chinese
+    # passport question that must stay out of scope, and expanding it with German nationality
+    # vocabulary would push an out-of-scope row toward the answer side of ADR-009.
+    en_triggers: [citizenship, citizens, citizen, will the baby be german, automatically be german,
+                  german by birth, german nationality, nationality of the baby, passport for the baby,
+                  staatsangehörigkeit]
     expand_with: [Staatsangehörigkeit, Erwerb, Geburt, Inland, Elternteil]
 
   - de: Elterngeldstelle
@@ -111,8 +145,23 @@ terms:
 
   - de: Vorsorgeuntersuchung
     en_gloss: routine preventive check-up
-    en_triggers: [check ups for the baby, u1, u2, u3, well baby visits, screening appointments]
+    # The hyphenated spellings were missing, which is how A-05's sibling A-17 ("the first
+    # check-ups for the baby") matched nothing: \bcheck ups\b does not match "check-ups".
+    en_triggers: [check ups for the baby, check-ups for the baby, check-ups, checkups, check-up,
+                  first examinations, u1, u2, u3, u4, u5, u6, well baby visits, screening appointments,
+                  vorsorgeuntersuchung, früherkennungsuntersuchung]
     expand_with: [Früherkennungsuntersuchung, Kinder-Richtlinie, U1, U2, U3, Toleranzzeitraum]
+
+  # Added 2026-10-24 for A-06. The income ceiling lives in BEEG §1(8), inside a chunk otherwise
+  # full of residence-permit conditions, so an English "income limit" question embeds nowhere
+  # near it. Expansion cannot fix the vector half — that embeds the original question — but it
+  # can give the lexical half the rare statutory words the paragraph actually uses.
+  # Every expand_with term is verbatim from the ingested §1(8), not invented.
+  - de: zu versteuerndes Einkommen
+    en_gloss: taxable income
+    en_triggers: [income limit, income threshold, income cap, maximum income, earn too much,
+                  too much income, taxable income, zu versteuerndes einkommen, veranlagungszeitraum]
+    expand_with: [zu versteuerndes Einkommen, Veranlagungszeitraum, Einkommensteuergesetz, Anspruch entfällt]
 
   - de: Steuer-Identifikationsnummer
     en_gloss: tax identification number
