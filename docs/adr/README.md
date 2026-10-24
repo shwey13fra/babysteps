@@ -12,6 +12,7 @@ Add a row below in the same commit that adds the ADR.
 | 000 | Template — not a decision | — |
 | 007 | Embedding model choice, with the cross-lingual comparison table | accepted |
 | 008 | Reciprocal rank fusion replaces the weighted-sum hybrid | accepted |
+| 009 | Refusal threshold is 0.43 top cosine, and it is a floor, not the refusal mechanism | accepted |
 | 010 | Elternzeit notice anchored to the due date at −49 days | accepted |
 | 011 | Keep the jurisdiction filter despite no live state-scoped rule | accepted |
 | 012 | Ingest gesetze-im-internet via official downloads, never by scraping | superseded by 013 |
@@ -22,6 +23,8 @@ Add a row below in the same commit that adds the ADR.
 | 017 | Statute and guidance are ranked in separate pools | accepted |
 | 018 | The BEEG §28 cohort boundary is asserted by neither the golden set nor an answer | accepted |
 | 019 | Consular text is hand-curated because it is unreachable, not because it is forbidden | accepted, corrects 014 |
+| 020 | Glossary triggers match real phrasing; one phrasing excluded to protect ADR-009 | accepted |
+| 021 | BEEG §1(8) is reached through the lexical half, not by re-chunking §1 | accepted |
 
 ## Reserved numbers
 
@@ -35,7 +38,6 @@ Assigned by the source documents before the work started. Keep these free.
 | 004 | Deterministic dates, generative language | brief §1.4 |
 | 005 | No accounts at MVP | brief §1.5 |
 | 006 | Ingestion is offline | brief §1.6 |
-| 009 | Refusal threshold, with both cosine distributions | playbook Phase 3 |
 
 ## Resolved
 
