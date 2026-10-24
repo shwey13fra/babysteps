@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 
-const CSV = "data/golden/golden_set_v1.1.csv";
+const CSV = "data/golden/golden_set_v1.2.csv";
 const PARSED = "data/cache/parsed.json";
 const REPORT = "eval/reports/golden-guidance-extracts-2026-10-22.md";
 
@@ -58,10 +58,14 @@ function main() {
   const sections: Section[] = JSON.parse(readFileSync(PARSED, "utf8"));
   const rows = Object.fromEntries(readCsv(readFileSync(CSV, "utf8")).map((r) => [r.id, r]));
 
+  // Derived, not hardcoded — same reason as golden-drift.ts: a report that states a version
+  // literal keeps stating it after the tool is pointed somewhere else.
+  const setName = CSV.replace(/^.*golden_set_/, "").replace(/\.csv$/, "");
+
   const out: string[] = [
-    "# Golden set v1.1 — evidence for the four non-statute rows",
+    `# Golden set ${setName} — evidence for the four non-statute rows`,
     "",
-    "Date: 2026-10-22 · corpus_version `2026-10`",
+    `Date: ${new Date().toISOString().slice(0, 10)} · corpus_version \`2026-10\``,
     "",
     "These rows cite guidance, not statute, so there is no § to match and",
     "`scripts/eval/golden-drift.ts` can say nothing about them. Below is each annotation",

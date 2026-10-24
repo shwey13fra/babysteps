@@ -20,7 +20,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { expandQuery } from "../../lib/rag/expand";
 
-const CSV = "data/golden/golden_set_v1.1.csv";
+const CSV = "data/golden/golden_set_v1.2.csv";
 const REPORT = "eval/reports/golden-verification-2026-10-23.md";
 
 function env(): Record<string, string> {
