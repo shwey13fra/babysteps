@@ -238,9 +238,20 @@ export const REFUSAL_LOW_CONFIDENCE = [
   `The Elterngeldstelle (${gloss("Elterngeldstelle")}) and your Standesamt (${gloss("Standesamt")}) answer questions like this directly, and they are the ones who decide.`,
 ].join("\n");
 
+/**
+ * Said when our own pipeline failed, not when the sources came up short. It
+ * must never send the user to an authority for a question we never processed,
+ * and it offers the only direction that is true here: try again. ADR-022.
+ */
+export const REFUSAL_UNAVAILABLE = [
+  `Something on our side failed, so we could not check the official sources for this question.`,
+  ``,
+  `Please try again in a few minutes.`,
+].join("\n");
+
 export function refuse(
-  reason: "low_confidence" | "out_of_scope" | "individual_case",
-  text: string = REFUSAL_LOW_CONFIDENCE,
+  reason: "low_confidence" | "out_of_scope" | "individual_case" | "unavailable",
+  text: string = reason === "unavailable" ? REFUSAL_UNAVAILABLE : REFUSAL_LOW_CONFIDENCE,
 ): Answer {
   return { kind: "refused", text, reason };
 }

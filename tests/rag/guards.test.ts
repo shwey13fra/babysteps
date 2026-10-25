@@ -17,6 +17,7 @@ import {
   isLowConfidence,
   REFUSAL_LOW_CONFIDENCE,
   REFUSAL_MIN_TOP_COSINE,
+  REFUSAL_UNAVAILABLE,
   refuse,
 } from "@/lib/rag/guards";
 import { Answer } from "@/lib/schemas";
@@ -207,5 +208,23 @@ describe("refusal signal", () => {
     expect(parsed.success).toBe(true);
     expect(REFUSAL_LOW_CONFIDENCE).toContain("Elterngeldstelle");
     expect(REFUSAL_LOW_CONFIDENCE).toContain("Standesamt");
+  });
+
+  it("does not send the user to an authority when the failure is ours", () => {
+    // The bug this prevents: a dead Supabase told the user we had searched the
+    // official sources and come up empty, then sent them to the Elterngeldstelle
+    // for a question we never processed. ADR-022.
+    const parsed = Answer.safeParse(refuse("unavailable"));
+    expect(parsed.success).toBe(true);
+    expect(REFUSAL_UNAVAILABLE).not.toContain("Elterngeldstelle");
+    expect(REFUSAL_UNAVAILABLE).not.toContain("Standesamt");
+    expect(REFUSAL_UNAVAILABLE).not.toContain("official sources we cover");
+  });
+
+  it("still gives the three judgement reasons the low-confidence wording", () => {
+    for (const reason of ["low_confidence", "out_of_scope", "individual_case"] as const) {
+      expect(refuse(reason).text).toBe(REFUSAL_LOW_CONFIDENCE);
+    }
+    expect(refuse("unavailable").text).toBe(REFUSAL_UNAVAILABLE);
   });
 });

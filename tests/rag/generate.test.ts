@@ -6,7 +6,7 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
-import { generate, groundCitations, toAnswer } from "@/lib/rag/generate";
+import { Generated, generate, groundCitations, toAnswer } from "@/lib/rag/generate";
 import type { Retrieval } from "@/lib/rag/retrieve";
 import type { ChunkHit } from "@/lib/supabase/server";
 
@@ -199,7 +199,10 @@ describe("generate retries once, then fails closed", () => {
     const answer = await generate("q", retrieval(), {
       anthropic: stub(answeredOutput(fake), answeredOutput(fake)),
     });
-    expect(answer).toMatchObject({ kind: "refused", reason: "low_confidence" });
+    // 'unavailable', not 'low_confidence': the sources were fine, we failed.
+    // An eval that cannot tell these apart scores an outage as a correct
+    // refusal. ADR-022.
+    expect(answer).toMatchObject({ kind: "refused", reason: "unavailable" });
   });
 
   it("refuses rather than throw when the provider is unreachable", async () => {
@@ -211,7 +214,17 @@ describe("generate retries once, then fails closed", () => {
       },
     } as unknown as Anthropic;
     const answer = await generate("q", retrieval(), { anthropic: throwing });
-    expect(answer.kind).toBe("refused");
+    expect(answer).toMatchObject({ kind: "refused", reason: "unavailable" });
+  });
+
+  it("gives the model no way to declare an outage itself", () => {
+    // The only thing stopping a fluent model from dressing a refusal up as an
+    // infrastructure failure is that its own contract omits the reason. If this
+    // ever passes, 'unavailable' stops meaning 'our fault' and the eval's
+    // outage count becomes a model opinion. ADR-022.
+    const refused = { kind: "refused", text: "x", citations: [], jurisdiction_scope: "", glossed_terms: [] };
+    expect(Generated.safeParse({ ...refused, refusal_reason: "unavailable" }).success).toBe(false);
+    expect(Generated.safeParse({ ...refused, refusal_reason: "low_confidence" }).success).toBe(true);
   });
 
   it("treats a truncated response as a violation", async () => {

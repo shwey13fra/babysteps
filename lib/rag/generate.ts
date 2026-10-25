@@ -34,7 +34,7 @@ const ANSWER_MAX_TOKENS = 4096;
  *   - flat rather than a discriminated union, because the structured-output
  *     schema stays simple and the real contract is applied afterwards.
  */
-const Generated = z.object({
+export const Generated = z.object({
   kind: z.enum(["answered", "refused"]),
   text: z.string(),
   citations: z.array(z.object({ section_ref: z.string(), source_url: z.string() })),
@@ -43,7 +43,7 @@ const Generated = z.object({
   refusal_reason: z.enum(["none", "low_confidence", "out_of_scope", "individual_case"]),
 });
 
-type Generated = z.infer<typeof Generated>;
+export type Generated = z.infer<typeof Generated>;
 
 export function describeScope(jurisdictions: Jurisdiction[]): string {
   const state = jurisdictions.includes("hesse") ? "Hessen" : "Berlin";
@@ -184,6 +184,10 @@ async function attempt(
 /**
  * Retries once on a contract violation, then fails closed to a refusal. It
  * never returns an unvalidated answer and never throws.
+ *
+ * The fail-closed reason is 'unavailable', not 'low_confidence': twice-failed
+ * generation is an outage, and an eval cannot score a run in which the two are
+ * indistinguishable. ADR-022.
  */
 export async function generate(
   question: string,
@@ -193,6 +197,6 @@ export async function generate(
   return (
     (await attempt(question, retrieval, deps, false)) ??
     (await attempt(question, retrieval, deps, true)) ??
-    refuse("low_confidence")
+    refuse("unavailable")
   );
 }

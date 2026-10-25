@@ -170,7 +170,12 @@ export const Answer = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("refused"),
     text: z.string().min(1),
-    reason: z.enum(["low_confidence", "out_of_scope", "individual_case"]),
+    /**
+     * 'unavailable' is set only by our own fail-closed paths, never by the
+     * model: lib/rag/generate.ts's Generated enum omits it, so a generation
+     * outage can never masquerade as a judgement about the question. ADR-022.
+     */
+    reason: z.enum(["low_confidence", "out_of_scope", "individual_case", "unavailable"]),
   }),
 ]);
 

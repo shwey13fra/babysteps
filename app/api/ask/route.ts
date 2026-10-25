@@ -156,7 +156,9 @@ export async function POST(request: NextRequest) {
   try {
     retrieval = await retrieve(question, profile);
   } catch {
-    return answered(refuse("low_confidence"));
+    // Retrieval threw: Supabase or the embedding call is down. That is an
+    // outage, not a weak corpus, and it gets its own reason. ADR-022.
+    return answered(refuse("unavailable"));
   }
 
   if (isLowConfidence(retrieval.hits, REFUSAL_MIN_TOP_COSINE)) {
