@@ -54,8 +54,8 @@ import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 
-const CSV = "data/golden/golden_set_v1.3.csv";
-const GOLDEN_VERSION = "v1.3";
+const CSV = "data/golden/golden_set_v1.4.csv";
+const GOLDEN_VERSION = "v1.4";
 const ANSWER_PROMPT_VERSION = "answer.v1.md";
 
 /**
@@ -846,7 +846,7 @@ async function main() {
       corpus_version: corpusVersion,
       scores,
       notes:
-        `baseline run 1 · golden ${GOLDEN_VERSION} · judge ${JUDGE_MODEL}/${JUDGE_PROMPT_VERSION} · ` +
+        `${label} · golden ${GOLDEN_VERSION} · judge ${JUDGE_MODEL}/${JUDGE_PROMPT_VERSION} · ` +
         `must_not_contain on two channels (literal deterministic + semantic judge), reported separately · ` +
         `report ${path}`,
     });
