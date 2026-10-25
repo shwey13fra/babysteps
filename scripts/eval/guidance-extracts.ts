@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 
-const CSV = "data/golden/golden_set_v1.2.csv";
+const CSV = "data/golden/golden_set_v1.3.csv";
 const PARSED = "data/cache/parsed.json";
 const REPORT = "eval/reports/golden-guidance-extracts-2026-10-22.md";
 

@@ -35,6 +35,21 @@ terms:
     en_triggers: [parental leave, time off after birth, leave from work, elternzeit]
     expand_with: [Elternzeit, Anmeldung, Arbeitgeber, Schriftform]
 
+  # Added 2026-10-25 (rule 14): golden row A-03 turns on this exact word — BEEG §16(1) requires
+  # the Elternzeit notice 'in Textform' — and it appeared nowhere in this file, so an answer
+  # obliged to use the term had no gloss to render. Found by the Phase 4 baseline, not by a
+  # drift tool, which is the same way the A-03 annotation error surfaced in v1.2.
+  # Textform (BGB §126b) and Schriftform (BGB §126) are DIFFERENT standards and must never be
+  # glossed as the same thing: Schriftform requires a handwritten signature, Textform does not.
+  # The gloss states the standard only. Whether a given medium satisfies it for a given
+  # declaration is the answer layer's job, from the statute, cited.
+  # expand_with holds only Textform, the word verified present in the ingested BEEG §16(1)
+  # (quoted in the v1.2 changelog). Schriftform is already an expand_with term on Elternzeit.
+  - de: Textform
+    en_gloss: text form (a readable declaration naming its author, without a handwritten signature)
+    en_triggers: [textform, text form]
+    expand_with: [Textform]
+
   - de: Mutterschutz
     en_gloss: statutory maternity protection period
     en_triggers: [maternity leave, maternity protection, stop working before birth, mutterschutz]

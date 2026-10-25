@@ -18,7 +18,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 
 import { todayISO } from "../../lib/timeline/dates";
 
-const CSV = "data/golden/golden_set_v1.2.csv";
+const CSV = "data/golden/golden_set_v1.3.csv";
 const PARSED = "data/cache/parsed.json";
 const REPORT = "eval/reports/golden-drift-2026-10-23.md";
 
