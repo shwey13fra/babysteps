@@ -20,7 +20,12 @@ import { todayISO } from "../../lib/timeline/dates";
 
 const CSV = "data/golden/golden_set_v1.4.csv";
 const PARSED = "data/cache/parsed.json";
-const REPORT = "eval/reports/golden-drift-2026-10-23.md";
+// The report is named for the day it describes, derived rather than written
+// down. A hardcoded date here silently rewrites a report committed on another
+// day — it happened to golden-drift's 2026-10-23 report on 2026-10-25 — and it
+// is the same class as the literal-in-a-report problem this file already warns
+// about further down (past-mistakes 2026-10-21).
+const REPORT = `eval/reports/golden-drift-${todayISO()}.md`;
 
 type Section = { section_ref: string | null; text: string; heading: string; source_url: string };
 
