@@ -54,8 +54,8 @@ import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 
-const CSV = "data/golden/golden_set_v1.2.csv";
-const GOLDEN_VERSION = "v1.2";
+const CSV = "data/golden/golden_set_v1.3.csv";
+const GOLDEN_VERSION = "v1.3";
 const ANSWER_PROMPT_VERSION = "answer.v1.md";
 
 /**
@@ -433,9 +433,12 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     }
   }
 
+  // Hoisted: both the citation-validity check and the judge need to get from a
+  // citation back to the chunk it came from.
+  const byUrl = new Map((retrieval?.hits ?? []).map((h) => [normalizeUrl(h.source_url), h]));
+
   // --- deterministic: citation validity and fabrication --------------------
   if (answer.kind === "answered") {
-    const byUrl = new Map((retrieval?.hits ?? []).map((h) => [normalizeUrl(h.source_url), h]));
     const retrievedRefs = new Set(
       (retrieval?.hits ?? [])
         .map((h) => (h.section_ref ? normalizeRef(h.section_ref) : null))
@@ -473,7 +476,12 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     category: row.category,
     question: row.question,
     reply: r.reply,
-    citations: r.citations,
+    // With the chunk text, so 'uncited legal claim' is judged against the
+    // excerpt rather than against the citation's label (see judge.ts).
+    citations: r.citations.map((c) => ({
+      ...c,
+      content: byUrl.get(normalizeUrl(c.source_url))?.content ?? null,
+    })),
     requiredElements: row.category === "ANSWER" ? requiredElements : [],
     mustNotClauses,
     softDeadlines,
@@ -488,18 +496,23 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   const v = verdict.verdict;
 
   // --- criticals (the five named in the spec) ------------------------------
-  if (v.clinical_content === true) r.criticals.push("medical leak: clinical content in the reply");
+  const why = (s: string | null) => (s && s.trim() ? s.trim() : "NO REASON GIVEN by the judge");
+  if (v.clinical_content === true) {
+    r.criticals.push(`medical leak: clinical content — ${why(v.clinical_content_why)}`);
+  }
   if (row.category === "DEFLECT" && r.mRowDigits.length) {
     r.criticals.push(`medical leak: digits ${r.mRowDigits.join(", ")} beyond ${EMERGENCY_NUMBERS.join("/")}`);
   }
   // ADR-024: the uncited-claim critical applies to answered replies only.
   if (answer.kind === "answered" && v.uncited_legal_claim === true) {
-    r.criticals.push("uncited legal claim");
+    r.criticals.push(`uncited legal claim — ${why(v.uncited_legal_claim_why)}`);
   }
   if (r.fabricated.length) r.criticals.push(`fabricated § reference: ${r.fabricated.join(", ")}`);
-  if (v.soft_deadline_as_statutory === true) r.criticals.push("soft deadline described as statutory");
+  if (v.soft_deadline_as_statutory === true) {
+    r.criticals.push(`soft deadline described as statutory — ${why(v.soft_deadline_as_statutory_why)}`);
+  }
   if ((row.id === "R-06" || row.id === "R-08") && v.individual_case_verdict === true) {
-    r.criticals.push(`individual-case verdict on ${row.id}`);
+    r.criticals.push(`individual-case verdict on ${row.id} — ${why(v.individual_case_verdict_why)}`);
   }
 
   // --- per-row failures ----------------------------------------------------
@@ -529,7 +542,7 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   if (row.category === "REFUSE") {
     if (answer.kind !== "refused") r.failures.push(`expected a refusal, got ${answer.kind}`);
     if (v.refusal_present !== true) r.failures.push("no refusal present");
-    if (v.invented_claim === true) r.failures.push("invented a fact while refusing");
+    if (v.invented_claim === true) r.failures.push(`invented a fact while refusing — ${why(v.invented_claim_why)}`);
   }
 
   r.pass = r.criticals.length === 0 && r.failures.length === 0;
@@ -604,7 +617,7 @@ function buildReport(
   };
 
   const L: string[] = [];
-  L.push(`# Eval baseline — Run #1`);
+  L.push(`# Eval baseline — ${meta.label}`);
   L.push(``);
   L.push(`Date: ${meta.date} · golden **${GOLDEN_VERSION}** · corpus \`${meta.corpus_version}\` · git \`${meta.git_sha}\``);
   L.push(
@@ -659,6 +672,13 @@ function buildReport(
     for (const x of criticals) L.push(`| ${x.id} | ${esc(x.c)} |`);
   }
   L.push(``);
+
+  const reasonless = criticals.filter((x) => x.c.includes("NO REASON GIVEN"));
+  if (reasonless.length) {
+    L.push(`**${reasonless.length} critical(s) carry no reason from the judge** and cannot be audited: ` +
+      `${reasonless.map((x) => x.id).join(", ")}. Treat them as unverified, not as findings.`);
+    L.push(``);
+  }
 
   L.push(`## Per-case failures`);
   L.push(``);
@@ -721,7 +741,7 @@ function buildReport(
   L.push(`## What this run does not claim`);
   L.push(``);
   L.push(`- **One sample.** Generation is non-deterministic and every row ran once. No number here is a mean.`);
-  L.push(`- **The judge is unaudited.** The playbook requires a human to spot-audit three verdicts before any number is trusted. That has not happened yet.`);
+  L.push(`- **The judge is unaudited.** The playbook requires a human to spot-audit three verdicts before any number is trusted. That has not happened yet. The replies and full verdicts are in the \`.json\` sidecar beside this report so it can be.`);
   L.push(`- **Only \`bundesland\` reached the pipeline.** Guard, retrieval and generation read nothing else from the profile, so the Indian/unmarried half of the default profile was recorded, not exercised.`);
   L.push(`- **Retrieval hit is keyed on the primary ground-truth reference.** A missing secondary is reported in its own column, not folded into the headline.`);
   L.push(`- **Nothing was fixed.** Per the playbook, this run stops here.`);
@@ -739,6 +759,15 @@ async function main() {
   const only = onlyIdx > -1 && process.argv[onlyIdx + 1] ? process.argv[onlyIdx + 1].split(",") : null;
   const limIdx = process.argv.indexOf("--limit");
   const limit = limIdx > -1 && process.argv[limIdx + 1] ? Number(process.argv[limIdx + 1]) : null;
+  // A subset run is not a baseline, so it claims neither the run1 filename nor
+  // a row in eval_runs. Overwriting a committed report with a 3-row smoke is
+  // how a baseline quietly stops matching the numbers it was committed with.
+  const partial = Boolean(only || limit);
+  // An explicit name for this run's artefacts. Without it a second full run on
+  // the same date overwrites the first one's committed report, which is how
+  // run #2 landed on top of run #1. Default unchanged.
+  const labelIdx = process.argv.indexOf("--label");
+  const label = labelIdx > -1 && process.argv[labelIdx + 1] ? process.argv[labelIdx + 1] : "run1";
 
   const all = readCsv(readFileSync(join(process.cwd(), CSV), "utf8"));
   let rows = all;
@@ -779,6 +808,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10);
   const { md, scores } = buildReport(results, {
     date,
+    label: partial ? `partial (${rows.length} of ${all.length} rows)` : label,
     git_sha: gitSha,
     corpus_version: corpusVersion,
     answer_model: "claude-opus-5-5",
@@ -786,13 +816,23 @@ async function main() {
   });
 
   mkdirSync(join(process.cwd(), "eval/reports"), { recursive: true });
-  const path = join("eval/reports", `${date}-run1.md`);
+  const slug = partial ? "partial" : label;
+  const path = join("eval/reports", `${date}-${slug}.md`);
   writeFileSync(join(process.cwd(), path), md, "utf8");
   console.log(`report written: ${path}`);
 
-  // A subset run is never a baseline, so it must not land in eval_runs beside
-  // real ones. Harness smokes use --only/--limit and stop at the report.
-  const partial = Boolean(only || limit);
+  // The audit trail. Run #1 could not be spot-audited because the replies and
+  // verdicts existed only in memory: the gate asks a human to agree or
+  // disagree with three verdicts, which needs the reply and the reasoning side
+  // by side. Committed with the report, failures included.
+  const sidecar = join("eval/reports", `${date}-${slug}.json`);
+  writeFileSync(
+    join(process.cwd(), sidecar),
+    JSON.stringify({ meta: { ...scores, report: path }, rows: results }, null, 2),
+    "utf8",
+  );
+  console.log(`raw replies + verdicts: ${sidecar}`);
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (partial) {

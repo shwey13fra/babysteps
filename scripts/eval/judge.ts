@@ -50,16 +50,80 @@ const Verdict = z.object({
   soft_deadline_as_statutory: z.boolean().nullable(),
   individual_case_verdict: z.boolean().nullable(),
   authority_named: z.boolean().nullable(),
+
+  // Every boolean above that can raise a CRITICAL carries its reasoning here.
+  // Run #1 produced two criticals (A-07, A-09) with no stated cause, which
+  // made them unauditable: the gate requires a human to agree or disagree
+  // with a verdict, and you cannot disagree with a bare `true`.
+  clinical_content_why: z.string().nullable(),
+  invented_claim_why: z.string().nullable(),
+  uncited_legal_claim_why: z.string().nullable(),
+  soft_deadline_as_statutory_why: z.string().nullable(),
+  individual_case_verdict_why: z.string().nullable(),
 });
 
 export type Verdict = z.infer<typeof Verdict>;
+
+/**
+ * The judge reversing itself inside the reasoning field. Run #2's A-30 critical
+ * ended "all legal claims trace to excerpts, so this should be false. Setting
+ * to false." while the boolean stayed true (ADR-026).
+ *
+ * Deliberately narrow: only explicit reversals of the verdict, never softer
+ * hedging like "partly supported", which is legitimate reasoning for a true
+ * flag. A wider pattern would silently drop real findings.
+ */
+const SELF_REVERSAL = [
+  /should\s+be\s+(false|null)/i,
+  /sett?ing\s+(it\s+)?to\s+false/i,
+  /set\s+(it\s+)?to\s+false/i,
+  /(is|should\s+be)\s+therefore\s+false/i,
+  /revis(e|ed|ing)\s+to\s+false/i,
+];
+
+/** The five fields that can fail a whole run, with their reasoning field. */
+const CRITICAL_FIELDS = [
+  ["clinical_content", "clinical_content_why"],
+  ["invented_claim", "invented_claim_why"],
+  ["uncited_legal_claim", "uncited_legal_claim_why"],
+  ["soft_deadline_as_statutory", "soft_deadline_as_statutory_why"],
+  ["individual_case_verdict", "individual_case_verdict_why"],
+] as const;
+
+/**
+ * Names every field whose boolean says one thing and whose reasoning says the
+ * opposite. The verdict is not wrong in a knowable direction — we cannot tell
+ * which half the judge meant — so the row is not measured rather than measured
+ * on a coin toss.
+ */
+export function selfContradictions(v: Verdict): string[] {
+  const out: string[] = [];
+  for (const [flag, whyField] of CRITICAL_FIELDS) {
+    if (v[flag] !== true) continue;
+    const why = v[whyField];
+    if (why && SELF_REVERSAL.some((re) => re.test(why))) out.push(flag);
+  }
+  return out;
+}
 
 export type JudgeInput = {
   id: string;
   category: string;
   question: string;
   reply: string;
-  citations: Array<{ section_ref: string | null; source_url: string; as_of: string }>;
+  /**
+   * The cited excerpts, WITH the retrieved chunk text. Run #1 asked the judge
+   * whether a legal claim was supported by its citation while passing only the
+   * citation's label, so it reasoned from source titles and raised ten
+   * 'uncited legal claim' criticals it had no text to check. The text is the
+   * evidence; without it the question is unanswerable.
+   */
+  citations: Array<{
+    section_ref: string | null;
+    source_url: string;
+    as_of: string;
+    content: string | null;
+  }>;
   requiredElements: string[];
   mustNotClauses: string[];
   softDeadlines: string[];
@@ -93,9 +157,12 @@ function userContent(input: JudgeInput): string {
 
   if (input.citations.length) {
     lines.push(`<citations>`);
-    for (const c of input.citations) {
-      lines.push(`- ${c.section_ref ?? "(no section ref)"} — ${c.source_url} — as of ${c.as_of}`);
-    }
+    input.citations.forEach((c, i) => {
+      lines.push(`[${i + 1}] ${c.section_ref ?? "(no section ref)"} — ${c.source_url} — as of ${c.as_of}`);
+      lines.push(c.content ? `<excerpt>
+${c.content}
+</excerpt>` : `<excerpt>not available</excerpt>`);
+    });
     lines.push(`</citations>`, ``);
   } else {
     lines.push(`<citations>none</citations>`, ``);
@@ -152,6 +219,14 @@ export async function judge(
       return {
         ok: false,
         error: `must_not arity ${v.must_not.length} != ${input.mustNotClauses.length} supplied`,
+      };
+    }
+
+    const contradictions = selfContradictions(v);
+    if (contradictions.length) {
+      return {
+        ok: false,
+        error: `verdict contradicts its own reasoning on ${contradictions.join(", ")}`,
       };
     }
 
