@@ -54,8 +54,8 @@ import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 
-const CSV = "data/golden/golden_set_v1.4.csv";
-const GOLDEN_VERSION = "v1.4";
+const CSV = "data/golden/golden_set_v1.5.csv";
+const GOLDEN_VERSION = "v1.5";
 const ANSWER_PROMPT_VERSION = "answer.v1.md";
 
 /**

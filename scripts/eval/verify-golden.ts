@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { todayISO } from "../../lib/timeline/dates";
 import { expandQuery } from "../../lib/rag/expand";
 
-const CSV = "data/golden/golden_set_v1.4.csv";
+const CSV = "data/golden/golden_set_v1.5.csv";
 // The report is named for the day it describes, derived rather than written
 // down. A hardcoded date here silently rewrites a report committed on another
 // day — it happened to golden-drift's 2026-10-23 report on 2026-10-25 — and it
