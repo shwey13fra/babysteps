@@ -71,7 +71,8 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 | Inspect corpus | `npx tsx scripts/ingest/query.ts "<query>" [--jurisdictions federal,hesse] [--k 5]` | works |
 | Verify golden annotations | `npx tsx scripts/eval/golden-drift.ts` | works |
 | Check golden retrieval | `npx tsx scripts/eval/verify-golden.ts` | works |
-| Calibrate refusal threshold | `npx tsx scripts/eval/calibrate.ts` | TBD — Phase 3 |
+| Calibrate refusal threshold | `npx tsx scripts/eval/calibrate.ts` | works — retrieval only, no model calls |
+| Rule-7 check: nothing client-reachable imports the service-role client | `f=$(grep -rl '"use client"' app lib); echo "client components: $(printf '%s' "$f" \| grep -c .)"; [ -z "$f" ] \|\| grep -n "supabase/server" $f` | works — prints its denominator; `0 client components` is "nothing to check yet", not a pass |
 | Run eval | `npx tsx scripts/eval/run.ts` | TBD — Phase 4 |
 
 Replace each TBD with the real command in the phase that creates it. Every dependency is pinned

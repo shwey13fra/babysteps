@@ -30,3 +30,20 @@ move the decision; it moves Phase 4's hit rate instead. Re-run `calibrate.ts` af
 composition changes rank order and nothing else reports it. A-24/A-26/A-27 must flip to answered
 when consular curation lands — if they do not, the corpus, not the threshold, is the problem.
 8 REFUSE rows is a small sample; this number is tuned to 8 questions, not to a class.
+
+**Re-measured 2026-10-26** against `golden_set_v1.6.csv` (38 attempted, 38 measured, 0 failed) —
+retrieval only, no model calls, so the credit outage did not block it. The decision stands at
+0.43 and the REFUSE side is unchanged: R-02 0.416, R-03 0.393, R-04 0.414 and R-07 0.382 are still
+the four it catches, R-01 0.638, R-05 0.514, R-06 0.570 and R-08 0.615 still the four left to the
+prompt. Two figures above have **drifted** since this ADR was written, both from the glossary
+widening of 2026-10-24:
+
+- **ANSWER p25 is 0.550, not 0.528.** min, median, p75 and max are identical. The decision is
+  unaffected: the only band that can move it is 0.38–0.47 and p25 sits above it.
+- **A-27 now measures 0.550 and is no longer refused by the threshold** — the Decision paragraph
+  above names it among the rows 0.43 refuses, and that is now false. It retrieves `AufenthG §33`
+  as its top hit. The rows 0.43 refuses today are A-24 (0.399) and A-26 (0.425) only.
+
+A-27 flipping to answered is this ADR's own stated success criterion being met early, by retrieval
+improving rather than by consular curation landing. A-24 and A-26 still need the curated text.
+A-01 is 0.452, the top of the 0.442–0.452 swing recorded under Alternatives.
