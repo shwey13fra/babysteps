@@ -13,7 +13,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { todayISO } from "../../lib/timeline/dates";
 
-const CSV = "data/golden/golden_set_v1.5.csv";
+const CSV = "data/golden/golden_set_v1.6.csv";
 const PARSED = "data/cache/parsed.json";
 // The report is named for the day it describes, derived rather than written
 // down. A hardcoded date here silently rewrites a report committed on another

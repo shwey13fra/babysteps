@@ -53,9 +53,10 @@ import { generate } from "../../lib/rag/generate";
 import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
+import { parseElement, prohibitionCoverage } from "./clauses";
 
-const CSV = "data/golden/golden_set_v1.5.csv";
-const GOLDEN_VERSION = "v1.5";
+const CSV = "data/golden/golden_set_v1.6.csv";
+const GOLDEN_VERSION = "v1.6";
 const ANSWER_PROMPT_VERSION = "answer.v1.md";
 
 /**
@@ -157,6 +158,7 @@ function bundeslandFor(override: string): { value: Bundesland; uncovered: string
 function clauses(cell: string): string[] {
   return cell.split(";").map((c) => c.trim()).filter(Boolean);
 }
+
 
 // ---------------------------------------------------------------------------
 // Reference and URL normalisation
@@ -320,6 +322,15 @@ type Result = {
   literal: Literal[];
   mRowDigits: string[];
 
+  /** Requirement clauses sent to the judge, in the order it graded them. */
+  requirements: string[];
+  /** `may:` clauses — reported as permitted, never scored either way. */
+  permissions: string[];
+  /** `not(ch):` clauses and the channel that covers each one. */
+  prohibitions: Array<{ text: string; channel: string | null; coveredBy: string | null }>;
+  /** Prohibitions whose channel is unknown or did not run on this row. */
+  unmatchedProhibitions: string[];
+
   verdict: Verdict | null;
   judgeError: string | null;
 
@@ -330,8 +341,21 @@ type Result = {
 
 async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   const { value: bundesland, uncovered } = bundeslandFor(row.profile_override);
-  const requiredElements = clauses(row.required_answer_elements);
+  const parsedElements = clauses(row.required_answer_elements).map(parseElement);
   const mustNotClauses = clauses(row.must_not_contain);
+
+  // Only requirements are gradeable. Permissions and prohibitions are filtered
+  // out before the judge sees the list, so every line it grades is mandatory
+  // (judge.v2.md). Prohibitions are then accounted for by channel below.
+  const requiredElements = parsedElements.filter((e) => e.kind === "requirement").map((e) => e.text);
+  const permissions = parsedElements.filter((e) => e.kind === "permission").map((e) => e.text);
+  const prohibitions = parsedElements
+    .filter((e) => e.kind === "prohibition")
+    .map((e) => ({
+      text: e.text,
+      channel: e.channel,
+      coveredBy: prohibitionCoverage(e, row.category),
+    }));
 
   const r: Result = {
     id: row.id,
@@ -358,12 +382,27 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     mustNotCount: mustNotClauses.length,
     literal: [],
     mRowDigits: [],
+    requirements: requiredElements,
+    permissions,
+    prohibitions,
+    unmatchedProhibitions: prohibitions
+      .filter((p) => !p.coveredBy)
+      .map((p) => `${p.text} — channel ${p.channel ? `'${p.channel}' is unknown or did not run on a ${row.category} row` : "not named"}`),
     verdict: null,
     judgeError: null,
     criticals: [],
     failures: [],
     pass: null,
   };
+
+  // A prohibition that names no working channel is NOT MEASURED, never a pass
+  // (ADR-029). Checked before the pipeline runs: it is a defect in the
+  // annotation, so there is nothing to learn from spending the model calls.
+  if (r.unmatchedProhibitions.length) {
+    r.measured = false;
+    r.notMeasured = `prohibition with no checking channel: ${r.unmatchedProhibitions.join("; ")}`;
+    return r;
+  }
 
   let piped: Piped;
   try {
@@ -482,7 +521,11 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
       ...c,
       content: byUrl.get(normalizeUrl(c.source_url))?.content ?? null,
     })),
-    requiredElements: row.category === "ANSWER" ? requiredElements : [],
+    // Every row, not ANSWER only. The 18 DEFLECT and REFUSE rows carried
+    // required elements through all three baselines without any of them being
+    // graded, so 'DEFLECT 10/10' was measured against the redirect boolean
+    // alone (ADR-029).
+    requiredElements,
     mustNotClauses,
     softDeadlines,
   });
@@ -526,11 +569,13 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     r.failures.push("individual-case verdict (rule 13), not a critical on this row per the spec");
   }
 
+  // Required elements fail a row in every category now, not just ANSWER.
+  v.elements.forEach((e, i) => {
+    if (!e.covered) r.failures.push(`element not covered: ${requiredElements[i]} — ${e.why}`);
+  });
+
   if (row.category === "ANSWER") {
     if (answer.kind !== "answered") r.failures.push(`expected an answer, got ${answer.kind}/${r.refusalReason}`);
-    v.elements.forEach((e, i) => {
-      if (!e.covered) r.failures.push(`element not covered: ${requiredElements[i]} — ${e.why}`);
-    });
   }
   if (row.category === "DEFLECT") {
     if (answer.kind !== "deflected") r.failures.push(`expected a deflection, got ${answer.kind}`);
@@ -575,8 +620,25 @@ function buildReport(
   const citTotal = answer.reduce((a, r) => a + r.citationsTotal, 0);
   const citValid = answer.reduce((a, r) => a + r.citationsValid, 0);
   const citGuidance = answer.reduce((a, r) => a + r.citationsGuidance, 0);
+  // Deliberately still ANSWER-only. Phase 5's exit gate is 'required-elements
+  // >= 75%' and runs 1-3 measured it over ANSWER rows alone; folding the newly
+  // graded DEFLECT and REFUSE elements into the same figure would move the
+  // gate's denominator without moving the gate. Reported separately below,
+  // never blended (ADR-029).
   const elTotal = answer.reduce((a, r) => a + (r.verdict?.elements.length ?? 0), 0);
   const elCovered = answer.reduce((a, r) => a + (r.verdict?.elements.filter((e) => e.covered).length ?? 0), 0);
+
+  const coverageFor = (c: string) => {
+    const rows = byCat(c);
+    const d = rows.reduce((a, r) => a + (r.verdict?.elements.length ?? 0), 0);
+    const n = rows.reduce((a, r) => a + (r.verdict?.elements.filter((e) => e.covered).length ?? 0), 0);
+    return { n, d, rate: d ? n / d : null };
+  };
+  const elementsByCategory = Object.fromEntries(
+    ["ANSWER", "DEFLECT", "REFUSE"].map((c) => [c, coverageFor(c)]),
+  );
+  const permissionsTotal = measured.reduce((a, r) => a + r.permissions.length, 0);
+  const prohibitionsTotal = measured.reduce((a, r) => a + r.prohibitions.length, 0);
   const criticals = measured.flatMap((r) => r.criticals.map((c) => ({ id: r.id, c })));
 
   // 'Not constrained' is read off the CSV, not off the verdict: a row with no
@@ -596,6 +658,11 @@ function buildReport(
     citations_guidance_excluded: citGuidance,
     required_elements_coverage: elTotal ? elCovered / elTotal : null,
     required_elements_counts: { n: elCovered, d: elTotal },
+    // ADR-029: graded on every category from v1.6 on. ANSWER repeats the gate
+    // figure above so the two can be checked against each other.
+    required_elements_by_category: elementsByCategory,
+    clauses_permitted_not_required: permissionsTotal,
+    clauses_prohibited_by_channel: prohibitionsTotal,
     per_category: Object.fromEntries(
       ["ANSWER", "DEFLECT", "REFUSE"].map((c) => {
         const rows = byCat(c);
@@ -652,7 +719,11 @@ function buildReport(
   L.push(`| --- | --- | --- |`);
   L.push(`| Retrieval hit rate | ${pct(hits, hitDen.length)} | ANSWER rows measured |`);
   L.push(`| Citation validity | ${pct(citValid, citTotal)} | citations claiming a § (${citGuidance} guidance citations excluded) |`);
-  L.push(`| Required-elements coverage | ${pct(elCovered, elTotal)} | elements across ANSWER rows |`);
+  L.push(`| Required-elements coverage | ${pct(elCovered, elTotal)} | elements across ANSWER rows — the Phase 5 gate figure |`);
+  for (const c of ["DEFLECT", "REFUSE"]) {
+    const e = elementsByCategory[c];
+    L.push(`| Required-elements coverage, ${c} | ${pct(e.n, e.d)} | elements across ${c} rows — **first graded at golden v1.6**, not part of the gate figure |`);
+  }
   for (const c of ["ANSWER", "DEFLECT", "REFUSE"]) {
     const rows = byCat(c);
     L.push(`| ${c} rows passing | ${pct(rows.filter((r) => r.pass).length, rows.length)} | measured rows in category |`);
@@ -738,12 +809,35 @@ function buildReport(
   L.push(`Rows not constrained: ${notConstrained.join(", ") || "none"}`);
   L.push(``);
 
+  // Permissions and prohibitions are reported, never scored. A clause that is
+  // neither graded nor reported is a clause nobody knows is unenforced.
+  L.push(`## Required-element clauses that are not scored (ADR-029)`);
+  L.push(``);
+  L.push(
+    `${permissionsTotal} clauses are marked \`may:\` — the reply is permitted to do this and is ` +
+      `neither credited for doing it nor failed for omitting it. ${prohibitionsTotal} are marked ` +
+      `\`not(channel):\` — scored by the named channel rather than as element coverage. A prohibition ` +
+      `whose channel is unknown or did not run on its row makes that row NOT MEASURED; this run has ` +
+      `${results.filter((r) => r.unmatchedProhibitions.length).length}.`,
+  );
+  L.push(``);
+  L.push(`| row | clause | kind | scored by |`);
+  L.push(`| --- | --- | --- | --- |`);
+  for (const r of results) {
+    for (const p of r.permissions) L.push(`| ${r.id} | ${p} | permission | not scored, permitted |`);
+    for (const p of r.prohibitions) {
+      L.push(`| ${r.id} | ${p.text} | prohibition | ${p.coveredBy ?? "**NOTHING — row not measured**"} |`);
+    }
+  }
+  L.push(``);
+
   L.push(`## What this run does not claim`);
   L.push(``);
   L.push(`- **One sample.** Generation is non-deterministic and every row ran once. No number here is a mean.`);
   L.push(`- **The judge is unaudited.** The playbook requires a human to spot-audit three verdicts before any number is trusted. That has not happened yet. The replies and full verdicts are in the \`.json\` sidecar beside this report so it can be.`);
   L.push(`- **Only \`bundesland\` reached the pipeline.** Guard, retrieval and generation read nothing else from the profile, so the Indian/unmarried half of the default profile was recorded, not exercised.`);
   L.push(`- **Retrieval hit is keyed on the primary ground-truth reference.** A missing secondary is reported in its own column, not folded into the headline.`);
+  L.push(`- **DEFLECT and REFUSE rows are graded on their required elements for the first time at golden v1.6.** Runs 1–3 passed an empty element list on those 18 rows, so their category pass rates were measured against the redirect, urgency and refusal booleans alone. A drop against those runs is this check starting to work, not a regression (ADR-029).`);
   L.push(`- **Nothing was fixed.** Per the playbook, this run stops here.`);
   L.push(``);
 

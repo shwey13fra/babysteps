@@ -1,8 +1,8 @@
-# Golden set v1.5 — annotation drift against ingested text
+# Golden set v1.6 — annotation drift against ingested text
 
 Date: 2026-10-26 · corpus_version 2026-10 · 770 chunks
 
-Rows in data/golden/golden_set_v1.5.csv: 48 (high 16 · medium 14 · verified 18). This tool examines the **2** still
+Rows in data/golden/golden_set_v1.6.csv: 48 (high 16 · medium 14 · verified 18). This tool examines the **2** still
 marked `high` in the ANSWER category — the ones whose ground truth nobody has signed off.
 A row already at `verified` was checked in an earlier run and is listed in that run's report;
 re-verifying it would overwrite a human sign-off with a tool's opinion. **0 confirmed here

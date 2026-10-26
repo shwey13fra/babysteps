@@ -101,7 +101,10 @@ is the honest reading: the constraint lives on `invented_claim` and is counted t
 ## Verification
 
 `npx tsx scripts/eval/golden-drift.ts` against v1.5: `confirmed 0 · drift? 0 · unverifiable 2`,
-report `eval/reports/golden-drift-2026-10-26.md`. **Identical to the 2026-10-25 run apart from the
+report `eval/reports/golden-drift-2026-10-26.md` **as committed in `c6b8087`** — v1.6 was
+verified the same day and that tool derives its filename from the date alone, so the working-tree
+copy of that file now holds the v1.6 run. The v1.5 content is the one in `c6b8087`.
+**Identical to the 2026-10-25 run apart from the
 version, the date and the filename** — which is the control, since that tool reads only
 `required_answer_elements` and this change touched only `must_not_contain`. A difference there
 would have meant the migration hit the wrong column.

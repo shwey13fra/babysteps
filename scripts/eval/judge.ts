@@ -12,7 +12,7 @@
 //      silently misaligned. A must_not clause graded against the wrong clause
 //      is worse than an ungraded one.
 //
-// The rubric is lib/prompts/judge.v1.md (rule 6: prompts are versioned files).
+// The rubric is lib/prompts/judge.v2.md (rule 6: prompts are versioned files).
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -21,7 +21,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 
 export const JUDGE_MODEL = "claude-haiku-5-5";
-export const JUDGE_PROMPT_VERSION = "judge.v1.md";
+export const JUDGE_PROMPT_VERSION = "judge.v2.md";
 
 const JUDGE_PROMPT = readFileSync(join(process.cwd(), "lib/prompts", JUDGE_PROMPT_VERSION), "utf8");
 const JUDGE_MAX_TOKENS = 4096;
