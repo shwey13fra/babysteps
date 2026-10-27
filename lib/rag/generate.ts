@@ -21,7 +21,7 @@ import { refuse } from "./guards";
 import type { Retrieval } from "./retrieve";
 import { record } from "./usage";
 
-const ANSWER_PROMPT = readFileSync(join(process.cwd(), "lib/prompts/answer.v1.md"), "utf8");
+const ANSWER_PROMPT = readFileSync(join(process.cwd(), "lib/prompts/answer.v2.md"), "utf8");
 
 const ANSWER_MODEL = "claude-opus-5-5";
 const ANSWER_MAX_TOKENS = 4096;

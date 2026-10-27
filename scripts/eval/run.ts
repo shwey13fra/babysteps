@@ -59,7 +59,7 @@ import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 const GOLDEN_VERSION = "v1.6";
-const ANSWER_PROMPT_VERSION = "answer.v1.md";
+const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 /**
  * The spec's default profile. Only `bundesland` reaches the pipeline — it is

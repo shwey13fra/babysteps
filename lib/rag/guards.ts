@@ -210,7 +210,7 @@ export function containsDigit(text: string): boolean {
  * Bavarian Elterngeld question, a Steuerklasse question, "will we be
  * approved", "fill in our form" — and no cosine cutoff can catch those without
  * refusing most answerable questions. They are refused by the scope and
- * individual-case rules in answer.v1.md instead (legal pack §3).
+ * individual-case rules in answer.v2.md instead (legal pack §3).
  *
  * Re-run calibrate.ts after any re-ingest: corpus composition moves rank order
  * and nothing else reports it.
