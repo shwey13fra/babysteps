@@ -99,3 +99,60 @@ refused before generation.
 One Phase 5 iteration, measured honestly, is four runs: three to re-establish the floor plus the
 change under test, or ~$9.80. Pricing the floor once and reusing it is the cheaper path, and valid
 only while golden, judge and answer prompts are all unchanged.
+
+---
+
+# Correction — there were four runs, not three
+
+Added 2026-10-27, after `eval_runs` was read directly.
+
+**The first noise2 attempt completed.** It was reported in this session as killed at row 29 with no
+report and no database row. It in fact measured all 48 rows and inserted `eval_runs` id 9 at
+10:26. Its log looked truncated because the output was still buffered when the host reaped the
+task for memory pressure, and its `git_sha` is `unknown` because `git rev-parse` failed under
+that same pressure.
+
+**Its report was then overwritten.** The rerun used the same label on the same day, and
+`run.ts` derives the report path from date + label, so `2026-10-27-noise2.md` on disk is the
+*second* noise2. The first survives only as `eval_runs` id 9, whose criticals are recovered into
+`2026-10-27-noise2-first-criticals-recovered.json`. This is the same defect as golden-drift's
+date-only report name, fixed in `bbe542c`; `run.ts` now refuses to overwrite an existing report.
+
+## Four samples, not three
+
+| run | eval_runs id | criticals |
+| --- | --- | --- |
+| noise1 | 8 | 12 |
+| **noise2, first attempt** | **9** | **13** |
+| noise2, rerun | 10 | 15 |
+| noise3 | 11 | 18 |
+
+Per-run counts: **12, 13, 15, 18.** Retrieval hit was 24/30 in all four. Coverage 53–55 of 95.
+
+## What the fourth sample changes
+
+| | 3 samples | 4 samples |
+| --- | --- | --- |
+| Flagged at least once | 20 | **21** (A-01 joins) |
+| Flagged in **every** run | **9** | **6** |
+| Flagged in ≥ half the runs | **16** | **17** (A-09 joins) |
+| Flagged exactly once | 4 | 4 (membership changes) |
+
+**The "flagged in every run" set is not a stable quantity — it shrank from 9 to 6 on one extra
+sample**, because A-02, A-11 and A-13 each missed one run. It is an artefact of how many times you
+ran, not a property of the system.
+
+**The ≥ half set barely moved: 16 → 17.** That is the robustness ADR-030 assumed, now actually
+tested against a different sample size rather than asserted.
+
+## The corrected baseline for iteration 1
+
+**17 rows**, flagged in at least 2 of 4 runs:
+
+A-02, A-03, A-04, A-05, A-07, A-08, A-09, A-11, A-12, A-13, A-16, A-17, A-18, A-19, A-20, A-21, A-28
+
+The six-row hard core — A-07, A-08, A-16, A-18, A-20, A-28 — is reported as the subset most likely
+to move visibly, not as a separate gate.
+
+**Cost of the floor, corrected:** four runs were paid for, not three. ~$9.83, of which ~$2.47 bought
+a fourth sample nobody asked for and which turned out to be the most informative one in the set.

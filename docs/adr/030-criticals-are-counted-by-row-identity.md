@@ -16,8 +16,22 @@ entirely in generation and judging.
 A critical counts only if the row raises it in **at least 2 of 3 runs**. Iteration results are
 compared as **sets of row ids**, never as counts.
 
-The baseline for Phase 5 iteration 1 is the **16-row stable set**: A-02, A-03, A-04, A-05, A-07,
-A-08, A-11, A-12, A-13, A-16, A-17, A-18, A-19, A-20, A-21, A-28.
+The baseline for Phase 5 iteration 1 is the **17-row stable set**: A-02, A-03, A-04, A-05, A-07,
+A-08, A-09, A-11, A-12, A-13, A-16, A-17, A-18, A-19, A-20, A-21, A-28.
+
+**Amended the same day, on a fourth sample.** A fourth complete run was recovered from `eval_runs`
+id 9 — the first noise2 attempt, which completed and whose report was then overwritten by a rerun
+sharing its date and label. Per-run counts across four runs are **12, 13, 15, 18**.
+
+The fourth sample tested this ADR's own assumption and changed one of its numbers:
+
+- The set flagged in **every** run fell from 9 rows to 6 — it is a function of how many times you
+  ran, not a property of the system, and must never be used as the baseline.
+- The set flagged in **at least half** the runs moved only from 16 to 17. That robustness is now
+  measured rather than assumed, which is the whole reason this ADR prefers it.
+
+The threshold is therefore stated as **≥ half the runs**, not "2 of 3", so it survives a change in
+sample count.
 
 A single run's criticals figure is reported as what it is — one sample — and never quoted as a
 before/after delta.

@@ -28,7 +28,7 @@
 //
 // Run: npx tsx scripts/eval/run.ts [--limit N] [--only A-02,M-09]
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
 
@@ -909,7 +909,21 @@ async function main() {
 
   mkdirSync(join(process.cwd(), "eval/reports"), { recursive: true });
   const slug = partial ? "partial" : label;
-  const path = join("eval/reports", `${date}-${slug}.md`);
+
+  // A report is evidence, and evidence that can be silently replaced is not
+  // evidence. Re-running a label on the same day overwrote noise2's first
+  // report on 2026-10-27; the run survived only because it had also written an
+  // eval_runs row, and its criticals had to be recovered from there. The
+  // suffix keeps both. The same defect in golden-drift was fixed in bbe542c.
+  const basePath = join("eval/reports", `${date}-${slug}`);
+  let suffix = "";
+  for (let i = 2; existsSync(join(process.cwd(), basePath + suffix + ".md")); i++) {
+    suffix = `-${i}`;
+  }
+  if (suffix) {
+    console.log(`note: ${basePath}.md exists, writing ${basePath}${suffix}.md instead`);
+  }
+  const path = `${basePath}${suffix}.md`;
   writeFileSync(join(process.cwd(), path), md, "utf8");
   console.log(`report written: ${path}`);
 
@@ -917,7 +931,7 @@ async function main() {
   // verdicts existed only in memory: the gate asks a human to agree or
   // disagree with three verdicts, which needs the reply and the reasoning side
   // by side. Committed with the report, failures included.
-  const sidecar = join("eval/reports", `${date}-${slug}.json`);
+  const sidecar = `${basePath}${suffix}.json`;
   writeFileSync(
     join(process.cwd(), sidecar),
     JSON.stringify({ meta: { ...scores, report: path }, rows: results }, null, 2),
