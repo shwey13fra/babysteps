@@ -334,9 +334,21 @@ Fill this in when the three rows above are done.
 
 | row | agree / disagree | one line |
 | --- | --- | --- |
-| A-07 | | |
-| A-18 | | |
-| R-06 | | |
+| A-07 |agree | |
+| A-18 |agree | |
+| R-06 | agree but | |1. Income eligibility
+
+For children born on or after 1 April 2025, the relevant taxable annual income limit is €175,000, applying to couples jointly and single parents individually.
+
+2. Residence status
+
+Non-EU nationals must also satisfy the applicable immigration/residence-permit requirements. Having a German address alone does not automatically establish entitlement.
+
+3. Child's age and benefit type
+
+Basiselterngeld and ElterngeldPlus have different rules governing the months during which benefits can be claimed. The three-month retroactive payment rule does not override these eligibility periods.
+
+These requirements are confirmed by the German Federal Family Portal and the Hessian administrative portal.
 
 **The gate's rule:** disagree with **two of three** and `judge.v2.md` gets tightened and the run
 redone before any number is trusted. One disagreement: record it and proceed.
