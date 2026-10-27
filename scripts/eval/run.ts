@@ -927,8 +927,21 @@ async function main() {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // A run can be incomplete without being a CLI partial. The credit balance
+  // running out mid-run on 2026-10-27 measured 2 of 48 rows and inserted a row
+  // anyway, because `partial` only knows about --only and --limit. Once in the
+  // table that row is indistinguishable from a real baseline — it is exactly
+  // how eval_runs row 1 came to report valid_baseline true on 3 rows — and the
+  // table is append-only, so the mistake cannot be taken back.
+  const notMeasured = Number(scores.rows_not_measured ?? 0);
   if (partial) {
     console.log(`eval_runs NOT written: partial run (${rows.length} of ${all.length} rows) is not a baseline`);
+  } else if (notMeasured > 0) {
+    console.log(
+      `eval_runs NOT written: ${notMeasured} of ${rows.length} rows were not measured, so this is ` +
+        `not a baseline. An outage mid-run — exhausted API balance, rate limit, guard fail-closed — ` +
+        `reaches this branch.`,
+    );
   } else if (!url || !key) {
     console.log(`eval_runs NOT written: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing`);
   } else {
