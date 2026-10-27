@@ -55,6 +55,7 @@ import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 import { parseElement, prohibitionCoverage } from "./clauses";
 import { formatUsage } from "../../lib/rag/usage";
+import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 const GOLDEN_VERSION = "v1.6";
@@ -120,40 +121,20 @@ function glossaryGerman(): string[] {
 // and verify-golden.ts. This is the FIFTH copy; calibrate.ts:32 already flags
 // the extraction as owed. Proposed and deliberately not taken inside this
 // phase (CLAUDE.md rule 1).
-function readCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  const header = rows.shift()!;
-  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? ""])));
-}
 
 /** Second copy, from calibrate.ts. Same extraction debt. */
-function bundeslandFor(override: string): { value: Bundesland; uncovered: string | null } {
-  if (!override) return { value: DEFAULT_PROFILE.bundesland, uncovered: null };
+function bundeslandFor(override: string): { value: Bundesland; bundeslandOverrideUnsupported: string | null } {
+  if (!override) return { value: DEFAULT_PROFILE.bundesland, bundeslandOverrideUnsupported: null };
   let parsed: Record<string, unknown>;
   try {
     parsed = JSON.parse(override) as Record<string, unknown>;
   } catch {
-    return { value: DEFAULT_PROFILE.bundesland, uncovered: "unparseable override" };
+    return { value: DEFAULT_PROFILE.bundesland, bundeslandOverrideUnsupported: "unparseable override" };
   }
   const b = parsed.bundesland;
-  if (b === "hessen" || b === "berlin") return { value: b, uncovered: null };
-  if (typeof b === "string") return { value: DEFAULT_PROFILE.bundesland, uncovered: b };
-  return { value: DEFAULT_PROFILE.bundesland, uncovered: null };
+  if (b === "hessen" || b === "berlin") return { value: b, bundeslandOverrideUnsupported: null };
+  if (typeof b === "string") return { value: DEFAULT_PROFILE.bundesland, bundeslandOverrideUnsupported: b };
+  return { value: DEFAULT_PROFILE.bundesland, bundeslandOverrideUnsupported: null };
 }
 
 function clauses(cell: string): string[] {
@@ -298,7 +279,13 @@ type Result = {
   category: string;
   question: string;
   bundesland: Bundesland;
-  uncovered: string | null;
+  // Named for what it holds: the Bundesland override this run could not
+  // honour. It was called `uncovered`, sat beside element coverage in the
+  // same row object, and is null on all 48 rows — so reading it as
+  // "elements not covered" yields a confident, perfectly wrong "0 missing
+  // elements, coverage must be 100%". It misled a planning session until the
+  // 54/95 reconciliation caught it.
+  bundeslandOverrideUnsupported: string | null;
 
   kind: Answer["kind"];
   refusalReason: string | null;
@@ -341,7 +328,7 @@ type Result = {
 };
 
 async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
-  const { value: bundesland, uncovered } = bundeslandFor(row.profile_override);
+  const { value: bundesland, bundeslandOverrideUnsupported } = bundeslandFor(row.profile_override);
   const parsedElements = clauses(row.required_answer_elements).map(parseElement);
   const mustNotClauses = clauses(row.must_not_contain);
 
@@ -363,7 +350,7 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     category: row.category,
     question: row.question,
     bundesland,
-    uncovered,
+    bundeslandOverrideUnsupported,
     kind: "refused",
     refusalReason: null,
     reply: "",

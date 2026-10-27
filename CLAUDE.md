@@ -73,7 +73,8 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 | Check golden retrieval | `npx tsx scripts/eval/verify-golden.ts` | works |
 | Calibrate refusal threshold | `npx tsx scripts/eval/calibrate.ts` | works — retrieval only, no model calls |
 | Rule-7 check: nothing client-reachable imports the service-role client | `f=$(grep -rl '"use client"' app lib); echo "client components: $(printf '%s' "$f" \| grep -c .)"; [ -z "$f" ] \|\| grep -n "supabase/server" $f` | works — prints its denominator; `0 client components` is "nothing to check yet", not a pass |
-| Run eval | `npx tsx scripts/eval/run.ts` | TBD — Phase 4 |
+| Run eval (full baseline, 48 rows, ~$2.45) | `npx tsx scripts/eval/run.ts --label <name>` | works |
+| Run eval (one row, a smoke test) | `npx tsx scripts/eval/run.ts --limit 1` | works — partial, writes no `eval_runs` row |
 
 Replace each TBD with the real command in the phase that creates it. Every dependency is pinned
 exactly, no carets: `typescript` is held at 6.x (typescript-eslint rejects TS 7) and `eslint` at

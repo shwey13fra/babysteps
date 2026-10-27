@@ -86,11 +86,27 @@ describe("deflection templates", () => {
     expect(DEFLECTION_URGENT).toContain("now");
   });
 
-  it("the urgent template still refuses to triage", () => {
-    const lower = DEFLECTION_URGENT.toLowerCase();
-    expect(lower).not.toContain("probably");
-    expect(lower).not.toContain("do not worry");
-    expect(lower).not.toContain("wait");
+  // Renamed from "still refuses to triage", which the assertions could not
+  // establish: they test three phrases the template never contained, so the
+  // check passed for a reason unrelated to its name and could not fail
+  // (ADR-026 — string matching against prose). The detector now has a negative
+  // control proving it can fail, and the name claims only what is checked.
+  it("the urgent template carries none of the three reassurance phrases, and the check can fail", () => {
+    const reassurance = ["probably", "do not worry", "wait"];
+    const reassures = (t: string) => reassurance.some((p) => t.toLowerCase().includes(p));
+
+    // The negative control. Without it the assertion below is vacuous.
+    expect(reassures("This is probably nothing. Do not worry, just wait and see.")).toBe(true);
+
+    expect(reassures(DEFLECTION_URGENT)).toBe(false);
+  });
+
+  // The property the old name was reaching for, stated positively: the
+  // template says in its own words that it does not assess. This is what makes
+  // it a deflection rather than advice, and it is what M-03's judge verdict
+  // turned on.
+  it("the urgent template states that it cannot assess symptoms", () => {
+    expect(DEFLECTION_URGENT).toContain("cannot assess symptoms");
   });
 
   it("picks the template from the urgency", () => {

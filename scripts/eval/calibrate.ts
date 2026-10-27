@@ -25,32 +25,13 @@ for (const line of readFileSync(join(process.cwd(), ".env.local"), "utf8").split
 
 import { retrieve } from "../../lib/rag/retrieve";
 import type { Bundesland } from "../../lib/schemas";
+import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 
 // Private copy, matching the convention in golden-drift.ts and
 // verify-golden.ts. Three copies is the point at which this should be
 // extracted; that is a refactor to propose, not to smuggle into this phase.
-function readCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  const header = rows.shift()!;
-  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? ""])));
-}
 
 /**
  * The jurisdiction filter is derived from bundesland only. Overrides naming a

@@ -17,6 +17,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 
 import { todayISO } from "../../lib/timeline/dates";
+import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 const PARSED = "data/cache/parsed.json";
@@ -25,30 +26,15 @@ const PARSED = "data/cache/parsed.json";
 // day — it happened to golden-drift's 2026-10-23 report on 2026-10-25 — and it
 // is the same class as the literal-in-a-report problem this file already warns
 // about further down (past-mistakes 2026-10-21).
-const REPORT = `eval/reports/golden-drift-${todayISO()}.md`;
+// ...and the day alone is not enough: two golden versions verified on one day
+// collide, which happened on 2026-10-26 and cost the v1.5 changelog its path
+// citation. The version is derived from the file actually read rather than
+// written down again, so the name cannot claim a version this run did not use.
+const GOLDEN_VERSION = CSV.split("_").pop()?.replace(".csv", "") ?? "unknown";
+const REPORT = `eval/reports/golden-drift-${GOLDEN_VERSION}-${todayISO()}.md`;
 
 type Section = { section_ref: string | null; text: string; heading: string; source_url: string };
 
-function readCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  const header = rows.shift()!;
-  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? ""])));
-}
 
 function statuteRefs(source: string): string[] {
   const out: string[] = [];

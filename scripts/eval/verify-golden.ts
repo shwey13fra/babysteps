@@ -20,6 +20,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { todayISO } from "../../lib/timeline/dates";
 import { expandQuery } from "../../lib/rag/expand";
+import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 // The report is named for the day it describes, derived rather than written
@@ -39,26 +40,6 @@ function env(): Record<string, string> {
 }
 
 /** Minimal RFC4180 reader: the file has quoted fields containing commas. */
-function readCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  const header = rows.shift()!;
-  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? ""])));
-}
 
 /** "BEEG §7(1)" -> "BEEG §7";  "MuSchG §19 SGB V §24i" -> both;  guidance -> []. */
 function statuteRefs(source: string): string[] {

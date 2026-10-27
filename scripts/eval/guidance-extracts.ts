@@ -12,6 +12,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { todayISO } from "../../lib/timeline/dates";
+import { readCsv } from "./csv";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 const PARSED = "data/cache/parsed.json";
@@ -31,26 +32,6 @@ type Section = {
   doc_title: string;
 };
 
-function readCsv(text: string): Record<string, string>[] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let cell = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (quoted) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') quoted = false;
-      else cell += c;
-    } else if (c === '"') quoted = true;
-    else if (c === ",") { row.push(cell); cell = ""; }
-    else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
-    else if (c !== "\r") cell += c;
-  }
-  if (cell || row.length) { row.push(cell); rows.push(row); }
-  const header = rows.shift()!;
-  return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? ""])));
-}
 
 /** Which ingested pages each row is supposed to rest on, and what to look for in them. */
 const TARGETS: Record<string, { sources: string[]; urlMatch?: RegExp; keywords: string[] }> = {
