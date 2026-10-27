@@ -19,6 +19,7 @@ import { join } from "node:path";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
+import { record } from "../../lib/rag/usage";
 
 export const JUDGE_MODEL = "claude-haiku-5-5";
 export const JUDGE_PROMPT_VERSION = "judge.v2.md";
@@ -199,6 +200,8 @@ export async function judge(
       system: JUDGE_PROMPT,
       messages: [{ role: "user", content: userContent(input) }],
     });
+
+    record(JUDGE_MODEL, response.usage);
 
     if (response.stop_reason === "refusal") return { ok: false, error: "judge refused" };
     if (response.stop_reason === "max_tokens") return { ok: false, error: "judge hit max_tokens" };

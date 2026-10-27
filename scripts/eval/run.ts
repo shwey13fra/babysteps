@@ -54,6 +54,7 @@ import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 import { parseElement, prohibitionCoverage } from "./clauses";
+import { formatUsage } from "../../lib/rag/usage";
 
 const CSV = "data/golden/golden_set_v1.6.csv";
 const GOLDEN_VERSION = "v1.6";
@@ -694,6 +695,16 @@ function buildReport(
   L.push(`Threshold ${REFUSAL_MIN_TOP_COSINE} (ADR-009) · profile ${DEFAULT_PROFILE.bundesland}/Indian/unmarried unless overridden`);
   L.push(``);
 
+  // Measured at the call sites, not estimated. A partial run reports only
+  // what its own rows spent.
+  const spend = formatUsage();
+  if (spend.length) {
+    L.push(`## What this run cost`);
+    L.push(``);
+    for (const line of spend) L.push(`- ${line}`);
+    L.push(``);
+  }
+
   if (notMeasured.length) {
     L.push(`## ⚠ This is not a valid baseline`);
     L.push(``);
@@ -945,6 +956,13 @@ async function main() {
         `report ${path}`,
     });
     console.log(error ? `eval_runs insert FAILED: ${error.message}` : `eval_runs row inserted`);
+  }
+
+  const spendLines = formatUsage();
+  if (spendLines.length) {
+    console.log("");
+    console.log("spend (measured at the call sites):");
+    for (const line of spendLines) console.log(`  ${line}`);
   }
 
   console.log(

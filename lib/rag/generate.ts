@@ -19,6 +19,7 @@ import { z } from "zod";
 import { Answer, type Citation, type Jurisdiction } from "../schemas";
 import { refuse } from "./guards";
 import type { Retrieval } from "./retrieve";
+import { record } from "./usage";
 
 const ANSWER_PROMPT = readFileSync(join(process.cwd(), "lib/prompts/answer.v1.md"), "utf8");
 
@@ -171,6 +172,10 @@ async function attempt(
         { role: "user", content: userContent(question, retrieval) + (retrying ? RETRY_NOTE : "") },
       ],
     });
+
+    // Before the early returns: a refused or truncated answer is billed too,
+    // and a retried row makes two of these calls.
+    record(ANSWER_MODEL, response.usage);
 
     if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") return null;
     if (!response.parsed_output) return null;

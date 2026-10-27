@@ -18,6 +18,7 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { parse } from "yaml";
 import { z } from "zod";
 import type { Answer } from "../schemas";
+import { record } from "./usage";
 
 // ---------------------------------------------------------------------------
 // Prompt and glossary
@@ -123,6 +124,8 @@ export async function classifyMedical(
       // are never obeyed (brief §4, prompt injection surface).
       messages: [{ role: "user", content: `<question>\n${question}\n</question>` }],
     });
+
+    record(GUARD_MODEL, response.usage);
 
     // A safety refusal, or a response cut off before the verdict was written, is
     // an unparseable verdict like any other.
