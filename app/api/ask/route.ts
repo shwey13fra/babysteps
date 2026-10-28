@@ -161,7 +161,9 @@ export async function POST(request: NextRequest) {
     return answered(refuse("unavailable"));
   }
 
-  if (isLowConfidence(retrieval.hits, REFUSAL_MIN_TOP_COSINE)) {
+  // RANKED, not hits: completion siblings carry cosine 0 (ADR-032), and the
+  // refusal threshold is calibrated against ranked cosine (ADR-009).
+  if (isLowConfidence(retrieval.ranked, REFUSAL_MIN_TOP_COSINE)) {
     return answered(refuse("low_confidence"));
   }
 

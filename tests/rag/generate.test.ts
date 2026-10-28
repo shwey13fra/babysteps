@@ -35,9 +35,13 @@ function hit(partial: Partial<ChunkHit>): ChunkHit {
 function retrieval(hits: ChunkHit[] = [hit({})]): Retrieval {
   return {
     expansion: { original: "q", lexicalQuery: "q Elterngeld", matched: [{ de: "Elterngeld", en_gloss: "parental allowance" }] },
+    // No completion in these fixtures: generate() renders `hits`, so ranked is
+    // the same list here and the generation tests stay about generation.
+    ranked: hits,
     hits,
     jurisdictions: ["federal", "hesse", "consular-india"],
     topCosine: hits.length ? Math.max(...hits.map((h) => h.cosine)) : 0,
+    completion: { added: [], budgetSkipped: [], nonContiguous: [], estTokens: 0 },
   };
 }
 

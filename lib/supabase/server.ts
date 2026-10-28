@@ -42,6 +42,17 @@ export type MatchChunksArgs = {
   matchCount: number;
 };
 
+export type SiblingsArgs = {
+  /** Distinct non-null section_refs among the ranked hits. */
+  sectionRefs: string[];
+  /**
+   * The SAME jurisdictions the ranked query used. Completion is retrieval, so
+   * ADR-011 binds it exactly as it binds match_chunks: a Hessen family must not
+   * be shown a Berlin procedure because it happened to share a § with a hit.
+   */
+  filterJurisdictions: string[];
+};
+
 let cached: SupabaseClient | null = null;
 
 /**
@@ -82,4 +93,41 @@ export async function matchChunks(args: MatchChunksArgs): Promise<ChunkHit[]> {
 
   if (error) throw new Error(`match_chunks failed: ${error.message}`);
   return (data ?? []) as ChunkHit[];
+}
+
+/**
+ * Every chunk belonging to the given §§, for section completion (ADR-032).
+ *
+ * A plain table read, not the RPC: these rows are not ranked and must never be
+ * scored. The retriever signals are therefore returned as zero/null rather than
+ * invented — `cosine: 0` on a sibling is what keeps the ADR-009 refusal
+ * threshold reading the ranked list only, since it takes a maximum.
+ *
+ * Ordered by id ascending, which the chunker's output makes equal to document
+ * order WITHIN a contiguous run. Callers must not assume it across a gap: three
+ * Kinder-RL §§ carry a mislabelled stray chunk, verified 2026-10-29, and the
+ * contiguity rule in lib/rag/retrieve.ts is what makes that harmless.
+ */
+export async function siblingsFor(args: SiblingsArgs): Promise<ChunkHit[]> {
+  if (args.sectionRefs.length === 0) return [];
+
+  const { data, error } = await serviceRoleClient()
+    .from("corpus_chunks")
+    .select(
+      "id, content, section_ref, doc_title, source_url, valid_from, retrieved_at, corpus_version",
+    )
+    .in("section_ref", args.sectionRefs)
+    .in("jurisdiction", args.filterJurisdictions)
+    .order("id", { ascending: true });
+
+  if (error) throw new Error(`siblingsFor failed: ${error.message}`);
+
+  return (data ?? []).map((row) => ({
+    ...(row as Omit<ChunkHit, "cosine" | "fts_rank" | "vec_pos" | "fts_pos" | "rrf">),
+    cosine: 0,
+    fts_rank: 0,
+    vec_pos: null,
+    fts_pos: null,
+    rrf: 0,
+  }));
 }

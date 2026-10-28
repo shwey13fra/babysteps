@@ -110,8 +110,10 @@ async function main() {
     const { value: bundesland, uncovered } = bundeslandFor(row.profile_override);
     try {
       const r = await retrieve(row.question, { bundesland });
-      const top = r.hits.length
-        ? r.hits.reduce((a, b) => (b.cosine > a.cosine ? b : a))
+      // RANKED: the threshold is calibrated on ranked cosine, and completion
+      // siblings carry cosine 0 by construction (ADR-032).
+      const top = r.ranked.length
+        ? r.ranked.reduce((a, b) => (b.cosine > a.cosine ? b : a))
         : null;
       measured.push({
         id: row.id,

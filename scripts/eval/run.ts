@@ -261,7 +261,8 @@ async function runPipeline(question: string, bundesland: Bundesland): Promise<Pi
     return { answer: refuse("unavailable"), retrieval: null, guardSource: verdict.source };
   }
 
-  if (isLowConfidence(retrieval.hits, REFUSAL_MIN_TOP_COSINE)) {
+  // RANKED, not hits — mirrors app/api/ask/route.ts. ADR-032.
+  if (isLowConfidence(retrieval.ranked, REFUSAL_MIN_TOP_COSINE)) {
     return { answer: refuse("low_confidence"), retrieval, guardSource: verdict.source };
   }
 
@@ -298,8 +299,19 @@ type Result = {
   measured: boolean;
   notMeasured: string | null;
 
+  /** Scored against the RANKED top-8. Comparable to every run before ADR-032. */
   retrievalHit: boolean | null;
   secondaryMissing: string[];
+  /** Scored against what the model was shown: ranked + section completion. */
+  shownHit: boolean | null;
+  shownMissing: string[];
+  /** What completion did on this row. Null when retrieval did not run. */
+  completion: {
+    added: number;
+    budgetSkipped: string[];
+    nonContiguous: string[];
+    estTokens: number;
+  } | null;
   refsCited: boolean | null;
   citationsTotal: number;
   citationsValid: number;
@@ -362,6 +374,9 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     notMeasured: null,
     retrievalHit: null,
     secondaryMissing: [],
+    shownHit: null,
+    shownMissing: [],
+    completion: null,
     refsCited: null,
     citationsTotal: 0,
     citationsValid: 0,
@@ -406,7 +421,15 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   r.reply = answer.text;
   r.guardSource = piped.guardSource;
   r.topCosine = retrieval?.topCosine ?? null;
-  r.corpusVersion = retrieval?.hits[0]?.corpus_version ?? null;
+  r.corpusVersion = retrieval?.ranked[0]?.corpus_version ?? null;
+  r.completion = retrieval
+    ? {
+        added: retrieval.completion.added.length,
+        budgetSkipped: retrieval.completion.budgetSkipped,
+        nonContiguous: retrieval.completion.nonContiguous,
+        estTokens: retrieval.completion.estTokens,
+      }
+    : null;
   if (answer.kind === "answered") {
     r.citations = answer.citations.map((c) => ({
       section_ref: c.section_ref ?? null,
@@ -432,8 +455,20 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   if (row.category === "ANSWER") {
     const groundRefs = refsIn(row.ground_truth_source);
     const groundUrl = row.ground_truth_url ? normalizeUrl(row.ground_truth_url) : null;
-    const hitUrls = new Set((retrieval?.hits ?? []).map((h) => normalizeUrl(h.source_url)));
+    // RANKED, not hits (ADR-032). Section completion appends chunks that share
+    // a § with a ranked hit, so scoring the completed list would raise this
+    // figure mechanically — without retrieval having found anything new — and
+    // break comparability with every run measured before completion existed.
+    const hitUrls = new Set((retrieval?.ranked ?? []).map((h) => normalizeUrl(h.source_url)));
     const hitRefs = new Set(
+      (retrieval?.ranked ?? [])
+        .map((h) => (h.section_ref ? normalizeRef(h.section_ref) : null))
+        .filter(Boolean) as string[],
+    );
+
+    // The separate, new figure: what the model was actually shown. Reported
+    // beside the ranked number and never blended with it.
+    const shownRefs = new Set(
       (retrieval?.hits ?? [])
         .map((h) => (h.section_ref ? normalizeRef(h.section_ref) : null))
         .filter(Boolean) as string[],
@@ -442,10 +477,17 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     if (groundRefs.length) {
       r.retrievalHit = hitRefs.has(groundRefs[0]) || (groundUrl ? hitUrls.has(groundUrl) : false);
       r.secondaryMissing = groundRefs.slice(1).filter((ref) => !hitRefs.has(ref));
+      r.shownHit = shownRefs.has(groundRefs[0]) || (groundUrl ? hitUrls.has(groundUrl) : false);
+      r.shownMissing = groundRefs.slice(1).filter((ref) => !shownRefs.has(ref));
     } else {
       // Guidance-page ground truth: there is no § to match, so the URL is the
       // only available signal. A-21, A-22, A-23, A-26.
+      //
+      // Completion never adds a URL that the ranked list did not already carry
+      // — a sibling shares its anchor's document — so on these rows the shown
+      // figure is the ranked figure by construction, not by coincidence.
       r.retrievalHit = groundUrl ? hitUrls.has(groundUrl) : false;
+      r.shownHit = r.retrievalHit;
     }
 
     // The § refs named in the ground truth appear among the answer's citations.
