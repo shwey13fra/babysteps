@@ -309,3 +309,62 @@ describe("retrieve, with section completion", () => {
     expect(r.hits).toHaveLength(2);
   });
 });
+
+describe("the completion toggle", () => {
+  const question = "How long can I take Elterngeld for?";
+
+  it("skips the sibling query entirely when complete is false", async () => {
+    // An eval run isolating a judge-context change must not also move the
+    // model's context. Not querying is stronger than querying and discarding:
+    // it also removes the round-trip and any chance of a partial merge.
+    const s = spy([sgb10[0]], sgb10);
+    const r = await retrieve(question, { bundesland: "hessen" }, s.deps, { complete: false });
+
+    expect(s.calls.siblings).toHaveLength(0);
+    expect(r.hits.map((h) => h.id)).toEqual([3873]);
+    expect(r.ranked.map((h) => h.id)).toEqual([3873]);
+    expect(r.completion.added).toEqual([]);
+  });
+
+  it("completes by default, because that is the product's behaviour", async () => {
+    const s = spy([sgb10[0]], sgb10);
+    const r = await retrieve(question, { bundesland: "hessen" }, s.deps);
+    expect(r.hits.map((h) => h.id)).toEqual([3873, 3874, 3875]);
+  });
+
+  it("completes when complete is explicitly true", async () => {
+    const s = spy([sgb10[0]], sgb10);
+    const r = await retrieve(question, { bundesland: "hessen" }, s.deps, { complete: true });
+    expect(r.hits.map((h) => h.id)).toEqual([3873, 3874, 3875]);
+  });
+});
+
+describe("grouping chunks by url, the shape run.ts:552 needs", () => {
+  // The bug: new Map(list.map(h => [url, h])) keeps only the LAST chunk per
+  // url, so a judge asked "is this claim supported by the cited excerpt?" was
+  // handed one Absatz of the law. Proven on A-16 and A-18, 2026-10-29.
+  const norm = (u: string) => u.trim().replace(/\/$/, "").toLowerCase();
+
+  it("a Map built from the list silently drops all but the last", () => {
+    const reduced = new Map(sgb10.map((h) => [norm(h.source_url), h]));
+    expect(reduced.size).toBe(1);
+    expect(reduced.get(norm(sgb10[0].source_url))!.id).toBe(3875);
+    expect(reduced.get(norm(sgb10[0].source_url))!.content).not.toContain("(1)");
+  });
+
+  it("grouping keeps every chunk, in document order", () => {
+    const grouped = new Map<string, ChunkHit[]>();
+    for (const h of [sgb10[1], sgb10[0], sgb10[2]]) {
+      const key = norm(h.source_url);
+      grouped.set(key, [...(grouped.get(key) ?? []), h]);
+    }
+    for (const g of grouped.values()) g.sort((a, b) => a.id - b.id);
+
+    const joined = grouped.get(norm(sgb10[0].source_url))!.map((h) => h.content).join("\n\n---\n\n");
+    expect(joined).toContain("(1)");
+    expect(joined).toContain("(3)");
+    expect(joined).toContain("(5)");
+    // Document order, not rrf order: ranked gave A-16 its §10 as (3)(4) first.
+    expect(joined.indexOf("(1)")).toBeLessThan(joined.indexOf("(3)"));
+  });
+});

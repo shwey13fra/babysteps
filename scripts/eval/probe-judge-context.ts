@@ -43,8 +43,12 @@ function markers(text: string): number[] {
 }
 
 async function main() {
+  // The exact setting the repair run uses: completion OFF, so what the judge
+  // gains here is attributable to the grouping fix alone.
+  console.log("retrieve({ complete: false }) — matching run.ts COMPLETE_SECTIONS\n");
+
   for (const c of CASES) {
-    const r = await retrieve(c.question, { bundesland: "hessen" });
+    const r = await retrieve(c.question, { bundesland: "hessen" }, {}, { complete: false });
 
     const forUrl = r.hits.filter((h) => h.source_url.includes(c.cited));
     if (forUrl.length === 0) {
@@ -52,20 +56,27 @@ async function main() {
       continue;
     }
 
-    // Exactly run.ts:507.
-    const byUrl = new Map(r.hits.map((h) => [norm(h.source_url), h]));
-    const judgeChunk = byUrl.get(norm(forUrl[0].source_url));
+    const key = norm(forUrl[0].source_url);
+
+    // OLD: exactly run.ts:507 before the repair — last-wins.
+    const old = new Map(r.hits.map((h) => [norm(h.source_url), h])).get(key);
+
+    // NEW: exactly run.ts's judgeContext() — grouped, sorted by id, joined.
+    const group = r.hits.filter((h) => norm(h.source_url) === key).sort((a, b) => a.id - b.id);
+    const repaired = group.map((h) => h.content).join("\n\n---\n\n");
 
     const modelAbsaetze = [...new Set(forUrl.flatMap((h) => markers(h.content)))].sort((a, b) => a - b);
-    const judgeAbsaetze = judgeChunk ? markers(judgeChunk.content).sort((a, b) => a - b) : [];
-    const lost = modelAbsaetze.filter((n) => !judgeAbsaetze.includes(n));
+    const oldAbsaetze = old ? markers(old.content).sort((a, b) => a - b) : [];
+    const newAbsaetze = markers(repaired).sort((a, b) => a - b);
+    const stillHidden = modelAbsaetze.filter((n) => !newAbsaetze.includes(n));
 
     console.log(`======== ${c.id}`);
     console.log(`  chunks of this § the MODEL was shown : ${forUrl.map((h) => h.id).join(", ")}`);
     console.log(`  Absätze the MODEL was shown          : ${modelAbsaetze.join(", ")}`);
-    console.log(`  chunk the JUDGE was handed           : ${judgeChunk?.id ?? "none"}  (byUrl last-wins)`);
-    console.log(`  Absätze the JUDGE was handed         : ${judgeAbsaetze.join(", ")}`);
-    console.log(`  >>> HIDDEN FROM THE JUDGE            : ${lost.length ? lost.join(", ") : "nothing"}`);
+    console.log(`  BEFORE — judge handed chunk ${String(old?.id ?? "none").padEnd(5)}    : ${oldAbsaetze.join(", ") || "none"}`);
+    console.log(`  AFTER  — judge handed ${group.length} chunk(s)       : ${newAbsaetze.join(", ") || "none"}`);
+    console.log(`  gained by the repair                 : ${newAbsaetze.filter((n) => !oldAbsaetze.includes(n)).join(", ") || "NONE"}`);
+    console.log(`  still hidden from the judge          : ${stillHidden.length ? stillHidden.join(", ") : "nothing"}`);
     console.log("");
   }
 }

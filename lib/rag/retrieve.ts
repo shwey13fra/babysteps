@@ -214,10 +214,23 @@ export type RetrieveDeps = {
   siblings?: typeof siblingsFor;
 };
 
+export type RetrieveOptions = {
+  /**
+   * Section completion (ADR-032). On by default: it is the product's behaviour.
+   *
+   * An eval run turns it off to isolate a change to the judge's context from a
+   * change to the model's context. Two variables in one run cannot be
+   * attributed, and the run that fixes a broken instrument must not also move
+   * the thing being measured.
+   */
+  complete?: boolean;
+};
+
 export async function retrieve(
   question: string,
   profile: Pick<IntakeProfile, "bundesland">,
   deps: RetrieveDeps = {},
+  options: RetrieveOptions = {},
 ): Promise<Retrieval> {
   const embed = deps.embed ?? embedQuestion;
   const match = deps.match ?? matchChunks;
@@ -237,9 +250,9 @@ export async function retrieve(
   // with section_ref null is guidance HTML and has no §§ to complete, so an
   // empty ref list must short-circuit rather than query for nulls — that would
   // match every guidance chunk in the corpus.
-  const sectionRefs = [
-    ...new Set(ranked.map((h) => h.section_ref).filter((r): r is string => Boolean(r))),
-  ];
+  const sectionRefs = (options.complete ?? true)
+    ? [...new Set(ranked.map((h) => h.section_ref).filter((r): r is string => Boolean(r)))]
+    : [];
   const pool = sectionRefs.length
     ? await siblings({ sectionRefs, filterJurisdictions: jurisdictions })
     : [];

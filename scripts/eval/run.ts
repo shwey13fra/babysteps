@@ -51,6 +51,7 @@ import {
 } from "../../lib/rag/guards";
 import { generate } from "../../lib/rag/generate";
 import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
+import type { ChunkHit } from "../../lib/supabase/server";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 import { parseElement, prohibitionCoverage } from "./clauses";
@@ -60,6 +61,16 @@ import { readCsv } from "./csv";
 const CSV = "data/golden/golden_set_v1.6.csv";
 const GOLDEN_VERSION = "v1.6";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
+
+/**
+ * Section completion (ADR-032), OFF for this run on purpose.
+ *
+ * This run repairs the judge's context, which is an instrument change. Letting
+ * completion move the model's context at the same time would split the delta
+ * across two variables and make it unattributable. Turn this back on, and say
+ * so in the report, when completion is the thing being measured.
+ */
+const COMPLETE_SECTIONS = false;
 
 /**
  * The spec's default profile. Only `bundesland` reaches the pipeline — it is
@@ -256,7 +267,7 @@ async function runPipeline(question: string, bundesland: Bundesland): Promise<Pi
 
   let retrieval: Retrieval;
   try {
-    retrieval = await retrieve(question, { bundesland });
+    retrieval = await retrieve(question, { bundesland }, {}, { complete: COMPLETE_SECTIONS });
   } catch {
     return { answer: refuse("unavailable"), retrieval: null, guardSource: verdict.source };
   }
@@ -506,6 +517,40 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   // citation back to the chunk it came from.
   const byUrl = new Map((retrieval?.hits ?? []).map((h) => [normalizeUrl(h.source_url), h]));
 
+  // The same hits, GROUPED rather than reduced.
+  //
+  // `byUrl` above is `new Map(list.map(...))`, which keeps only the last chunk
+  // per URL. Where a cited source is stored in parts — every split §, and every
+  // guidance page, one of which is 95 chunks — that discarded all but one of
+  // them silently. Handing the judge a single fragment made it report, truthfully
+  // about its own input and falsely about the product, that the rest of the law
+  // was missing: all 13 of iteration 1's criticals were graded this way
+  // (probe-judge-context.ts, 2026-10-29).
+  //
+  // Sorted by id, which is document order within a section, so the judge reads
+  // the § the right way round — ranked order is rrf order and had A-16's §10
+  // arriving as (3)(4) then (1)(2).
+  //
+  // `byUrl` is deliberately left as it was: it also feeds citation validity, and
+  // changing that too would put two instrument changes in one run.
+  const chunksByUrl = new Map<string, ChunkHit[]>();
+  for (const h of retrieval?.hits ?? []) {
+    const key = normalizeUrl(h.source_url);
+    const group = chunksByUrl.get(key) ?? [];
+    group.push(h);
+    chunksByUrl.set(key, group);
+  }
+  for (const group of chunksByUrl.values()) group.sort((a, b) => a.id - b.id);
+
+  /** Every chunk of this source the model was shown, in document order. */
+  const judgeContext = (url: string): string | null => {
+    const group = chunksByUrl.get(normalizeUrl(url));
+    if (!group || group.length === 0) return null;
+    // The same separator generate.ts uses between excerpts, so the judge sees
+    // the material laid out the way the model did.
+    return group.map((h) => h.content).join("\n\n---\n\n");
+  };
+
   // --- deterministic: citation validity and fabrication --------------------
   if (answer.kind === "answered") {
     const retrievedRefs = new Set(
@@ -549,7 +594,7 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     // excerpt rather than against the citation's label (see judge.ts).
     citations: r.citations.map((c) => ({
       ...c,
-      content: byUrl.get(normalizeUrl(c.source_url))?.content ?? null,
+      content: judgeContext(c.source_url),
     })),
     // Every row, not ANSWER only. The 18 DEFLECT and REFUSE rows carried
     // required elements through all three baselines without any of them being
@@ -722,6 +767,13 @@ function buildReport(
       `prompts \`${ANSWER_PROMPT_VERSION}\`, \`${JUDGE_PROMPT_VERSION}\``,
   );
   L.push(`Threshold ${REFUSAL_MIN_TOP_COSINE} (ADR-009) · profile ${DEFAULT_PROFILE.bundesland}/Indian/unmarried unless overridden`);
+  // Both are instrument settings, so a report that does not state them cannot
+  // be compared with another report. Judge context was one chunk per cited URL
+  // for every run up to and including 2026-10-28-iter1.
+  L.push(
+    `Section completion **${COMPLETE_SECTIONS ? "on" : "off"}** (ADR-032) · ` +
+      `judge context: **every retrieved chunk of the cited source**, document order`,
+  );
   L.push(``);
 
   // Measured at the call sites, not estimated. A partial run reports only
@@ -916,6 +968,8 @@ async function main() {
   console.log(`judge      : ${JUDGE_MODEL} · ${JUDGE_PROMPT_VERSION}`);
   console.log(`threshold  : ${REFUSAL_MIN_TOP_COSINE} (ADR-009)`);
   console.log(`soft rules : ${softDeadlines.length} soft/advisory deadlines passed to the judge`);
+  console.log(`completion : ${COMPLETE_SECTIONS ? "on" : "OFF — isolating the judge-context repair"} (ADR-032)`);
+  console.log(`judge ctx  : every retrieved chunk of the cited source, document order`);
   console.log(`allowlist  : emergency numbers ${EMERGENCY_NUMBERS.join(", ")} (ADR-023, derived)`);
   console.log(`legend     : . pass   x fail   C critical   ? not measured\n`);
 
