@@ -17,7 +17,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { Answer, type Citation, type Jurisdiction } from "../schemas";
-import { refuse } from "./guards";
+import { isLowConfidence, refuse } from "./guards";
 import type { Retrieval } from "./retrieve";
 import { record } from "./usage";
 
@@ -204,4 +204,50 @@ export async function generate(
     (await attempt(question, retrieval, deps, true)) ??
     refuse("unavailable")
   );
+}
+
+/**
+ * The single entry point for both call sites: `app/api/ask/route.ts` and
+ * `scripts/eval/run.ts`. They used to carry the branch separately and are only
+ * kept in step by a comment, so it lives here once.
+ *
+ * Below the ADR-009 floor the row still refuses — that is not negotiable, it is
+ * the floor against answering from nothing. What changes is who writes the
+ * refusal. It used to be `refuse()`'s default constant, which cannot name the
+ * subject the user asked about or the body that handles it; four of the eight
+ * golden REFUSE rows (private insurance, another consulate, childcare in
+ * another state, tenancy) are *literally* four of the six examples listed in
+ * `answer.v2.md`'s `out_of_scope` rule, and that rule never ran on them,
+ * because an out-of-scope question has a low cosine by definition.
+ *
+ * The net is deterministic: anything the model returns that is not a refusal is
+ * discarded for the constant. A 0.38-cosine answer is exactly what the floor
+ * exists to stop. `generate()` already fails closed to `unavailable`, which is
+ * a refusal and so passes through untouched — an outage must stay
+ * distinguishable from a weak corpus (ADR-022).
+ *
+ * `minTopCosine` is a required argument for the reason `isLowConfidence` makes
+ * it one: so no call site can silently drift from ADR-009.
+ */
+export async function answerOrRefuse(
+  question: string,
+  retrieval: Retrieval,
+  minTopCosine: number,
+  deps: GenerateDeps = {},
+): Promise<Answer> {
+  // Zero retrieval is the one case the model cannot improve on: there are no
+  // excerpts to ground a refusal in, and a contract violation from an
+  // excerptless prompt is collapsed by generate() into 'unavailable', which
+  // must keep meaning 'our fault' and nothing else (ADR-022).
+  //
+  // No golden row retrieves zero chunks today (probe-refusal.ts: all 11 probed
+  // rows return 8), so this guard is not reached by the eval. It is here
+  // because isLowConfidence() is true on an empty list and the branch this
+  // function replaced handled that case with the constant: without it the
+  // change would quietly turn an empty corpus result into a reported outage.
+  if (retrieval.ranked.length === 0) return refuse("low_confidence");
+
+  const answer = await generate(question, retrieval, deps);
+  if (!isLowConfidence(retrieval.ranked, minTopCosine)) return answer;
+  return answer.kind === "refused" ? answer : refuse("low_confidence");
 }

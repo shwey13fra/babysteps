@@ -77,6 +77,20 @@ all, so it is structurally incapable of citing anything — do not mark `invente
 merely because a statement has no citation beside it. Judge whether the reply answered the
 question it refused, not whether its sentences are sourced.
 
+Two tests decide the hard cases, because this field has been read far too widely (ADR-034):
+
+- **Substitution.** When the question names a state, ask whether the statement would read the
+  same had the user named a different one. Federal law that holds in every Bundesland is the
+  general rule — even when the user asked about Bavaria, and even when the reply says so. Only a
+  statement true of the named state *in particular* — its own procedure, office, form, figure or
+  deadline — is the invented claim. Apply this to the statement itself, not to the framing around
+  it: "under Bavarian rules" wrapped around federal content is still the general rule, and a
+  genuinely Bavarian procedure is still an invented claim however federal it is made to sound.
+- **Act, not subject.** When the reply declines to *do* something — fill in a form, compute an
+  amount, predict an outcome — what is out of scope is the **act**, not the law about it. Setting
+  out what the statute requires of an application is the general rule. Writing the applicant's
+  entries for them, or giving a figure for this family, is the invented claim.
+
 ## Every row, regardless of category
 
 `elements` — one entry per supplied required element, in the order given, **on every row**:

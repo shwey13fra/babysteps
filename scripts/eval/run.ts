@@ -44,12 +44,11 @@ import { parse as parseYaml } from "yaml";
 import {
   classifyMedical,
   deflect,
-  isLowConfidence,
   refuse,
   DEFLECTION_URGENT,
   REFUSAL_MIN_TOP_COSINE,
 } from "../../lib/rag/guards";
-import { generate } from "../../lib/rag/generate";
+import { answerOrRefuse } from "../../lib/rag/generate";
 import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { ChunkHit } from "../../lib/supabase/server";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
@@ -272,12 +271,15 @@ async function runPipeline(question: string, bundesland: Bundesland): Promise<Pi
     return { answer: refuse("unavailable"), retrieval: null, guardSource: verdict.source };
   }
 
-  // RANKED, not hits — mirrors app/api/ask/route.ts. ADR-032.
-  if (isLowConfidence(retrieval.ranked, REFUSAL_MIN_TOP_COSINE)) {
-    return { answer: refuse("low_confidence"), retrieval, guardSource: verdict.source };
-  }
-
-  return { answer: await generate(question, retrieval), retrieval, guardSource: verdict.source };
+  // One call for the floor and the generation step, the same one the route
+  // uses, so the eval cannot measure a path the product does not take. Below
+  // the floor the row still refuses and the model writes the refusal
+  // (ADR-035). RANKED, not hits — mirrors app/api/ask/route.ts. ADR-032.
+  return {
+    answer: await answerOrRefuse(question, retrieval, REFUSAL_MIN_TOP_COSINE),
+    retrieval,
+    guardSource: verdict.source,
+  };
 }
 
 // ---------------------------------------------------------------------------

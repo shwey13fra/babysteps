@@ -13,11 +13,10 @@ import type { NextRequest } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { z } from "zod";
-import { generate } from "@/lib/rag/generate";
+import { answerOrRefuse } from "@/lib/rag/generate";
 import {
   classifyMedical,
   deflect,
-  isLowConfidence,
   refuse,
   REFUSAL_MIN_TOP_COSINE,
 } from "@/lib/rag/guards";
@@ -161,11 +160,12 @@ export async function POST(request: NextRequest) {
     return answered(refuse("unavailable"));
   }
 
+  // The floor and the generation step are one call, shared with
+  // scripts/eval/run.ts so the two cannot drift. Below the floor the row still
+  // refuses; the model writes the refusal instead of a constant that cannot
+  // name the subject or the right authority (ADR-035).
+  //
   // RANKED, not hits: completion siblings carry cosine 0 (ADR-032), and the
   // refusal threshold is calibrated against ranked cosine (ADR-009).
-  if (isLowConfidence(retrieval.ranked, REFUSAL_MIN_TOP_COSINE)) {
-    return answered(refuse("low_confidence"));
-  }
-
-  return answered(await generate(question, retrieval));
+  return answered(await answerOrRefuse(question, retrieval, REFUSAL_MIN_TOP_COSINE));
 }

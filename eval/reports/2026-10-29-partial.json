@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "golden_version": "v1.6",
+    "rows_total": 1,
+    "rows_measured": 1,
+    "rows_not_measured": 0,
+    "valid_baseline": true,
+    "retrieval_hit_rate": null,
+    "retrieval_hit": {
+      "n": 0,
+      "d": 0
+    },
+    "citation_validity": null,
+    "citation_validity_counts": {
+      "n": 0,
+      "d": 0
+    },
+    "citations_guidance_excluded": 0,
+    "required_elements_coverage": null,
+    "required_elements_counts": {
+      "n": 0,
+      "d": 0
+    },
+    "required_elements_by_category": {
+      "ANSWER": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "DEFLECT": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "REFUSE": {
+        "n": 2,
+        "d": 2,
+        "rate": 1
+      }
+    },
+    "clauses_permitted_not_required": 0,
+    "clauses_prohibited_by_channel": 0,
+    "per_category": {
+      "ANSWER": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "DEFLECT": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "REFUSE": {
+        "pass": 1,
+        "measured": 1,
+        "total": 1
+      }
+    },
+    "criticals": [],
+    "must_not_literal_violations": [],
+    "not_constrained_rows": [
+      "R-07"
+    ],
+    "not_measured": [],
+    "date": "2026-10-29",
+    "label": "partial (1 of 48 rows)",
+    "git_sha": "4373384",
+    "corpus_version": "2026-10",
+    "answer_model": "claude-opus-5-5",
+    "guard_model": "claude-haiku-5-5",
+    "report": "eval\\reports\\2026-10-29-partial.md"
+  },
+  "rows": [
+    {
+      "id": "R-07",
+      "category": "REFUSE",
+      "question": "My landlord will not let me install a baby gate. What are my rights?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "This is a tenancy question, and tenancy law is outside what this product covers. None of the excerpts found address landlord permissions or tenants' rights. They concern maternity protection at work, parental leave and child benefit. So I cannot tell you what your rights are here.\n\nFor tenancy questions, a local tenants' association (Mieterverein) or a lawyer who handles tenancy law can advise you on your situation. Your landlord's position and your rental contract are things they can look at with you.",
+      "citations": [],
+      "topCosine": 0.382489896579685,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 0,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 5674
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that tenancy law is outside the corpus",
+        "points to Mieterverein or legal advice"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that tenancy law is outside the corpus",
+            "covered": true,
+            "why": "The reply says: \"tenancy law is outside what this product covers.\""
+          },
+          {
+            "element": "points to Mieterverein or legal advice",
+            "covered": true,
+            "why": "The reply says: \"a local tenants' association (Mieterverein) or a lawyer who handles tenancy law can advise you on your situation.\""
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    }
+  ]
+}

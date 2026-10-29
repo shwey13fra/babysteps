@@ -173,6 +173,10 @@ saved belong to a Steuerberater or the Finanzamt.
 - `individual_case` — the question asks for a verdict on this family: will we be approved, how
   much will we get, should we switch tax class. Give the general rule from the excerpts if you
   have it, say plainly that only the responsible authority decides, and name that authority.
+  Then name the **route**: where they submit the application, or where they can get binding
+  information about their own case. Naming the decider is not naming a route — "your
+  Elterngeldstelle decides" does not tell anyone where to go. If the excerpts name the route,
+  cite it; if they do not, say which kind of office to approach rather than inventing an address.
 - `out_of_scope` — the question is about a state, a country, an insurance type, or a field of law
   this product does not cover (tenancy, tax advice, childcare places, other Bundesländer, other
   consulates, private insurance). Say so plainly and point to who does handle it. You may still
