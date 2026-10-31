@@ -23,7 +23,7 @@ import { isLowConfidence, REFUSAL_MIN_TOP_COSINE } from "../../lib/rag/guards";
 import { retrieve } from "../../lib/rag/retrieve";
 import { readCsv } from "./csv";
 
-const GOLDEN = join(process.cwd(), "data/golden/golden_set_v1.6.csv");
+const GOLDEN = join(process.cwd(), "data/golden/golden_set_v1.7.csv");
 
 // The rows the plan predicts are below the floor, from the judgefix run's
 // recorded topCosine. Asserted, not assumed: a re-ingest moves cosine and
@@ -45,7 +45,7 @@ const BUNDESLAND = "hessen" as const;
 async function main() {
   const rows = readCsv(readFileSync(GOLDEN, "utf8")).filter((r) => PROBE.includes(r.id));
   const missing = PROBE.filter((id) => !rows.some((r) => r.id === id));
-  if (missing.length) throw new Error(`golden v1.6 has no row for ${missing.join(", ")}`);
+  if (missing.length) throw new Error(`golden v1.7 has no row for ${missing.join(", ")}`);
 
   console.log(`threshold ${REFUSAL_MIN_TOP_COSINE} (ADR-009) · profile ${BUNDESLAND} · no answer-model call\n`);
   console.log(`id    cat     cosine  chunks  branch`);

@@ -84,7 +84,7 @@ describe("the five clauses that falsified the inferred classifier", () => {
 describe("the golden set classifies without ambiguity", () => {
   it("leaves no unmarked clause that looks like a permission or a prohibition on a non-ANSWER row", async () => {
     const { readFileSync } = await import("node:fs");
-    const csv = readFileSync("data/golden/golden_set_v1.6.csv", "utf8");
+    const csv = readFileSync("data/golden/golden_set_v1.7.csv", "utf8");
 
     // Minimal RFC4180 read of the two columns this test needs.
     const rows: string[][] = [];
@@ -121,7 +121,7 @@ describe("the golden set classifies without ambiguity", () => {
 
   it("every prohibition in the set names a channel", async () => {
     const { readFileSync } = await import("node:fs");
-    const csv = readFileSync("data/golden/golden_set_v1.6.csv", "utf8");
+    const csv = readFileSync("data/golden/golden_set_v1.7.csv", "utf8");
     const unnamed = csv
       .split("\n")
       .flatMap((line) => line.split(";").map((s) => s.trim()))
@@ -167,7 +167,7 @@ describe("prohibitionCoverage — the guard, fed what it must refuse", () => {
 
   it("every prohibition the live golden set carries is covered on its own row", async () => {
     const { readFileSync } = await import("node:fs");
-    const lines = readFileSync("data/golden/golden_set_v1.6.csv", "utf8").split("\n").slice(1);
+    const lines = readFileSync("data/golden/golden_set_v1.7.csv", "utf8").split("\n").slice(1);
     const seen: string[] = [];
     for (const line of lines) {
       if (!line.trim()) continue;

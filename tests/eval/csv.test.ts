@@ -51,7 +51,7 @@ describe("readCsv", () => {
   it("reads the real golden set: 48 rows, every one with an id", () => {
     // The end-to-end case. If this parser ever disagrees with the file, every
     // score in every report is measured against the wrong ground truth.
-    const text = readFileSync(join(process.cwd(), "data/golden/golden_set_v1.6.csv"), "utf8");
+    const text = readFileSync(join(process.cwd(), "data/golden/golden_set_v1.7.csv"), "utf8");
     const rows = readCsv(text);
     expect(rows).toHaveLength(48);
     expect(rows.every((r) => r.id)).toBe(true);

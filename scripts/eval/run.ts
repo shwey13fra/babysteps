@@ -57,8 +57,8 @@ import { parseElement, prohibitionCoverage } from "./clauses";
 import { formatUsage } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
 
-const CSV = "data/golden/golden_set_v1.6.csv";
-const GOLDEN_VERSION = "v1.6";
+const CSV = "data/golden/golden_set_v1.7.csv";
+const GOLDEN_VERSION = "v1.7";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 /**
