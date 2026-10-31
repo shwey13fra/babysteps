@@ -105,6 +105,28 @@ describe("glossary trigger coverage — the phrasings the golden set actually us
     expect(e.matched.map((m) => m.de)).toContain("zu versteuerndes Einkommen");
     expect(e.lexicalQuery).toContain("Veranlagungszeitraum");
   });
+
+  it("expands golden row A-21 with Hesse's own name for its Elterngeld authority", () => {
+    // A-21 missed all three elements with retrievalHit false. The answer is in the
+    // corpus and in the right jurisdiction — rp-giessen.hessen.de names "der sechs
+    // hessischen Ämter für Versorgung und Soziales (HÄVS)" — but that page never says
+    // "Elterngeldstelle", so neither half of RRF reached it. Measured 2026-10-31: the
+    // chunk was absent from the top 5 before this vocabulary and sits at #5 after.
+    const e = expandQuery("Where do we apply for Elterngeld in Frankfurt?");
+    expect(e.matched.map((m) => m.de)).toContain("Elterngeldstelle");
+    expect(e.lexicalQuery).toContain("Ämter für Versorgung und Soziales");
+    expect(e.lexicalQuery).toContain("Regierungspräsidium");
+  });
+
+  it("expands golden row A-23 with the online-application vocabulary", () => {
+    // A-23 refused low_confidence at cosine 0.616 while all four of its elements were
+    // in the corpus: the federal guidance page names ElterngeldDigital and lists the ten
+    // Bundesländer it covers, Hessen deliberately not among them. The question's only
+    // glossary hit was Elterngeld, whose expansion pulls none of that vocabulary.
+    const e = expandQuery("Can we apply for Elterngeld online?");
+    expect(e.matched.map((m) => m.de)).toContain("ElterngeldDigital");
+    expect(e.lexicalQuery).toContain("online beantragen");
+  });
 });
 
 describe("deliberate non-coverage — these must keep expanding nothing", () => {
@@ -115,6 +137,16 @@ describe("deliberate non-coverage — these must keep expanding nothing", () => 
   // that decision — if someone adds the trigger, this is what objects.
   it("does not expand the out-of-scope consular phrasing (R-03)", () => {
     expect(de("How do I get a Chinese passport for my baby born in Berlin?")).toEqual([]);
+  });
+
+  it("does not fire ElterngeldDigital on the form-filling refusal (R-05)", () => {
+    // The 2026-10-31 triggers for ElterngeldDigital include "online application". R-05
+    // says "application form" and must stay a refusal — expanding it would raise its
+    // retrieval score and push an out-of-scope row toward the answer side of ADR-009's
+    // threshold, which is the same failure ADR-020 guards against above.
+    expect(de("Can you fill in our Elterngeld application form for us?")).toEqual([
+      "Elterngeld",
+    ]);
   });
 
   it("does not expand the private-insurance row (R-02)", () => {

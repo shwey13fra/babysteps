@@ -156,7 +156,27 @@ terms:
   - de: Elterngeldstelle
     en_gloss: the state office that decides parental allowance
     en_triggers: [where do we apply for elterngeld, parental allowance office, which office]
-    expand_with: [Elterngeldstelle, zuständige Behörde, Antrag]
+    # Added 2026-10-31 (rule 14) for A-21, which missed all three of its elements with
+    # retrievalHit false. Hesse's Elterngeld authority page is in the corpus and in the right
+    # jurisdiction, but calls itself "Versorgungsamt" / "Ämter für Versorgung und Soziales" and
+    # never says "Elterngeldstelle" — so neither half of RRF bridged "where do we apply" to it.
+    # Measured: cosine 0.668 on a German query, absent from the top 5 on A-21's own question.
+    expand_with: [Elterngeldstelle, zuständige Behörde, Antrag, Versorgungsamt,
+                  Ämter für Versorgung und Soziales, HÄVS, Regierungspräsidium]
+
+  # Added 2026-10-31 (rule 14) for A-23 "Can we apply for Elterngeld online?", which refused
+  # low_confidence at cosine 0.616 while all four of its golden elements sat in the corpus: the
+  # federal guidance page names ElterngeldDigital and lists the ten Bundesländer it covers
+  # (Hessen is not among them), and the Hesse page carries the HÄVS route. The question's only
+  # glossary hit was Elterngeld, whose expansion pulls none of that vocabulary.
+  # Triggers are kept to phrases that are unambiguously about applying online — a bare "online"
+  # would fire on unrelated questions, which the file header forbids.
+  - de: ElterngeldDigital
+    en_gloss: the federal online assistant for parental allowance applications
+    en_triggers: [apply for elterngeld online, apply online, online application, apply digitally,
+                  online route, elterngelddigital]
+    expand_with: [ElterngeldDigital, online beantragen, digital beantragen, Onlineservice,
+                  Antragsassistent]
 
   - de: Vorsorgeuntersuchung
     en_gloss: routine preventive check-up
