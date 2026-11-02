@@ -44,3 +44,27 @@ detectable rather than invisible: `scripts/eval/consular-staleness.ts` exits 1 o
 entry. If the mission answers the permission letter, this ADR is superseded and the YAML becomes
 the crawl's seed rather than wasted work. ADR-014's title remains in the index as written, with
 this ADR named beside it — the wrong reasoning is part of the audit trail.
+
+## Amendment 2026-11-02 — the 8 elements are `pending_manual_curation`, not "unreachable"
+
+Re-probed today: `www.cgifrankfurt.gov.in` still returns `200, Disallow: /` — genuinely forbidden,
+unchanged. `www.indianembassyberlin.gov.in` now returns **302** where this ADR recorded 404, so the
+host is alive and redirecting; the apex still 404s. Neither carries a `Content-Signal` (ADR-042).
+No new permission follows from either: the substance is still not on a reachable page.
+
+**The reclassification.** This ADR's language let the 8 consular required elements (A-24: 3,
+A-26: 5) be read as permanently out of reach, and two coverage reports then excluded them from the
+gate's denominator on that basis. That was never the plan. The addendum §3 provides for consular
+sources to be curated by hand on a 90-day review precisely because nothing on
+gesetze-im-internet covers Indian consular procedure. Hand curation is the designed path, not a
+failure of one.
+
+These 8 elements are therefore labelled **`pending_manual_curation`, target: pre-beta** — work
+that is scheduled and owed, with a named worklist (`docs/consular-curation-worklist.md`) and a
+human with a browser as its only dependency.
+
+**What this binds.** Any exclusion from the coverage denominator must be justified structurally
+(no ingestable source exists — not "we failed to retrieve it"), listed individually by element,
+and dated. Every report from now on carries both figures, never one: the scorable number the gate
+is assessed on, and the all-elements number, with the exclusions listed beneath. A single
+flattering figure does not go in this repo.

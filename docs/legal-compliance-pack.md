@@ -94,7 +94,44 @@ Recommended resolution: log the question text, the retrieved chunk IDs, the answ
 
 The alternative — no logging at all — is also defensible. What isn't defensible is discovering in week 4 that you can't reproduce the answer a beta family complained about.
 
-## 6. Pre-beta checklist
+## 6. Robots, Content-Signal and text-and-data-mining reservations
+
+This product is a RAG system. Its corpus is other people's text, so permission to ingest is a
+legal question and not a technical one. The policy, decided in ADR-042:
+
+**We honour robots.txt.** `scripts/ingest/robots.ts` is deliberately stricter than RFC 9309: a 403
+or an unreadable robots.txt is treated as refusal, because "the site would not tell us" is not
+permission. Nothing is fetched that `data/corpus_manifest.yaml` does not list.
+
+**We honour Content-Signal.** Some operators now publish a `Content-Signal` line in robots.txt
+declaring which uses they permit, as an express reservation of rights under **Art. 4 of EU
+Directive 2019/790**. The signal `ai-input` covers retrieval-augmented generation and grounding —
+exactly what this product does. It is read three ways:
+
+| what the source publishes | verdict |
+| --- | --- |
+| no `Content-Signal` line at all | nothing reserved; robots.txt governs → **ingestable** |
+| signal present, `ai-input` **omitted** | the operator considered AI access and left this use unresolved → **not granted** → `link_only` |
+| `ai-input=no` | **refused** |
+
+The middle row is the important one and it is deliberate. An operator who publishes
+`search=yes,ai-train=no` has thought about AI access; the silence on `ai-input` is unresolved, and
+unresolved resolves against us.
+
+**We do not rely on §5 UrhG to cure a reservation.** Statutes, decrees and official
+announcements are amtliche Werke and free to use. A municipality's service-description page is
+not reliably within that category, and a contract between associations — the
+`Hebammenhilfevertrag`, for instance — is not an amtliches Werk at all.
+
+**Every source carries a dated verdict.** `corpus_manifest.yaml` records `robots:` and
+`content_signal:` per source, each with the date probed, and both are re-probed at
+`review_after`. An undated permission claim is what ADR-012 got wrong and ADR-013 exists to stop.
+
+**`link_only` is not a workaround.** Where a source may not be ingested but its facts matter, the
+answer cites its URL and sends the user there, with no chunk stored and no text retrieved. The
+page changes without notifying us, so pointing at it is more honest than caching it.
+
+## 7. Pre-beta checklist
 
 - [ ] `/impressum` live, linked from every route, real address
 - [ ] `/datenschutz` live in German, `/how-it-works` in English, cross-linked
@@ -106,3 +143,4 @@ The alternative — no logging at all — is also defensible. What isn't defensi
 - [ ] `answer.v1.md` contains the individual-case prohibition; R-06 and R-08 pass
 - [ ] Query-log consent decided, implemented at the write site, described in both privacy pages
 - [ ] Beta invite states plainly that this is a test, that answers can be wrong, and that the authority decides
+- [ ] Robots and Content-Signal verdicts current for all sources — every `corpus_manifest.yaml` entry carries a dated `robots:` and `content_signal:` record, none older than its `review_after`, and no ingested source has `ai_input: unspecified` or `no`

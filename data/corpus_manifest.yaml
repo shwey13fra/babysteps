@@ -33,6 +33,7 @@ sources:
     url: https://www.gesetze-im-internet.de/muschg_2018/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: beeg
     title_de: Gesetz zum Elterngeld und zur Elternzeit
@@ -41,6 +42,7 @@ sources:
     url: https://www.gesetze-im-internet.de/beeg/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: bkgg
     title_de: Bundeskindergeldgesetz
@@ -49,6 +51,7 @@ sources:
     url: https://www.gesetze-im-internet.de/bkgg_1996/xml.zip
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: sgb_5
     title_de: Sozialgesetzbuch Fünftes Buch — Gesetzliche Krankenversicherung
@@ -58,6 +61,7 @@ sources:
     fetch: auto
     only_sections: ["10", "24d", "24i"]   # per the playbook; SGB V entire is far too large
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: bgb
     title_de: Bürgerliches Gesetzbuch
@@ -67,6 +71,7 @@ sources:
     fetch: auto
     only_sections: ["1592", "1594", "1626a"]   # parentage and custody
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: stag
     title_de: Staatsangehörigkeitsgesetz
@@ -76,6 +81,7 @@ sources:
     fetch: auto
     only_sections: ["4"]
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: aufenthg
     title_de: Aufenthaltsgesetz
@@ -85,6 +91,7 @@ sources:
     fetch: auto
     only_sections: ["33"]
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   # ---- Beyond the playbook's list; approved 2026-10-22. ----
   # Both are cited by rules that already exist, so the golden-set pass needs their text:
@@ -98,6 +105,7 @@ sources:
     fetch: auto
     only_sections: ["18"]
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: estg
     title_de: Einkommensteuergesetz
@@ -107,6 +115,7 @@ sources:
     fetch: auto
     only_sections: ["66", "70"]   # 66(1) carries the Kindergeld amount (golden A-10)
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   # ---- HTML sources. Domains and robots verified 2026-10-22; exact page URLs still to be
   # ---- confirmed one by one before fetching. No URL is invented here.
@@ -140,6 +149,7 @@ sources:
       - https://familienportal.de/familienportal/rechner-antraege/elterngeld-digital
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: familienkasse
     format: html
@@ -151,6 +161,7 @@ sources:
       - https://www.arbeitsagentur.de/familie-und-kinder/infos-rund-um-kindergeld/nachweise-einreichen
     fetch: auto
     robots: { allows: true, rule: "Disallow: (empty) + Allow: /", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: gba_kinder_richtlinie
     format: html
@@ -160,6 +171,7 @@ sources:
       - https://www.g-ba.de/richtlinien/15/
     fetch: auto
     robots: { allows: true, rule: "only /styleguide/ and /sys/suche disallowed", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: berlin_service
     jurisdiction: berlin
@@ -173,6 +185,7 @@ sources:
     fetch: auto
     # NOTE: PDF paths are disallowed. HTML pages only.
     robots: { allows: true, rule: "Disallow: /dienstleistung/*/pdf/ and similar — HTML permitted, PDF NOT", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: hessen_rp
     jurisdiction: hesse
@@ -183,6 +196,7 @@ sources:
       - https://rp-giessen.hessen.de/Elterngeld
     fetch: auto
     robots: { allows: true, rule: "infrastructure paths only (/core/, /admin/, …); content permitted", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   - id: frankfurt_standesamt
     jurisdiction: hesse
@@ -196,6 +210,8 @@ sources:
     # and content alike, under every header combination tried. Unfetchable, not forbidden.
     # We will not spoof a browser fingerprint to get around an access control.
     robots: { allows: true, rule: "User-agent: * / allow: /", checked: 2026-10-22 }
+    content_signal: { present: true, signal: "search=yes,ai-train=no,use=reference", ai_input: unspecified,
+                      verdict: link_only, probed: 2026-11-02 }   # ADR-042
     blocked_by: bot-protection-403
 
 
@@ -211,6 +227,7 @@ sources:
     fetch: auto
     review_after_days: 180
     robots: { allows: true, rule: "only /styleguide/ and /sys/suche disallowed", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
   # ---- Consular India. NEVER auto-fetched. ----
 
@@ -226,6 +243,7 @@ sources:
     # robots.txt contains "User-agent: * / Disallow: /". Automated fetching is forbidden
     # outright. This text must be curated by hand or not ingested at all.
     robots: { allows: false, rule: "User-agent: * / Disallow: /", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }   # moot: robots Disallow: / governs
 
   - id: indian_embassy_berlin
     jurisdiction: consular-india
@@ -240,4 +258,5 @@ sources:
     # https://www.indianembassyberlin.gov.in/ returns 404 and robots.txt 404s via /error.
     # Needs the mission's current official URL, which must be confirmed by a human.
     robots: { allows: unknown, rule: "host returns 404 - site moved or retired", checked: 2026-10-22 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }   # www host 302, apex 404; no signal on either
     blocked_by: host-404
