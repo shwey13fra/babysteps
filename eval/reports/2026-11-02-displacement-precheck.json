@@ -1,0 +1,923 @@
+{
+  "budget": 12800,
+  "golden": "v1.7",
+  "results": [
+    {
+      "id": "A-01",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 12,
+      "added": [
+        3878,
+        3802,
+        3804,
+        3822
+      ],
+      "dropped": [],
+      "offTokens": 4304,
+      "onTokens": 6098,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "A-02",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 4939,
+      "onTokens": 4939,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 1
+    },
+    {
+      "id": "A-03",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3819
+      ],
+      "dropped": [],
+      "offTokens": 4273,
+      "onTokens": 4940,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 1
+    },
+    {
+      "id": "A-04",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3878
+      ],
+      "dropped": [],
+      "offTokens": 4710,
+      "onTokens": 4901,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-05",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3757
+      ],
+      "dropped": [],
+      "offTokens": 5357,
+      "onTokens": 5470,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-06",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        3793,
+        3788,
+        3789
+      ],
+      "dropped": [],
+      "offTokens": 5021,
+      "onTokens": 7305,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-07",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 5227,
+      "onTokens": 5227,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-08",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3804
+      ],
+      "dropped": [],
+      "offTokens": 4745,
+      "onTokens": 5046,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-09",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 3263,
+      "onTokens": 3263,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-10",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        3848,
+        3849,
+        3793
+      ],
+      "dropped": [],
+      "offTokens": 3193,
+      "onTokens": 5409,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-11",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3883
+      ],
+      "dropped": [],
+      "offTokens": 2791,
+      "onTokens": 2909,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-12",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3883
+      ],
+      "dropped": [],
+      "offTokens": 2791,
+      "onTokens": 2909,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-13",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3883
+      ],
+      "dropped": [],
+      "offTokens": 3099,
+      "onTokens": 3217,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-14",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3878
+      ],
+      "dropped": [],
+      "offTokens": 3172,
+      "onTokens": 3364,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-15",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 3395,
+      "onTokens": 3395,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-16",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3875
+      ],
+      "dropped": [],
+      "offTokens": 4174,
+      "onTokens": 4315,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-17",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        4435,
+        4436
+      ],
+      "dropped": [],
+      "offTokens": 3855,
+      "onTokens": 4906,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-18",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3801
+      ],
+      "dropped": [],
+      "offTokens": 4445,
+      "onTokens": 4598,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-19",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3883
+      ],
+      "dropped": [],
+      "offTokens": 2450,
+      "onTokens": 2568,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-20",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        3803,
+        3804
+      ],
+      "dropped": [],
+      "offTokens": 3974,
+      "onTokens": 5011,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "A-21",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 3201,
+      "onTokens": 3201,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-22",
+      "category": "ANSWER",
+      "bundesland": "berlin",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 4292,
+      "onTokens": 4292,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-23",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        3789,
+        3790
+      ],
+      "dropped": [],
+      "offTokens": 4538,
+      "onTokens": 5618,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-24",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        4452,
+        4454,
+        3883
+      ],
+      "dropped": [],
+      "offTokens": 3055,
+      "onTokens": 3538,
+      "budgetSkipped": [],
+      "nonContiguous": [
+        "Kinder-RL §17"
+      ],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-25",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        3789,
+        3790
+      ],
+      "dropped": [],
+      "offTokens": 4506,
+      "onTokens": 5586,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "A-26",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 17,
+      "added": [
+        3839,
+        3840,
+        3842,
+        4427,
+        4428,
+        4425,
+        4430,
+        4431,
+        3837
+      ],
+      "dropped": [],
+      "offTokens": 4746,
+      "onTokens": 9320,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 1
+    },
+    {
+      "id": "A-27",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        3883,
+        3839,
+        3788
+      ],
+      "dropped": [],
+      "offTokens": 5045,
+      "onTokens": 6395,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "A-28",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3801
+      ],
+      "dropped": [],
+      "offTokens": 4871,
+      "onTokens": 5024,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "A-29",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 12,
+      "added": [
+        3789,
+        3790,
+        3802,
+        3803
+      ],
+      "dropped": [],
+      "offTokens": 5105,
+      "onTokens": 7580,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "A-30",
+      "category": "ANSWER",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 8,
+      "added": [],
+      "dropped": [],
+      "offTokens": 3138,
+      "onTokens": 3138,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "M-01",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 9,
+      "added": [
+        3763
+      ],
+      "dropped": [],
+      "offTokens": 3918,
+      "onTokens": 4201,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "M-02",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 22,
+      "added": [
+        4452,
+        4454,
+        4429,
+        4430,
+        4442,
+        4435,
+        4436,
+        4426,
+        4427,
+        4444,
+        4446,
+        4424,
+        4432,
+        4433
+      ],
+      "dropped": [],
+      "offTokens": 5169,
+      "onTokens": 11514,
+      "budgetSkipped": [],
+      "nonContiguous": [
+        "Kinder-RL §17"
+      ],
+      "guidanceRanked": 0
+    },
+    {
+      "id": "M-03",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 14,
+      "added": [
+        3760,
+        3761,
+        3763,
+        3757,
+        4427,
+        4428
+      ],
+      "dropped": [],
+      "offTokens": 4653,
+      "onTokens": 7475,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 1
+    },
+    {
+      "id": "M-04",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 15,
+      "added": [
+        4429,
+        4430,
+        4424,
+        4426,
+        4427,
+        4432,
+        4433
+      ],
+      "dropped": [],
+      "offTokens": 3790,
+      "onTokens": 7468,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "M-05",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 12,
+      "added": [
+        4476,
+        4452,
+        4454,
+        4425
+      ],
+      "dropped": [],
+      "offTokens": 3062,
+      "onTokens": 4762,
+      "budgetSkipped": [],
+      "nonContiguous": [
+        "Kinder-RL §17"
+      ],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "M-06",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        4467,
+        3837
+      ],
+      "dropped": [],
+      "offTokens": 3510,
+      "onTokens": 4032,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 1
+    },
+    {
+      "id": "M-07",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 13,
+      "added": [
+        3760,
+        3761,
+        4467,
+        4469,
+        3763
+      ],
+      "dropped": [],
+      "offTokens": 4741,
+      "onTokens": 6882,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "M-08",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 17,
+      "added": [
+        4435,
+        4436,
+        4432,
+        4433,
+        4426,
+        4427,
+        4429,
+        4430,
+        4442
+      ],
+      "dropped": [],
+      "offTokens": 4842,
+      "onTokens": 9778,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 0
+    },
+    {
+      "id": "M-09",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 13,
+      "added": [
+        3761,
+        3763,
+        3868,
+        3869,
+        3871
+      ],
+      "dropped": [],
+      "offTokens": 4939,
+      "onTokens": 7060,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 3
+    },
+    {
+      "id": "M-10",
+      "category": "DEFLECT",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 16,
+      "added": [
+        3760,
+        3761,
+        3763,
+        3868,
+        3869,
+        3871,
+        4452,
+        4454
+      ],
+      "dropped": [],
+      "offTokens": 4632,
+      "onTokens": 7764,
+      "budgetSkipped": [],
+      "nonContiguous": [
+        "Kinder-RL §17"
+      ],
+      "guidanceRanked": 4
+    },
+    {
+      "id": "R-01",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 12,
+      "added": [
+        3801,
+        3804,
+        3789,
+        3790
+      ],
+      "dropped": [],
+      "offTokens": 5459,
+      "onTokens": 6991,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 0
+    },
+    {
+      "id": "R-02",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 14,
+      "added": [
+        3802,
+        3804,
+        3839,
+        3801,
+        4429,
+        4430
+      ],
+      "dropped": [],
+      "offTokens": 5082,
+      "onTokens": 7635,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 0
+    },
+    {
+      "id": "R-03",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 17,
+      "added": [
+        3837,
+        3839,
+        3868,
+        3869,
+        3870,
+        3802,
+        3804,
+        4444,
+        4445
+      ],
+      "dropped": [],
+      "offTokens": 4110,
+      "onTokens": 8598,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "R-04",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        3839,
+        3789,
+        3790
+      ],
+      "dropped": [],
+      "offTokens": 3210,
+      "onTokens": 4726,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    },
+    {
+      "id": "R-05",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 10,
+      "added": [
+        3802,
+        3804
+      ],
+      "dropped": [],
+      "offTokens": 4626,
+      "onTokens": 5586,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "R-06",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 12,
+      "added": [
+        3802,
+        3804,
+        3789,
+        3790
+      ],
+      "dropped": [],
+      "offTokens": 5032,
+      "onTokens": 7071,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 2
+    },
+    {
+      "id": "R-07",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 15,
+      "added": [
+        3781,
+        3760,
+        3761,
+        3821,
+        3788,
+        3790,
+        3839
+      ],
+      "dropped": [],
+      "offTokens": 5674,
+      "onTokens": 9205,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 0
+    },
+    {
+      "id": "R-08",
+      "category": "REFUSE",
+      "bundesland": "hessen",
+      "rankedN": 8,
+      "offN": 8,
+      "onN": 11,
+      "added": [
+        3798,
+        3837,
+        3793
+      ],
+      "dropped": [],
+      "offTokens": 5158,
+      "onTokens": 6495,
+      "budgetSkipped": [],
+      "nonContiguous": [],
+      "guidanceRanked": 5
+    }
+  ]
+}

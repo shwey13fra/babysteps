@@ -62,14 +62,21 @@ const GOLDEN_VERSION = "v1.7";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 /**
- * Section completion (ADR-032), OFF for this run on purpose.
+ * Section completion (ADR-032), ON — and it is THIS run's single variable.
  *
- * This run repairs the judge's context, which is an instrument change. Letting
- * completion move the model's context at the same time would split the delta
- * across two variables and make it unattributable. Turn this back on, and say
- * so in the report, when completion is the thing being measured.
+ * It was set false for the judge-context repair so that run would carry one
+ * variable, and it stayed false through judgefix, iter3 and iter4. Production
+ * has always run with completion on (`retrieve.ts` defaults `complete` true,
+ * and `app/api/ask/route.ts` passes no options), so three baselines measured a
+ * pipeline the user never meets and ADR-032 never appeared in a measured
+ * figure. This run closes that gap.
+ *
+ * Displacement was ruled out before the spend, not after:
+ * `eval/reports/2026-11-02-displacement-precheck.md` — 0 of 48 rows lose a
+ * chunk, because completeSections only ever gives up an extra, never a ranked
+ * hit. Any element lost here is dilution or judge variance, not crowding-out.
  */
-const COMPLETE_SECTIONS = false;
+const COMPLETE_SECTIONS = true;
 
 /**
  * The spec's default profile. Only `bundesland` reaches the pipeline — it is
