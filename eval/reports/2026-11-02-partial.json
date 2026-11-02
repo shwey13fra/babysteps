@@ -1,0 +1,506 @@
+{
+  "meta": {
+    "golden_version": "v1.7",
+    "rows_total": 4,
+    "rows_measured": 4,
+    "rows_not_measured": 0,
+    "valid_baseline": true,
+    "retrieval_hit_rate": 1,
+    "retrieval_hit": {
+      "n": 4,
+      "d": 4
+    },
+    "citation_validity": 1,
+    "citation_validity_counts": {
+      "n": 9,
+      "d": 9
+    },
+    "citations_guidance_excluded": 5,
+    "required_elements_coverage": 0.6153846153846154,
+    "required_elements_counts": {
+      "n": 8,
+      "d": 13
+    },
+    "required_elements_by_category": {
+      "ANSWER": {
+        "n": 8,
+        "d": 13,
+        "rate": 0.6153846153846154
+      },
+      "DEFLECT": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "REFUSE": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      }
+    },
+    "clauses_permitted_not_required": 0,
+    "clauses_prohibited_by_channel": 0,
+    "per_category": {
+      "ANSWER": {
+        "pass": 1,
+        "measured": 4,
+        "total": 4
+      },
+      "DEFLECT": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "REFUSE": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      }
+    },
+    "criticals": [],
+    "must_not_literal_violations": [],
+    "not_constrained_rows": [
+      "A-18",
+      "A-29"
+    ],
+    "not_measured": [],
+    "date": "2026-11-02",
+    "label": "partial (4 of 48 rows)",
+    "git_sha": "38222dd",
+    "corpus_version": "2026-10",
+    "answer_model": "claude-opus-5-5",
+    "guard_model": "claude-haiku-5-5",
+    "report": "eval\\reports\\2026-11-02-partial.md"
+  },
+  "rows": [
+    {
+      "id": "A-06",
+      "category": "ANSWER",
+      "question": "Is there an income limit above which we get no Elterngeld?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "Yes. Under the federal Elterngeld (parental allowance) law, the entitlement lapses above a set level of zu versteuerndes Einkommen (taxable income).\n\nThe rule in the statute:\n- For one entitled person, the claim lapses if that person had taxable income of more than 175,000 euros in the last completed tax assessment period before the birth (\"im letzten abgeschlossenen Veranlagungszeitraum vor der Geburt des Kindes ein zu versteuerndes Einkommen ... in Höhe von mehr als 175 000 Euro\").\n- If another person also meets the conditions, for example the other parent living in the same household with the child, the claim lapses if the two incomes added together are more than 175,000 euros (\"wenn die Summe des zu versteuernden Einkommens beider Personen mehr als 175 000 Euro beträgt\").\n\nThe limit refers to taxable income, not gross income. The official family portal explains that taxable income is usually considerably lower than gross income, because certain expenses and allowances are deducted. It also says that taxable income is determined by the Finanzamt and shown in your tax assessment notice.\n\nIf the tax assessment notice for that period is not yet available when you apply, the law still allows an application. Elterngeld is paid subject to revocation if the limit turns out to be exceeded after all, or the amount is decided provisionally if it is not yet possible to say whether the limit is exceeded.\n\nThe official family portal says that higher limits applied to births before 1 April 2025. The transitional provisions of the statute are not among the sources available here, so this answer gives only the 175,000 euro figure the statute states.\n\nWhether the limit applies to your family, and which rule governs a particular birth, is decided by the Elterngeldstelle for your district. In Hessen, that is the authority to approach.",
+      "citations": [
+        {
+          "section_ref": "BEEG §1",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__1.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §8",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__8.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "Was Sie zum Elterngeld wissen müssen",
+          "source_url": "https://familienportal.de/familienportal/familienleistungen/elterngeld/faq",
+          "as_of": "2026-10-22"
+        }
+      ],
+      "topCosine": 0.629325446846787,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [
+        "BEEG §28"
+      ],
+      "shownHit": true,
+      "shownMissing": [
+        "BEEG §28"
+      ],
+      "completion": {
+        "added": 3,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 7305
+      },
+      "refsCited": true,
+      "citationsTotal": 2,
+      "citationsValid": 2,
+      "citationsGuidance": 1,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "175000 EUR zu versteuerndes Einkommen (BEEG §1(8) Satz 1 for a single claimant, Satz 2 for the combined income of two claimants — the same figure applies to both)",
+        "based on zu versteuerndes Einkommen under EStG §2(5) in the last completed Veranlagungszeitraum before the birth",
+        "earlier birth cohorts are governed by BEEG §28"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "175000 EUR zu versteuerndes Einkommen (BEEG §1(8) Satz 1 for a single claimant, Satz 2 for the combined income of two claimants — the same figure applies to both)",
+            "covered": true,
+            "why": "The reply states 175,000 euros for one entitled person and for the combined income of two persons under the other-person rule, quoting the statute."
+          },
+          {
+            "element": "based on zu versteuerndes Einkommen under EStG §2(5) in the last completed Veranlagungszeitraum before the birth",
+            "covered": false,
+            "why": "The reply refers to taxable income in the last completed tax assessment period before the birth, but never names EStG §2(5) or the EStG as the source of the definition, so the specific reference is not stated."
+          },
+          {
+            "element": "earlier birth cohorts are governed by BEEG §28",
+            "covered": false,
+            "why": "The reply says earlier higher limits applied to births before 1 April 2025 but states that transitional provisions are not available and does not name BEEG §28."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "250000 EUR",
+            "violated": false,
+            "quote": ""
+          },
+          {
+            "clause": "200000 EUR as the current figure",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: based on zu versteuerndes Einkommen under EStG §2(5) in the last completed Veranlagungszeitraum before the birth — The reply refers to taxable income in the last completed tax assessment period before the birth, but never names EStG §2(5) or the EStG as the source of the definition, so the specific reference is not stated.",
+        "element not covered: earlier birth cohorts are governed by BEEG §28 — The reply says earlier higher limits applied to births before 1 April 2025 but states that transitional provisions are not available and does not name BEEG §28."
+      ],
+      "pass": false
+    },
+    {
+      "id": "A-16",
+      "category": "ANSWER",
+      "question": "How do we insure the baby after the birth?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "Under federal law, children of a member of a statutory health insurance fund are covered through the Familienversicherung (free family cover for dependants) (SGB V §10). This is a general rule; whether your baby is covered is decided by the health insurance fund, not here.\n\nThe law covers a member's children if all of the following apply. The child:\n1. lives or usually stays in Germany (\"Wohnsitz oder gewöhnlichen Aufenthalt im Inland\");\n2. is not compulsorily insured under the listed provisions of §5 and is not voluntarily insured;\n3. is not exempt from insurance or released from compulsory insurance;\n4. is not self-employed as a main occupation;\n5. has no total income regularly above one seventh of the monthly reference figure (\"ein Siebtel der monatlichen Bezugsgröße\").\n\nChildren are covered up to age 18 (\"bis zur Vollendung des achtzehnten Lebensjahres\"), with longer periods in the cases the statute lists.\n\nThere is one exclusion to know about. Children are not covered this way if the parent related to them who is married to or the civil partner of the member is not a member of a health insurance fund, and that parent's total income regularly exceeds one twelfth of the annual earnings ceiling (\"ein Zwölftel der Jahresarbeitsentgeltgrenze\") and is regularly higher than the member's income (§10(3)).\n\nIf both parents are members and the conditions are met more than once, the member chooses the fund (§10(5)).\n\nWhat you do: the member must report the covered child to the competent health insurance fund, with the details needed to run the Familienversicherung, and must also report later changes to those details (§10(6)).\n\nYou will need the birth certificate. The Familienportal lists registration with the health insurance fund (\"Anmeldung bei der Krankenkasse\") among the things the birth certificate is needed for. It is issued by the registry office for the place of birth, where the Familienportal says you must register the child within 1 week (\"innerhalb 1 Woche\"). If the child is born in a hospital, birth centre or maternity clinic, the facility notifies the registry office.\n\nThe excerpts do not cover how a child is insured if the Familienversicherung does not apply, for example through private insurance. Ask your health insurance fund about that.",
+      "citations": [
+        {
+          "section_ref": "SGB V §10",
+          "source_url": "https://www.gesetze-im-internet.de/sgb_5/__10.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "Anmeldung Ihres Kindes beim Standesamt",
+          "source_url": "https://familienportal.de/familienportal/lebenslagen/schwangerschaft-geburt/anmeldung-standesamt",
+          "as_of": "2026-10-22"
+        }
+      ],
+      "topCosine": 0.492925754121292,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 2,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 4315
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 2,
+      "fabricated": [],
+      "mustNotCount": 1,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "Familienversicherung is free of charge for the child under statutory insurance",
+        "the child must be registered with the Krankenkasse",
+        "register promptly so cover runs from the date of birth",
+        "the child's insurance number is needed for other applications"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "Familienversicherung is free of charge for the child under statutory insurance",
+            "covered": true,
+            "why": "The reply says children are covered through the Familienversicherung, described as \"free family cover for dependants\" (SGB V §10)."
+          },
+          {
+            "element": "the child must be registered with the Krankenkasse",
+            "covered": true,
+            "why": "The reply says \"the member must report the covered child to the competent health insurance fund\" and cites §10(6)."
+          },
+          {
+            "element": "register promptly so cover runs from the date of birth",
+            "covered": false,
+            "why": "The reply gives a 1-week registry-office deadline but never says that cover starts from the date of birth or that prompt registration secures cover from birth."
+          },
+          {
+            "element": "the child's insurance number is needed for other applications",
+            "covered": false,
+            "why": "The reply never mentions an insurance number or its use in other applications."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "compares statutory and private insurance, or advises which to choose",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: register promptly so cover runs from the date of birth — The reply gives a 1-week registry-office deadline but never says that cover starts from the date of birth or that prompt registration secures cover from birth.",
+        "element not covered: the child's insurance number is needed for other applications — The reply never mentions an insurance number or its use in other applications."
+      ],
+      "pass": false
+    },
+    {
+      "id": "A-18",
+      "category": "ANSWER",
+      "question": "What is Mutterschaftsgeld and when do I apply for it?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "Mutterschaftsgeld (maternity pay from the health insurer) is a payment for the protection periods before and after the birth and for the day of the birth itself ('für die Zeit der Schutzfristen vor und nach der Entbindung sowie für den Entbindungstag').\n\nWho pays depends on how you are insured:\n\n- Members of a statutory health insurance fund ('Mitglied einer gesetzlichen Krankenkasse') receive Mutterschaftsgeld under the rules of the Social Code, Book V. Under those rules it goes to female members who are entitled to sickness benefit when unable to work, or who are not paid wages because of the maternity protection periods. It also goes to women whose employment ends immediately before the protection period begins, if they were members of a health insurance fund on the last day of employment.\n- For members in employment at the start of the protection period, Mutterschaftsgeld is based on average net daily pay over the last three settled calendar months, but is at most 13 euros per calendar day ('höchstens 13 Euro für den Kalendertag'). Any amount above that is paid by the employer, or by the body responsible for paying Mutterschaftsgeld, as an employer supplement ('Zuschuss zum Mutterschaftsgeld').\n- Women who are not members of a statutory health insurance fund receive Mutterschaftsgeld paid by the federal government, capped at 210 euros in total ('insgesamt höchstens 210 Euro'). It is paid on application by the Bundesamt für Soziale Sicherung ('auf Antrag vom Bundesamt für Soziale Sicherung').\n\nThe Familienportal explains that the protection periods normally begin 6 weeks before the calculated due date and end 8 weeks after the birth.\n\nWhen to apply: the excerpts do not give a time for applying. They say only that, for payment before the birth, a certificate from a doctor or midwife stating the expected date of delivery is decisive ('das Zeugnis eines Arztes oder einer Hebamme maßgebend, in dem der voraussichtliche Tag der Entbindung angegeben ist').\n\nIf you are in statutory health insurance, your health insurance fund is the body to ask about timing. If you are not, the Bundesamt für Soziale Sicherung is the authority named in the law.\n\nWhether you qualify and how much you would receive is decided by that body, not here.\n\nMutterschaftsgeld also affects Elterngeld. Statutory Mutterschaftsgeld and the employer supplement for the time from the child's birth are counted against Elterngeld. The 210-euro payment under § 19 Absatz 2 MuSchG is excluded from this.",
+      "citations": [
+        {
+          "section_ref": "MuSchG §19",
+          "source_url": "https://www.gesetze-im-internet.de/muschg_2018/__19.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "MuSchG §20",
+          "source_url": "https://www.gesetze-im-internet.de/muschg_2018/__20.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "SGB V §24i",
+          "source_url": "https://www.gesetze-im-internet.de/sgb_5/__24i.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §3",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__3.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "Mutterschutz",
+          "source_url": "https://familienportal.de/familienportal/familienleistungen/mutterschutz",
+          "as_of": "2026-10-22"
+        }
+      ],
+      "topCosine": 0.736083173626611,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 2,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 4598
+      },
+      "refsCited": true,
+      "citationsTotal": 3,
+      "citationsValid": 3,
+      "citationsGuidance": 2,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "paid by the Krankenkasse during the protection periods with an employer top-up to net pay",
+        "requires a certificate of the expected date of delivery",
+        "that certificate may be issued at the earliest 7 weeks before the due date"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "paid by the Krankenkasse during the protection periods with an employer top-up to net pay",
+            "covered": true,
+            "why": "The reply says Mutterschaftsgeld from the health insurer covers the protection periods, and that it is based on average net daily pay with any amount above 13 euros paid by the employer as an employer supplement."
+          },
+          {
+            "element": "requires a certificate of the expected date of delivery",
+            "covered": true,
+            "why": "The reply states that for payment before the birth, a certificate from a doctor or midwife stating the expected date of delivery is decisive."
+          },
+          {
+            "element": "that certificate may be issued at the earliest 7 weeks before the due date",
+            "covered": false,
+            "why": "The reply gives no earliest issue date for the certificate and does not mention 7 weeks before the due date."
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: that certificate may be issued at the earliest 7 weeks before the due date — The reply gives no earliest issue date for the certificate and does not mention 7 weeks before the due date."
+      ],
+      "pass": false
+    },
+    {
+      "id": "A-29",
+      "category": "ANSWER",
+      "question": "Can I work while receiving Elterngeld?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "Yes, the law allows it, within a limit. Elterngeld (parental allowance) goes to a person who does no paid work or does not work full time: \"keine oder keine volle Erwerbstätigkeit ausübt\" (BEEG §1(1) no. 4).\n\nThe law says a person is not working full time in any of these three cases (BEEG §1(6)):\n1. their working hours do not exceed 32 hours a week, averaged over the child's month of life (\"32 Wochenstunden im Durchschnitt des Lebensmonats\");\n2. they are in employment for vocational training (\"Beschäftigung zur Berufsbildung\");\n3. they work as a suitable childminder within the meaning of §§ 23 and 43 of Book VIII of the Social Code.\n\nWorking reduces the payment. The maximum of 1,800 euros a month is paid for full months of life in which you have no earned income (BEEG §2(1)). For months in which you earn less than before the birth, Elterngeld is paid as a percentage of the difference between your earnings before and after the birth. For this, earnings before the birth count up to at most 2,770 euros (BEEG §2(3)).\n\nIf your application states that you expect to earn income during the payment period, the amount is first decided provisionally (BEEG §8(3) no. 3). After the payment period ends, you must prove your actual earnings for that time (BEEG §8(1)). Instead of one month of the basic allowance, you can take two months of \"Elterngeld Plus\" (BEEG §4(3)).\n\nWhether you qualify and how much you would receive is decided only by the Elterngeld office for your district.",
+      "citations": [
+        {
+          "section_ref": "BEEG §1",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__1.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §2",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__2.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §8",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__8.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §4",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__4.html",
+          "as_of": "2026-10-22"
+        }
+      ],
+      "topCosine": 0.609755436231233,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 4,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 7580
+      },
+      "refsCited": true,
+      "citationsTotal": 4,
+      "citationsValid": 4,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "part-time work is permitted up to the statutory weekly average",
+        "income earned during the reference period reduces the payment",
+        "the hours limit is stated with its source"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "part-time work is permitted up to the statutory weekly average",
+            "covered": true,
+            "why": "The reply says 'Yes, the law allows it, within a limit' and states that a person is not full-time if working hours 'do not exceed 32 hours a week, averaged over the child's month of life' (BEEG §1(6))."
+          },
+          {
+            "element": "income earned during the reference period reduces the payment",
+            "covered": true,
+            "why": "The reply states 'Working reduces the payment', that the maximum is paid only for full months with no earned income, and that months with lower earnings receive a percentage of the difference (BEEG §2(1), §2(3)). It does not use the term 'reference period', but the reduction by income is stated."
+          },
+          {
+            "element": "the hours limit is stated with its source",
+            "covered": true,
+            "why": "The 32-hour limit is stated and cited as BEEG §1(6)."
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    }
+  ]
+}
