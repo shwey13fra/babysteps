@@ -117,6 +117,61 @@ sources:
     robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-10-22 }
     content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-02 }
 
+  # ---- Added 2026-11-03. Four federal sources for the class C elements the corpus could not
+  # reach. Licence: all four are amtliche Werke under §5 UrhG, so no licence question arises.
+  # robots.txt re-read live 2026-11-03 with the project User-Agent: 200, "User-agent: * /
+  # Disallow:" (empty), 0 rules, so every path is permitted. No Content-Signal header or
+  # robots.txt directive on this origin (ADR-042), so nothing is reserved: ai-input is
+  # unrestricted, not merely unspecified. All four returned HTTP 200 with the same byte counts
+  # the 2026-11-02 survey recorded, so neither the sources nor the policy moved.
+  #
+  # Each only_sections list is the provision named in the survey, nothing wider:
+  #   pstv §33 Nachweise bei Anzeige der Geburt (A-13) | §34 Ausländerbehörde (A-27)
+  #   sgb_8 §18 advice, §58 Sorgeregister, §59 Beurkundung | sgb_10 §64 Kostenfreiheit
+  #   ao_1977 §139a notification, §139b Meldebehörden → BZSt (A-30 frame)
+  #
+  # `ao` and `ao_2017` 404; `ao_1977` is the slug.
+
+  - id: pstv
+    title_de: Verordnung zur Ausführung des Personenstandsgesetzes (Personenstandsverordnung)
+    format: xml
+    ref_prefix: "PStV"
+    url: https://www.gesetze-im-internet.de/pstv/xml.zip
+    fetch: auto
+    only_sections: ["33", "34"]   # §33 birth-registration evidence (A-13); §34 Ausländerbehörde (A-27)
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-11-03 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-03 }
+
+  - id: sgb_8
+    title_de: Sozialgesetzbuch Achtes Buch — Kinder- und Jugendhilfe
+    format: xml
+    ref_prefix: "SGB VIII"
+    url: https://www.gesetze-im-internet.de/sgb_8/xml.zip
+    fetch: auto
+    only_sections: ["18", "58", "59"]   # SGB VIII entire is far too large
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-11-03 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-03 }
+
+  - id: sgb_10
+    title_de: Sozialgesetzbuch Zehntes Buch — Sozialverwaltungsverfahren und Sozialdatenschutz
+    format: xml
+    ref_prefix: "SGB X"
+    url: https://www.gesetze-im-internet.de/sgb_10/xml.zip
+    fetch: auto
+    only_sections: ["64"]   # §64(1) "keine Gebühren und Auslagen" — the fee-free frame for A-19/A-20
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-11-03 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-03 }
+
+  - id: ao_1977
+    title_de: Abgabenordnung
+    format: xml
+    ref_prefix: "AO"
+    url: https://www.gesetze-im-internet.de/ao_1977/xml.zip
+    fetch: auto
+    only_sections: ["139a", "139b"]   # the tax-ID frame for A-30. §139a says "unverzüglich", never "by post"
+    robots: { allows: true, rule: "Disallow: (empty)", checked: 2026-11-03 }
+    content_signal: { present: false, ai_input: not_restricted, probed: 2026-11-03 }
+
   # ---- HTML sources. Domains and robots verified 2026-10-22; exact page URLs still to be
   # ---- confirmed one by one before fetching. No URL is invented here.
 
