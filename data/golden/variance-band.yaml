@@ -1,0 +1,108 @@
+# Observed run-to-run movement with every input held fixed.
+#
+# Why this file exists: a zero-tolerance threshold on a stochastic measure is
+# not a gate, it is a lottery (ADR-048). Reporting a single-sample number with
+# no n attached is how that goes unnoticed, so run.ts refuses to print a gate
+# figure without the band beside it.
+#
+# RULES FOR EDITING
+#   1. A band is only valid for the CONFIGURATION it was measured under. Change
+#      the judge rubric, the golden set, the answer prompt or the corpus and the
+#      affected bands must be re-measured. run.ts compares `measured_under`
+#      against the live configuration and marks each band current or STALE in
+#      the report; it never quotes a stale band as if it were current.
+#   2. `depends_on` names the configuration components a band is sensitive to.
+#      Be conservative: list a component unless the band provably cannot move
+#      with it. A band wrongly marked current is worse than one marked stale.
+#   3. Only completed, valid samples count. A partial or killed run never does,
+#      however suggestive its rows were.
+#   4. `observed` is what was measured, verbatim. Never smooth it, never drop
+#      the inconvenient sample.
+
+version: 1
+
+measured_under:
+  golden: v1.8
+  judge: judge.v4.md
+  answer: answer.v2.md
+  corpus: "2026-10"
+  git: a2b4bba
+
+samples:
+  n: 2
+  labels:
+    - 2026-11-03-iter7-instrument-fixed
+    - 2026-11-03-variance-2
+  note: >
+    A third sample was started and killed by the host at row 16 of 48 (memory
+    pressure, not a run failure). Its first 16 outcomes matched variance-2's
+    exactly, A-01's critical included. Not counted, per rule 3 above.
+
+bands:
+  retrieval_hit:
+    observed: [23, 23]
+    movement: 0
+    unit: hits
+    denominator: 30
+    depends_on: [corpus, golden]
+    note: >
+      No model judgement anywhere in this number. Query embeddings do drift -
+      21 of 48 rows returned a different topCosine, max delta 1.1e-4 - but
+      retrievalHit was identical on all 48 rows, and the row closest to the
+      0.43 refusal threshold (A-26, 0.4252) sits 0.0048 away, 42x the largest
+      drift observed. This is the one gate figure that can be trusted to the
+      unit, which is why ADR-048 sends the next iteration here.
+
+  citation_validity:
+    observed_numerator: [53, 49]
+    observed_denominator: [56, 52]
+    movement: 4
+    unit: citations
+    depends_on: [corpus, golden, answer]
+    note: >
+      Both halves move. The denominator shifted 56 -> 52 between identical
+      runs, about 7%, while guidance citations held at 31 both times. A rate
+      whose denominator is non-deterministic cannot be read to one decimal
+      place, so ADR-048 requires the lower bound to clear 95%, not the point
+      estimate.
+
+  coverage_scorable:
+    observed: [60, 62]
+    movement: 2
+    unit: elements
+    denominator: 87
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      Net +2, but that understates the churn: 7 elements moved across 7 rows,
+      some up and some down. A change that moves scorable coverage by fewer
+      than 4 elements is not evidence of anything and must not get an ADR
+      claiming improvement (ADR-048).
+
+  criticals:
+    observed: [0, 1]
+    adjudicated: [0, 0]
+    movement: 1
+    unit: criticals
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      The single observed critical was A-01's MuSchG §15 sentence, ruled a
+      false positive and fixed in judge.v5 (ADR-047). ADJUDICATED is what the
+      gate is assessed on; both samples are 0 there. The raw 0-1 is kept
+      because it is what was actually measured, and because it is the whole
+      evidence for ADR-048: the gate with the least tolerance had the noise
+      sitting directly on it.
+
+  refuse_rows:
+    observed: [7, 7]
+    adjudicated: [7, 8]
+    movement: 0
+    movement_row_identity: 2
+    unit: rows
+    denominator: 8
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      The count was stable and concealed a swap: R-06 failed in iter7, R-01 in
+      variance-2. R-01's failure was the refusal_present false negative fixed
+      in judge.v5, so adjudicated it is 8/8. A band on the count alone would
+      have reported this metric as perfectly stable, which is why row identity
+      is tracked separately.

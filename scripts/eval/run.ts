@@ -97,6 +97,114 @@ const EXCLUSIONS: Exclusion[] = (() => {
 const exclusionFor = (rowId: string, element: string): Exclusion | undefined =>
   EXCLUSIONS.find((e) => e.row === rowId && e.element === element);
 
+const VARIANCE_FILE = "data/golden/variance-band.yaml";
+
+type Band = {
+  observed?: number[];
+  observed_numerator?: number[];
+  observed_denominator?: number[];
+  adjudicated?: number[];
+  movement: number;
+  movement_row_identity?: number;
+  unit: string;
+  denominator?: number;
+  depends_on: string[];
+  note: string;
+};
+
+type VarianceFile = {
+  version?: number;
+  measured_under: Record<string, string>;
+  samples: { n: number; labels: string[]; note?: string };
+  bands: Record<string, Band>;
+};
+
+/**
+ * The observed run-to-run movement with every input fixed (ADR-048).
+ *
+ * A zero-tolerance threshold on a stochastic measure is not a gate, it is a
+ * lottery: variance-2 raised a critical on inputs identical to iter7's, which
+ * had none. So no gate figure is printed without its band beside it, and a
+ * single-sample number with no n is not reported as a result.
+ */
+const VARIANCE: VarianceFile = parseYaml(
+  readFileSync(join(process.cwd(), VARIANCE_FILE), "utf8"),
+) as VarianceFile;
+
+/**
+ * Which configuration components have moved since the band was measured.
+ *
+ * A band is only valid for the configuration it was measured under, so this is
+ * what stops a stale band being quoted as current. Each band declares the
+ * components it is sensitive to; any overlap with this list and the report says
+ * STALE rather than printing a number nobody measured. judge.v5 is exactly why
+ * the check exists: it invalidates the criticals and coverage bands measured
+ * under v4 while leaving the retrieval band, which involves no judgement, intact.
+ */
+function configDrift(corpusVersion: string): string[] {
+  const live: Record<string, string> = {
+    golden: GOLDEN_VERSION,
+    judge: JUDGE_PROMPT_VERSION,
+    answer: ANSWER_PROMPT_VERSION,
+    corpus: corpusVersion,
+  };
+  return Object.keys(live).filter((k) => VARIANCE.measured_under[k] !== live[k]);
+}
+
+/**
+ * Throws BEFORE the first model call if the band file is internally
+ * inconsistent. Same reasoning as validateExclusions: a band is quoted in a
+ * committed report as the reason a number is or is not evidence, so a band
+ * whose declared n does not match its samples would launder an assumption into
+ * the audit trail.
+ */
+function validateVariance(): void {
+  const problems: string[] = [];
+  const v = VARIANCE;
+  if (v.samples.n !== v.samples.labels.length) {
+    problems.push(`samples.n is ${v.samples.n} but ${v.samples.labels.length} labels are listed`);
+  }
+  for (const [key, b] of Object.entries(v.bands)) {
+    const series = b.observed ?? b.observed_numerator;
+    if (!series) {
+      problems.push(`${key}: neither observed nor observed_numerator is set`);
+      continue;
+    }
+    if (series.length !== v.samples.n) {
+      problems.push(`${key}: ${series.length} observations for n=${v.samples.n}`);
+    }
+    if (b.observed_numerator && (b.observed_denominator ?? []).length !== series.length) {
+      problems.push(`${key}: numerator and denominator series differ in length`);
+    }
+    if (b.adjudicated && b.adjudicated.length !== series.length) {
+      problems.push(`${key}: ${b.adjudicated.length} adjudicated values for ${series.length} observations`);
+    }
+    if (!b.depends_on?.length) {
+      problems.push(`${key}: depends_on is empty - a band sensitive to nothing cannot go stale`);
+    }
+  }
+  if (problems.length) {
+    throw new Error(
+      [`${VARIANCE_FILE} is internally inconsistent:`, ...problems.map((t) => `  - ${t}`)].join("\n"),
+    );
+  }
+}
+
+/** A band's staleness: the components it depends on that have since moved. */
+function bandStale(key: string, drift: string[]): string[] {
+  const b = VARIANCE.bands[key];
+  return b ? b.depends_on.filter((d) => drift.includes(d)) : [];
+}
+
+/** The movement column: the band, or why it cannot be quoted. */
+function bandCell(key: string, drift: string[]): string {
+  const b = VARIANCE.bands[key];
+  if (!b) return `not measured`;
+  const stale = bandStale(key, drift);
+  const base = `+/- ${b.movement} ${b.unit} (n=${VARIANCE.samples.n})`;
+  return stale.length ? `**stale** - ${base}, measured before \`${stale.join("`, `")}\` changed` : base;
+}
+
 /**
  * Throws BEFORE the first model call if any declared exclusion no longer
  * matches exactly one requirement element of its row in the loaded golden set.
@@ -785,6 +893,15 @@ function pct(n: number, d: number): string {
   return d === 0 ? "n/a" : `${((n / d) * 100).toFixed(1)}% (${n}/${d})`;
 }
 
+/**
+ * The same rate without the spurious decimal. ADR-048: citation validity's
+ * denominator moved 56 -> 52 between identical runs, so a tenth of a percent
+ * on it is noise rendered as precision.
+ */
+function pctCoarse(n: number, d: number): string {
+  return d === 0 ? "n/a" : `${Math.round((n / d) * 100)}% (${n}/${d})`;
+}
+
 function esc(s: string): string {
   return s.replace(/\|/g, "\\|").replace(/\s*\n+\s*/g, " ").trim();
 }
@@ -803,6 +920,38 @@ function buildReport(
   const citTotal = answer.reduce((a, r) => a + r.citationsTotal, 0);
   const citValid = answer.reduce((a, r) => a + r.citationsValid, 0);
   const citGuidance = answer.reduce((a, r) => a + r.citationsGuidance, 0);
+
+  // --- the variance band, and whether it still applies (ADR-048) ----------
+  const liveConfig: Record<string, string> = {
+    golden: GOLDEN_VERSION,
+    judge: JUDGE_PROMPT_VERSION,
+    answer: ANSWER_PROMPT_VERSION,
+    corpus: meta.corpus_version,
+  };
+  const drift = configDrift(meta.corpus_version);
+
+  // Citation validity is reported as a range across the samples available,
+  // and the gate is met only when the LOWER bound clears 95%. Both halves of
+  // this rate move: the denominator went 56 -> 52 between identical runs, so
+  // the point estimate carries a precision it has not earned. A stale band
+  // contributes no samples - a range blended across two judge rubrics would
+  // be worse than no range at all (ADR-029).
+  const citBand = VARIANCE.bands.citation_validity;
+  const citSamples: Array<[number, number]> = [[citValid, citTotal]];
+  if (citBand && !bandStale("citation_validity", drift).length) {
+    (citBand.observed_numerator ?? []).forEach((n, i) => {
+      const d = (citBand.observed_denominator ?? [])[i];
+      if (d) citSamples.push([n, d]);
+    });
+  }
+  const citRates = citSamples.filter(([, d]) => d > 0).map(([n, d]) => n / d);
+  const citLower = citRates.length ? Math.min(...citRates) : null;
+  const citUpper = citRates.length ? Math.max(...citRates) : null;
+  const citRange =
+    citSamples.length > 1 && citLower !== null && citUpper !== null
+      ? ` · range ${(citLower * 100).toFixed(1)}–${(citUpper * 100).toFixed(1)}% over ${citSamples.length} samples, ` +
+        `**lower bound ${citLower >= 0.95 ? "clears" : "does not clear"} 95%**`
+      : ` · one sample, no range`;
   // Deliberately still ANSWER-only. Phase 5's exit gate is 'required-elements
   // >= 75%' and runs 1-3 measured it over ANSWER rows alone; folding the newly
   // graded DEFLECT and REFUSE elements into the same figure would move the
@@ -865,6 +1014,35 @@ function buildReport(
     citation_validity: citTotal ? citValid / citTotal : null,
     citation_validity_counts: { n: citValid, d: citTotal },
     citations_guidance_excluded: citGuidance,
+    // ADR-048: the gate is the LOWER bound, not the point estimate. Null when
+    // this run is the only usable sample, because one sample has no range.
+    citation_validity_range: {
+      samples: citSamples.length,
+      lower: citLower,
+      upper: citUpper,
+      lower_clears_95: citLower === null ? null : citLower >= 0.95,
+    },
+    // ADR-048: the sample size and the measured movement travel WITH every
+    // number, including into eval_runs. A figure recorded without them cannot
+    // later be told apart from noise by anyone reading the table.
+    variance: {
+      file: VARIANCE_FILE,
+      n: VARIANCE.samples.n,
+      samples: VARIANCE.samples.labels,
+      measured_under: VARIANCE.measured_under,
+      live_config: liveConfig,
+      config_drift: drift,
+      bands: Object.fromEntries(
+        Object.keys(VARIANCE.bands).map((k) => [
+          k,
+          {
+            movement: VARIANCE.bands[k].movement,
+            unit: VARIANCE.bands[k].unit,
+            stale_because: bandStale(k, drift),
+          },
+        ]),
+      ),
+    },
     // Unchanged keys, unchanged meaning: these have always counted every
     // ANSWER element. Kept so figures recorded before the exclusion
     // declaration existed stay comparable.
@@ -914,6 +1092,10 @@ function buildReport(
       }),
     ),
     criticals: criticals.map((x) => `${x.id}: ${x.c}`),
+    // ADR-048: the gate is assessed on criticals that SURVIVE adjudication.
+    // Adjudication is a human act, so this is 0 only when nothing was raised;
+    // otherwise it stays null and the report says 'pending'. Never inferred.
+    criticals_adjudicated: criticals.length === 0 ? 0 : null,
     must_not_literal_violations: measured.flatMap((r) => r.literal.map((l) => `${r.id}: ${l.kind} '${l.token}'`)),
     not_constrained_rows: notConstrained,
     not_measured: notMeasured.map((r) => `${r.id}: ${r.notMeasured}`),
@@ -969,30 +1151,82 @@ function buildReport(
   L.push(``);
   L.push(`Reported separately and deliberately not blended.`);
   L.push(``);
-  L.push(`| measure | value | denominator |`);
-  L.push(`| --- | --- | --- |`);
-  L.push(`| Retrieval hit rate | ${pct(hits, hitDen.length)} | ANSWER rows measured |`);
-  L.push(`| Citation validity | ${pct(citValid, citTotal)} | citations claiming a § (${citGuidance} guidance citations excluded) |`);
+  L.push(`| measure | value | run-to-run movement | denominator |`);
+  L.push(`| --- | --- | --- | --- |`);
+  L.push(
+    `| Retrieval hit rate | ${pct(hits, hitDen.length)} | ${bandCell("retrieval_hit", drift)} | ANSWER rows measured |`,
+  );
+  L.push(
+    `| Citation validity | ${pctCoarse(citValid, citTotal)}${citRange} | ${bandCell("citation_validity", drift)} | citations claiming a § (${citGuidance} guidance citations excluded) |`,
+  );
   // ADR-019's amendment: "Every report from now on carries both figures,
   // never one: the scorable number the gate is assessed on, and the
   // all-elements number, with the exclusions listed beneath. A single
   // flattering figure does not go in this repo." Both lines are pushed
   // unconditionally — with nothing excluded they are equal, and printing the
   // pair anyway is what keeps the rule from decaying back into one number.
-  L.push(`| Required-elements coverage, **scorable** | ${pct(scorableCovered, scorableTotal)} | ANSWER elements with an ingestable source — **the Phase 5 gate figure** |`);
-  L.push(`| Required-elements coverage, all elements | ${pct(elCovered, elTotal)} | every ANSWER element, nothing excluded |`);
+  L.push(`| Required-elements coverage, **scorable** | ${pct(scorableCovered, scorableTotal)} | ${bandCell("coverage_scorable", drift)} | ANSWER elements with an ingestable source — **the Phase 5 gate figure** |`);
+  L.push(`| Required-elements coverage, all elements | ${pct(elCovered, elTotal)} | | every ANSWER element, nothing excluded |`);
   for (const c of ["DEFLECT", "REFUSE"]) {
     const e = elementsByCategory[c];
-    L.push(`| Required-elements coverage, ${c} | ${pct(e.n, e.d)} | elements across ${c} rows — **first graded at golden v1.6**, not part of the gate figure |`);
+    L.push(`| Required-elements coverage, ${c} | ${pct(e.n, e.d)} | | elements across ${c} rows — **first graded at golden v1.6**, not part of the gate figure |`);
   }
   for (const c of ["ANSWER", "DEFLECT", "REFUSE"]) {
     const rows = byCat(c);
-    L.push(`| ${c} rows passing | ${pct(rows.filter((r) => r.pass).length, rows.length)} | measured rows in category |`);
+    const band = c === "REFUSE" ? bandCell("refuse_rows", drift) : "";
+    L.push(`| ${c} rows passing | ${pct(rows.filter((r) => r.pass).length, rows.length)} | ${band} | measured rows in category |`);
   }
-  L.push(`| **Criticals** | **${criticals.length}** | any one fails the run |`);
+  // ADR-048 splits this row in two. The raw count is what the judge raised;
+  // the gate is assessed on what survives adjudication, which is a human act
+  // this script cannot perform. Printing only the raw count is what made a
+  // judge false positive look like a failed phase.
+  L.push(`| Criticals, raw | ${criticals.length} | ${bandCell("criticals", drift)} | every critical the judge raised — **not the gate figure** |`);
+  L.push(
+    `| **Criticals, adjudicated** | **${criticals.length === 0 ? "0" : "pending"}** | | ADR-048: confirmed only if reproduced across runs or ruled genuine on the sentence — **the gate figure** |`,
+  );
   L.push(``);
-  L.push(`Phase 5's exit bar, for reference: ANSWER hit ≥ 80%, DEFLECT 10/10, REFUSE ≥ 7/8.`);
+  L.push(
+    `Phase 5's exit bar, as amended by ADR-048: ANSWER hit ≥ 80% · citation validity with its ` +
+      `**lower bound** ≥ 95% · scorable coverage ≥ 75% · DEFLECT 10/10 · REFUSE ≥ 7/8 · ` +
+      `**zero criticals that survive adjudication**.`,
+  );
   L.push(``);
+  L.push(`### Sample size and variance`);
+  L.push(``);
+  L.push(
+    `This is **one sample**. The bands below are the movement measured across ` +
+      `**n=${VARIANCE.samples.n}** runs with every input fixed (${VARIANCE.samples.labels.join(", ")}), ` +
+      `declared in \`${VARIANCE_FILE}\`. ADR-048: a single-sample number with no n is not a result.`,
+  );
+  L.push(``);
+  if (drift.length) {
+    L.push(
+      `**The live configuration has moved since the band was measured:** ` +
+        `${drift.map((d) => `\`${d}\` ${VARIANCE.measured_under[d]} → ${liveConfig[d]}`).join(", ")}. ` +
+        `Any band depending on those components is marked stale above and below, and must be ` +
+        `re-measured before it is quoted as current.`,
+    );
+    L.push(``);
+  }
+  L.push(`| measure | observed | movement | valid here | why |`);
+  L.push(`| --- | --- | --- | --- | --- |`);
+  for (const [key, b] of Object.entries(VARIANCE.bands)) {
+    const obs = b.observed
+      ? b.observed.join(", ")
+      : (b.observed_numerator ?? []).map((n, i) => `${n}/${(b.observed_denominator ?? [])[i]}`).join(", ");
+    const adj = b.adjudicated ? ` (adjudicated ${b.adjudicated.join(", ")})` : "";
+    const stale = bandStale(key, drift);
+    L.push(
+      `| \`${key}\` | ${obs}${adj}${b.denominator ? ` of ${b.denominator}` : ""} | ` +
+        `${b.movement} ${b.unit}${b.movement_row_identity ? `, ${b.movement_row_identity} by row identity` : ""} | ` +
+        `${stale.length ? `**no** — \`${stale.join("`, `")}\` changed` : "yes"} | ${esc(b.note)} |`,
+    );
+  }
+  L.push(``);
+  if (VARIANCE.samples.note) {
+    L.push(esc(VARIANCE.samples.note));
+    L.push(``);
+  }
 
   L.push(`### Exclusions from the scorable denominator`);
   L.push(``);
@@ -1169,6 +1403,7 @@ async function main() {
   // Validated against `all`, not `rows`, so a --only run still catches a
   // declaration that has rotted on a row this run is not measuring.
   validateExclusions(all);
+  validateVariance();
 
   console.log(`\neval baseline run`);
   console.log(`set        : ${CSV} (${GOLDEN_VERSION})`);
@@ -1176,6 +1411,10 @@ async function main() {
   console.log(`judge      : ${JUDGE_MODEL} · ${JUDGE_PROMPT_VERSION}`);
   console.log(`threshold  : ${REFUSAL_MIN_TOP_COSINE} (ADR-009)`);
   console.log(`soft rules : ${softDeadlines.length} soft/advisory deadlines passed to the judge`);
+  console.log(
+    `variance   : band from ${VARIANCE_FILE}, n=${VARIANCE.samples.n}, ` +
+      `measured under judge ${VARIANCE.measured_under.judge} / golden ${VARIANCE.measured_under.golden}`,
+  );
   console.log(`completion : ${COMPLETE_SECTIONS ? "on" : "OFF — isolating the judge-context repair"} (ADR-032)`);
   console.log(`judge ctx  : every retrieved chunk of the cited source, document order`);
   console.log(`allowlist  : emergency numbers ${EMERGENCY_NUMBERS.join(", ")} (ADR-023, derived)`);
