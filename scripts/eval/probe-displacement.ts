@@ -20,7 +20,7 @@
 //
 // Run: npx tsx scripts/eval/probe-displacement.ts [--category ANSWER]
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 for (const line of readFileSync(join(process.cwd(), ".env.local"), "utf8").split(/\r?\n/)) {
@@ -32,10 +32,16 @@ import { retrieve, completeSections, EXCERPT_TOKEN_BUDGET } from "../../lib/rag/
 import type { ChunkHit } from "../../lib/supabase/server";
 import type { Bundesland } from "../../lib/schemas";
 import { readCsv } from "./csv";
+import { todayISO } from "../../lib/timeline/dates";
 
 const CSV = "data/golden/golden_set_v1.7.csv";
 const GOLDEN_VERSION = "v1.7";
-const TODAY = "2026-11-02";
+// Was `const TODAY = "2026-11-02"`. A hardcoded date in an output path does not
+// date the report, it names ONE file that every later run overwrites: running
+// this probe on 2026-11-03 silently replaced the committed 2026-11-02 report
+// and its .json, which is the failure 57c1428 ("a report is evidence") exists
+// to prevent. `todayISO()` is the project helper four sibling eval scripts
+// already use, so this file now dates itself the same way they do.
 
 /** Sixth copy. calibrate.ts:32 already flags the extraction as owed (CLAUDE.md rule 1). */
 function bundeslandFor(override: string): Bundesland {
@@ -166,7 +172,7 @@ async function main() {
   L.push("# Displacement pre-check — section completion OFF vs ON");
   L.push("");
   L.push(
-    `Date ${TODAY} · golden ${GOLDEN_VERSION} · ${results.length} rows · budget ${EXCERPT_TOKEN_BUDGET} est. tokens`,
+    `Date ${todayISO()} · golden ${GOLDEN_VERSION} · ${results.length} rows · budget ${EXCERPT_TOKEN_BUDGET} est. tokens`,
   );
   L.push("Retrieval only. **No model calls.** One embedding per row.");
   L.push("");
@@ -204,7 +210,15 @@ async function main() {
   L.push("");
 
   mkdirSync(join(process.cwd(), "eval/reports"), { recursive: true });
-  const stem = `eval/reports/${TODAY}-displacement-precheck`;
+  // Date from the clock, plus run.ts's suffix so a SECOND run on the same day
+  // cannot overwrite the first either. Both halves are needed: the date stops
+  // tomorrow's run clobbering today's, the suffix stops today's second run
+  // clobbering today's first.
+  const base = `eval/reports/${todayISO()}-displacement-precheck`;
+  let suffix = "";
+  for (let i = 2; existsSync(join(process.cwd(), `${base}${suffix}.md`)); i++) suffix = `-${i}`;
+  if (suffix) console.log(`note: ${base}.md exists, writing ${base}${suffix}.md instead`);
+  const stem = `${base}${suffix}`;
   writeFileSync(join(process.cwd(), `${stem}.md`), L.join("\n") + "\n");
   writeFileSync(
     join(process.cwd(), `${stem}.json`),
