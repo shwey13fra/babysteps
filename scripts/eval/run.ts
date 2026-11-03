@@ -57,8 +57,8 @@ import { parseElement, prohibitionCoverage } from "./clauses";
 import { formatUsage } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
 
-const CSV = "data/golden/golden_set_v1.7.csv";
-const GOLDEN_VERSION = "v1.7";
+const CSV = "data/golden/golden_set_v1.8.csv";
+const GOLDEN_VERSION = "v1.8";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 // ---------------------------------------------------------------------------
@@ -243,15 +243,39 @@ function clauses(cell: string): string[] {
  * names sub-paragraphs; chunk section_refs stop at the §. Comparing them raw
  * would score every statutory row a miss.
  */
+// A statute prefix may be several words ("SGB V", "SGB VIII", "SGB X") or
+// hyphenated ("Kinder-RL"). The original pattern was a single word of 2+
+// letters, which silently mis-read every one of those:
+//
+//   SGB V §24d   -> null          invisible to every ref comparison
+//   SGB X §64    -> null          same
+//   SGB VIII §59 -> "VIII §59"   prefix dropped
+//   Kinder-RL §2  -> "RL §2"     prefix dropped
+//
+// `null` was the damaging case. The citation loop treats an unparseable ref as
+// a GUIDANCE citation and `continue`s on the reasoning that it "claims no §" —
+// so SGB V and SGB X citations were dropped from the validity denominator AND
+// skipped the fabricated-reference check, which raises a critical. A
+// hallucinated `SGB V §27b` could not be caught. Measured on the 2026-11-03
+// baseline: 5 statute citations counted as guidance (SGB V §24i x2, §24d x2,
+// §10 x1), so citation validity reported a denominator of 51 where 56 was due.
+//
+// The two truncating cases matched each other on both sides of every
+// comparison, so they worked by accident rather than by design. Roman-numeral
+// continuation only, deliberately: every ref_prefix in corpus_manifest.yaml is
+// covered by it, and allowing any capital letter would let the pattern swallow
+// the first letter of a following word.
+const REF_PATTERN = /([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]{1,}(?:\s+[IVXL]+)?)\s*§+\s*(\d+[a-z]?)/;
+
 function normalizeRef(ref: string): string | null {
-  const m = ref.match(/([A-Za-zÄÖÜäöüß]{2,})\s*§+\s*(\d+[a-z]?)/);
+  const m = ref.match(REF_PATTERN);
   return m ? `${m[1].toUpperCase()} §${m[2]}` : null;
 }
 
 /** Every § reference in a ground-truth cell, in order. First is the primary. */
 function refsIn(text: string): string[] {
   const out: string[] = [];
-  const re = /([A-Za-zÄÖÜäöüß]{2,})\s*§+\s*(\d+[a-z]?)/g;
+  const re = new RegExp(REF_PATTERN.source, "g");
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) out.push(`${m[1].toUpperCase()} §${m[2]}`);
   return out;
