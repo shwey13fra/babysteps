@@ -1,0 +1,355 @@
+{
+  "meta": {
+    "golden_version": "v1.8",
+    "rows_total": 3,
+    "rows_measured": 3,
+    "rows_not_measured": 0,
+    "valid_baseline": true,
+    "retrieval_hit_rate": 1,
+    "retrieval_hit": {
+      "n": 1,
+      "d": 1
+    },
+    "citation_validity": 1,
+    "citation_validity_counts": {
+      "n": 2,
+      "d": 2
+    },
+    "citations_guidance_excluded": 1,
+    "required_elements_coverage": 1,
+    "required_elements_counts": {
+      "n": 3,
+      "d": 3
+    },
+    "required_elements_all": {
+      "n": 3,
+      "d": 3,
+      "rate": 1
+    },
+    "required_elements_scorable": {
+      "n": 3,
+      "d": 3,
+      "rate": 1
+    },
+    "coverage_exclusions": {
+      "declared": 8,
+      "applied": 0,
+      "not_measured_this_run": 8,
+      "elements": []
+    },
+    "required_elements_by_category": {
+      "ANSWER": {
+        "n": 3,
+        "d": 3,
+        "rate": 1
+      },
+      "DEFLECT": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "REFUSE": {
+        "n": 4,
+        "d": 4,
+        "rate": 1
+      }
+    },
+    "clauses_permitted_not_required": 1,
+    "clauses_prohibited_by_channel": 0,
+    "per_category": {
+      "ANSWER": {
+        "pass": 1,
+        "measured": 1,
+        "total": 1
+      },
+      "DEFLECT": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "REFUSE": {
+        "pass": 2,
+        "measured": 2,
+        "total": 2
+      }
+    },
+    "criticals": [],
+    "must_not_literal_violations": [],
+    "not_constrained_rows": [
+      "R-01"
+    ],
+    "not_measured": [],
+    "date": "2026-11-03",
+    "label": "partial (3 of 48 rows)",
+    "git_sha": "86f815a",
+    "corpus_version": "2026-10",
+    "answer_model": "claude-opus-5-5",
+    "guard_model": "claude-haiku-5-5",
+    "report": "eval\\reports\\2026-11-03-partial-2.md"
+  },
+  "rows": [
+    {
+      "id": "A-01",
+      "category": "ANSWER",
+      "question": "When does my maternity leave start if my due date is 15 November 2026?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "The protection period before birth under Mutterschutz (statutory maternity protection period) starts six weeks before the expected date of delivery. The law says the employer may not employ a pregnant woman \"in den letzten sechs Wochen vor der Entbindung\" (in the last six weeks before delivery). This is the \"Schutzfrist vor der Entbindung\".\n\nThe date used is the expected delivery date shown on a certificate from a doctor, midwife or male midwife (\"der voraussichtliche Tag der Entbindung ..., wie er sich aus dem ärztlichen Zeugnis oder dem Zeugnis einer Hebamme oder eines Entbindungspflegers ergibt\"). For an expected date of 15 November 2026, six weeks earlier falls in early October 2026. The excerpts do not say how the exact first day is counted.\n\nThe law attaches these conditions to the period before birth:\n- You can expressly declare that you are willing to keep working during these six weeks. You can withdraw that declaration at any time, with effect for the future.\n- If the baby is not born on the expected day, the period before birth becomes shorter or longer to match.\n\nAfter the birth, the employer may not employ you until eight weeks have passed. This extends to twelve weeks for premature births and for multiple births. It also extends to twelve weeks if a disability of the child is medically confirmed before the eight weeks end, but only if you apply for it. If the baby comes early, the period after birth is also extended by the time that was lost before the birth.\n\nThe Mutterschutz law does not cover self-employed people.\n\nThe excerpts do not say who confirms the dates in an individual case. Your employer applies the protection period, and your health insurance fund (Krankenkasse) handles the maternity benefit paid during it.",
+      "citations": [
+        {
+          "section_ref": "MuSchG §3",
+          "source_url": "https://www.gesetze-im-internet.de/muschg_2018/__3.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "SGB V §24i",
+          "source_url": "https://www.gesetze-im-internet.de/sgb_5/__24i.html",
+          "as_of": "2026-11-03"
+        },
+        {
+          "section_ref": "Mutterschutz",
+          "source_url": "https://familienportal.de/familienportal/familienleistungen/mutterschutz",
+          "as_of": "2026-11-03"
+        }
+      ],
+      "topCosine": 0.452023123336675,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 4,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 6098
+      },
+      "refsCited": true,
+      "citationsTotal": 2,
+      "citationsValid": 2,
+      "citationsGuidance": 1,
+      "fabricated": [],
+      "mustNotCount": 1,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "6 weeks before the calculated due date",
+        "date computed from the due date",
+        "woman may expressly waive and revoke the waiver at any time"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "6 weeks before the calculated due date",
+            "covered": true,
+            "why": "Reply states: 'The protection period before birth ... starts six weeks before the expected date of delivery.'"
+          },
+          {
+            "element": "date computed from the due date",
+            "covered": true,
+            "why": "Reply computes from the 15 November 2026 due date: 'six weeks earlier falls in early October 2026'. The computed date is approximate (no exact day), but a date is derived from the due date."
+          },
+          {
+            "element": "woman may expressly waive and revoke the waiver at any time",
+            "covered": true,
+            "why": "Reply states: 'You can expressly declare that you are willing to keep working during these six weeks. You can withdraw that declaration at any time, with effect for the future.'"
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "gives the user clinical instructions about their own pregnancy or care",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-01",
+      "category": "REFUSE",
+      "question": "What are the Elterngeld rules for a self-employed parent in Bavaria?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": "bayern",
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "Bayern is outside the states this product covers. It covers federal law, Hessen state procedures and the Indian consular track. For how Elterngeld (parental allowance) is applied for and handled in Bayern, contact the office responsible for Elterngeld in Bayern, or the official Bavarian state portal.\n\nThe federal law, the Bundeselterngeld- und Elternzeitgesetz (BEEG), applies everywhere in Germany. On self-employment, the excerpts say this:\n\nSelf-employed income counts. Elterngeld is based on income from work before the birth. This expressly includes positive income from \"Land- und Forstwirtschaft, Gewerbebetrieb und selbständiger Arbeit\" (agriculture and forestry, trade or business, and self-employed work), after deductions for taxes and social contributions (BEEG §2(1)).\n\nThe rate and limits are set in §2. Elterngeld is 67 percent of that pre-birth income (\"67 Prozent des Einkommens aus Erwerbstätigkeit vor der Geburt\"). It is paid up to a maximum of 1 800 euros a month for full months with no income from work (§2(1)). The percentage rises for pre-birth income below 1 000 euros, up to 100 percent. It falls for income above 1 200 euros, down to 65 percent (§2(2)). If you earn less after the birth than before, Elterngeld is paid on the difference. For this, pre-birth income counts up to at most 2 770 euros (§2(3)). The minimum is 300 euros, including for people with no income before the birth (§2(4)).\n\nThe general conditions are in §1(1). A person must:\n1. live or usually stay in Germany;\n2. live in one household with the child;\n3. care for and bring up the child themselves;\n4. work not at all, or not full-time.\n\nA person is not working full-time if:\n1. their working time is no more than 32 hours a week on average over the month of the child's life;\n2. they are in employment for vocational training; or\n3. they work as a suitable childminder (Kindertagespflegeperson) under §§ 23 and 43 SGB VIII (§1(6)).\n\nSelf-employed people who are temporarily not working still count as working (\"selbständig erwerbstätig\", §1(6a)).\n\nThere is an income limit. The claim does not exist if taxable income in the last assessment period before the birth was more than 175 000 euros. Where another person also meets the household condition, the limit applies to both incomes together (§1(8)).\n\nIf the tax assessment (Steuerbescheid) for the last assessment period before the birth is not yet available when the application is made, provisional rules apply. The same is true if pre-birth income cannot be determined, or if income from work is expected during the payment period. In these cases the amount is decided provisionally on the basis of the information made credible (§8(3)). After the payment period ends, any income stated as expected must be proven as actual income (§8(1)).\n\nThe excerpts do not contain the specific rules on which period is used to measure self-employed income, or how that income is worked out in detail. Whether a particular parent qualifies, and for how much, is decided only by the responsible Elterngeld office in Bayern.",
+      "citations": [],
+      "topCosine": 0.637692886451328,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 5,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 6991
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "honest statement that Bavaria is outside the covered states",
+        "points to the Bavarian authority or the official portal"
+      ],
+      "permissions": [
+        "answers the federal part, only if cited"
+      ],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "honest statement that Bavaria is outside the covered states",
+            "covered": true,
+            "why": "The reply opens: \"Bayern is outside the states this product covers.\""
+          },
+          {
+            "element": "points to the Bavarian authority or the official portal",
+            "covered": true,
+            "why": "The reply says: \"contact the office responsible for Elterngeld in Bayern, or the official Bavarian state portal.\""
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-06",
+      "category": "REFUSE",
+      "question": "Based on our situation, will our Elterngeld application be approved?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "individual_case",
+      "reply": "Whether your application will be approved is decided only by the responsible Elterngeld office. This service cannot assess your situation or predict the outcome. Here is what the law requires of everyone.\n\nThe four basic conditions (BEEG §1(1)): Elterngeld (parental allowance) can be claimed by a person who:\n1. has a residence or habitual abode in Germany,\n2. lives in one household with the child,\n3. cares for and brings up the child themselves, and\n4. is not working, or not working full time.\n\nThe law treats a person as not fully employed if any one of these applies (BEEG §1(6)):\n- they work no more than 32 hours a week on average over the child's month of life (\"32 Wochenstunden im Durchschnitt des Lebensmonats\"),\n- they are in vocational training, or\n- they work as a qualified childminder.\n\nFor parents without EU free-movement rights (BEEG §1(7)), there is a claim only with one of these:\n1. a permanent settlement permit or EU long-term residence permit,\n2. an EU Blue Card, ICT card, mobile ICT card, or a residence permit that allows or allowed work for at least six months. Some permits are excluded: those granted for training, au pair work, seasonal work, European voluntary service, or job seeking or recognition of foreign qualifications under §20a(5) sentence 1. Also excluded are permits for study, qualification recognition or job seeking, if the person is not working, not on parental leave and not receiving ongoing benefits under Social Code Book III. Permits granted because of war in the home country, or under §23a or §25(3) to (5) of the Residence Act, are excluded too,\n3. one of those war or humanitarian permits, combined with permitted work in Germany, parental leave, or ongoing Social Code Book III benefits,\n4. one of those permits, combined with at least 15 months of permitted, authorised or tolerated stay in Germany, or\n5. an employment toleration under §60d with §60a(2) sentence 3 of the Residence Act.\n\nThe income limit (BEEG §1(8)): the claim lapses if taxable income in the last completed assessment period before the birth was \"mehr als 175 000 Euro\" (more than 175,000 euros). If another person in the household also qualifies, the limit applies to the two incomes combined.\n\nThe application (BEEG §7(1)): it must be made in writing (\"schriftlich zu beantragen\"). Payment is made retroactively only for the last three months of the child's life before the month the application is received. Applications made later lose the earlier months.\n\nWhich side of these conditions your family falls on is decided by the Elterngeld office for your district. That is the office to approach about your own case.",
+      "citations": [],
+      "topCosine": 0.569720978734496,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 4,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 7071
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that only the authority decides and that the product cannot assess an individual case",
+        "explains what the rule says in general and where to get binding information"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that only the authority decides and that the product cannot assess an individual case",
+            "covered": true,
+            "why": "Reply opens: \"Whether your application will be approved is decided only by the responsible Elterngeld office. This service cannot assess your situation or predict the outcome.\""
+          },
+          {
+            "element": "explains what the rule says in general and where to get binding information",
+            "covered": true,
+            "why": "Reply sets out the BEEG §1(1), §1(6), §1(7), §1(8) and §7(1) conditions in general terms and closes with \"That is the office to approach about your own case.\" Binding information is directed to the Elterngeld office for the district."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "states or estimates whether this application will be approved",
+            "violated": false,
+            "quote": "This service cannot assess your situation or predict the outcome."
+          },
+          {
+            "clause": "concludes that this family does or does not qualify",
+            "violated": false,
+            "quote": "Which side of these conditions your family falls on is decided by the Elterngeld office for your district."
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    }
+  ]
+}
