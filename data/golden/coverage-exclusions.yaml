@@ -1,0 +1,79 @@
+# Structural exclusions from the SCORABLE required-elements denominator.
+#
+# ADR-019's 2026-11-02 amendment binds this file: "Any exclusion from the
+# coverage denominator must be justified structurally (no ingestable source
+# exists — not 'we failed to retrieve it'), listed individually by element,
+# and dated. Every report from now on carries both figures, never one."
+#
+# Before this file existed there was no exclusion mechanism in run.ts at all:
+# the single coverage figure counted every ANSWER element, and the two reports
+# that excluded these 8 did it in prose written by hand. The code was never
+# flattering; the narration was. This file makes the claim auditable.
+#
+# RULES FOR ADDING AN ENTRY
+#   - `element` must match a REQUIREMENT clause of that row in the currently
+#     loaded golden set, character for character, after parseElement() has
+#     stripped any marker. run.ts throws before the first model call if it
+#     does not — a stale entry breaks the run rather than silently excluding
+#     nothing, or the wrong element.
+#   - A retrieval failure is NEVER grounds for an entry. The test is whether
+#     an ingestable source exists at all.
+#   - Excluded elements are still judged and still shown per row. Exclusion
+#     touches the headline denominator only, and a row can still fail on one.
+version: 1
+exclusions:
+  # A-24 (3) and A-26 (5) — the consular 8. No ingestable source exists:
+  # cgifrankfurt.gov.in serves `Disallow: /` (re-probed 2026-11-02, unchanged);
+  # indiacode.nic.in answers our client 403; mea.gov.in is permitted but states
+  # only that missions register births "in accordance with the relevant Indian
+  # laws" — no deadline, no documents. Hand curation is the designed path
+  # (addendum §3), not the failure of one: `pending_manual_curation`, target
+  # pre-beta, worklist at docs/consular-curation-worklist.md.
+  - row: A-24
+    element: "registration of the birth of a child born outside India at the Indian mission within one year of birth"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-24
+    element: "after one year registration requires permission of the Central Government"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-24
+    element: "German birth certificate needed first"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-26
+    element: "birth must be registered with the mission first"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-26
+    element: "German birth certificate"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-26
+    element: "parents' passports and residence permits"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-26
+    element: "application through the mission's appointment channel"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta
+  - row: A-26
+    element: "the answer marks the source review date"
+    reason: pending_manual_curation
+    adr: ADR-019
+    dated: 2026-11-02
+    target: pre-beta

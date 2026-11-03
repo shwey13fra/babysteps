@@ -61,6 +61,81 @@ const CSV = "data/golden/golden_set_v1.7.csv";
 const GOLDEN_VERSION = "v1.7";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
+// ---------------------------------------------------------------------------
+// Structural coverage exclusions (ADR-019 amendment, 2026-11-02)
+// ---------------------------------------------------------------------------
+//
+// Until this existed there was NO exclusion mechanism here: the single
+// coverage figure counted every ANSWER element, the consular 8 included, and
+// the two reports that excluded them did it in hand-written prose. The rule
+// "every report carries both figures" could not be honoured by the code that
+// writes the reports. Now it is, and the exclusions are data.
+//
+// Keyed by row id + the requirement text AFTER parseElement() strips markers,
+// never by index: a positional key rots the next time a golden version
+// reorders a cell, and would then exclude a different element in silence.
+
+const EXCLUSIONS_FILE = "data/golden/coverage-exclusions.yaml";
+
+type Exclusion = {
+  row: string;
+  element: string;
+  reason: string;
+  adr: string;
+  dated: string;
+  target: string;
+};
+
+const EXCLUSIONS: Exclusion[] = (() => {
+  const raw = parseYaml(readFileSync(join(process.cwd(), EXCLUSIONS_FILE), "utf8")) as {
+    version?: number;
+    exclusions?: Exclusion[];
+  };
+  return raw.exclusions ?? [];
+})();
+
+const exclusionFor = (rowId: string, element: string): Exclusion | undefined =>
+  EXCLUSIONS.find((e) => e.row === rowId && e.element === element);
+
+/**
+ * Throws BEFORE the first model call if any declared exclusion no longer
+ * matches exactly one requirement element of its row in the loaded golden set.
+ *
+ * Failing loud is the point. An entry that silently stopped matching would
+ * re-admit an element to the scorable denominator and move a committed figure
+ * with no diff to show for it; an entry that matched the WRONG element would
+ * exclude something answerable. Either way the number moves and the audit
+ * trail does not. golden-drift.ts's lesson, applied to the exclusion list.
+ */
+function validateExclusions(rows: Row[]): void {
+  const problems: string[] = [];
+  for (const x of EXCLUSIONS) {
+    const row = rows.find((r) => r.id === x.row);
+    if (!row) {
+      problems.push(`${x.row}: no such row in ${CSV}`);
+      continue;
+    }
+    const requirements = clauses(row.required_answer_elements)
+      .map(parseElement)
+      .filter((e) => e.kind === "requirement")
+      .map((e) => e.text);
+    const hits = requirements.filter((t) => t === x.element).length;
+    if (hits !== 1) {
+      const what = hits === 0 ? "no requirement element matches" : `${hits} elements match`;
+      problems.push(`${x.row}: ${what} "${x.element}"`);
+    }
+  }
+  if (problems.length) {
+    throw new Error(
+      [
+        `${EXCLUSIONS_FILE} is stale against ${CSV} (${GOLDEN_VERSION}).`,
+        `Fix the declaration or the golden set before spending a run:`,
+        ...problems.map((t) => `  - ${t}`),
+      ].join("\n"),
+    );
+  }
+}
+
 /**
  * Section completion (ADR-032), ON — and it is THIS run's single variable.
  *
@@ -712,6 +787,32 @@ function buildReport(
   const elTotal = answer.reduce((a, r) => a + (r.verdict?.elements.length ?? 0), 0);
   const elCovered = answer.reduce((a, r) => a + (r.verdict?.elements.filter((e) => e.covered).length ?? 0), 0);
 
+  // --- the two figures, ADR-019's amendment -------------------------------
+  //
+  // `elTotal`/`elCovered` above are the ALL-ELEMENTS figure and always were:
+  // nothing was ever excluded in code. The scorable figure drops the elements
+  // declared in coverage-exclusions.yaml, and neither is ever printed alone.
+  //
+  // Zipped by index against `r.requirements`, which holds the requirement
+  // clauses in the order the judge graded them; judge.ts enforces that arity,
+  // so position i is the same element on both sides.
+  const excludedHit: Array<{ row: string; element: string; covered: boolean; x: Exclusion }> = [];
+  for (const r of answer) {
+    r.verdict?.elements.forEach((e, i) => {
+      const text = r.requirements[i];
+      const x = text === undefined ? undefined : exclusionFor(r.id, text);
+      if (x) excludedHit.push({ row: r.id, element: text, covered: e.covered, x });
+    });
+  }
+  const scorableTotal = elTotal - excludedHit.length;
+  const scorableCovered = elCovered - excludedHit.filter((h) => h.covered).length;
+
+  // Declared but not reached by this run — a --only or --limit run excludes
+  // only what it measured. Reported so the two denominators are explicable.
+  const exclusionsNotMeasured = EXCLUSIONS.filter(
+    (x) => !excludedHit.some((h) => h.row === x.row && h.element === x.element),
+  );
+
   const coverageFor = (c: string) => {
     const rows = byCat(c);
     const d = rows.reduce((a, r) => a + (r.verdict?.elements.length ?? 0), 0);
@@ -740,8 +841,36 @@ function buildReport(
     citation_validity: citTotal ? citValid / citTotal : null,
     citation_validity_counts: { n: citValid, d: citTotal },
     citations_guidance_excluded: citGuidance,
+    // Unchanged keys, unchanged meaning: these have always counted every
+    // ANSWER element. Kept so figures recorded before the exclusion
+    // declaration existed stay comparable.
     required_elements_coverage: elTotal ? elCovered / elTotal : null,
     required_elements_counts: { n: elCovered, d: elTotal },
+    // ADR-019 amendment: both figures, never one.
+    required_elements_all: {
+      n: elCovered,
+      d: elTotal,
+      rate: elTotal ? elCovered / elTotal : null,
+    },
+    required_elements_scorable: {
+      n: scorableCovered,
+      d: scorableTotal,
+      rate: scorableTotal ? scorableCovered / scorableTotal : null,
+    },
+    coverage_exclusions: {
+      declared: EXCLUSIONS.length,
+      applied: excludedHit.length,
+      not_measured_this_run: exclusionsNotMeasured.length,
+      elements: excludedHit.map((h) => ({
+        row: h.row,
+        element: h.element,
+        covered: h.covered,
+        reason: h.x.reason,
+        adr: h.x.adr,
+        dated: h.x.dated,
+        target: h.x.target,
+      })),
+    },
     // ADR-029: graded on every category from v1.6 on. ANSWER repeats the gate
     // figure above so the two can be checked against each other.
     required_elements_by_category: elementsByCategory,
@@ -820,7 +949,14 @@ function buildReport(
   L.push(`| --- | --- | --- |`);
   L.push(`| Retrieval hit rate | ${pct(hits, hitDen.length)} | ANSWER rows measured |`);
   L.push(`| Citation validity | ${pct(citValid, citTotal)} | citations claiming a § (${citGuidance} guidance citations excluded) |`);
-  L.push(`| Required-elements coverage | ${pct(elCovered, elTotal)} | elements across ANSWER rows — the Phase 5 gate figure |`);
+  // ADR-019's amendment: "Every report from now on carries both figures,
+  // never one: the scorable number the gate is assessed on, and the
+  // all-elements number, with the exclusions listed beneath. A single
+  // flattering figure does not go in this repo." Both lines are pushed
+  // unconditionally — with nothing excluded they are equal, and printing the
+  // pair anyway is what keeps the rule from decaying back into one number.
+  L.push(`| Required-elements coverage, **scorable** | ${pct(scorableCovered, scorableTotal)} | ANSWER elements with an ingestable source — **the Phase 5 gate figure** |`);
+  L.push(`| Required-elements coverage, all elements | ${pct(elCovered, elTotal)} | every ANSWER element, nothing excluded |`);
   for (const c of ["DEFLECT", "REFUSE"]) {
     const e = elementsByCategory[c];
     L.push(`| Required-elements coverage, ${c} | ${pct(e.n, e.d)} | elements across ${c} rows — **first graded at golden v1.6**, not part of the gate figure |`);
@@ -833,6 +969,40 @@ function buildReport(
   L.push(``);
   L.push(`Phase 5's exit bar, for reference: ANSWER hit ≥ 80%, DEFLECT 10/10, REFUSE ≥ 7/8.`);
   L.push(``);
+
+  L.push(`### Exclusions from the scorable denominator`);
+  L.push(``);
+  if (!EXCLUSIONS.length) {
+    L.push(`None declared — the two figures above are identical by construction.`);
+    L.push(``);
+  } else {
+    L.push(
+      `Declared in \`${EXCLUSIONS_FILE}\` and justified structurally: no ingestable source ` +
+        `exists for these. A retrieval failure is never grounds for an entry. Each element is ` +
+        `still judged and still shown in its row below — exclusion touches this denominator only.`,
+    );
+    L.push(``);
+    L.push(`| row | element | covered | reason | authority | dated | target |`);
+    L.push(`| --- | --- | --- | --- | --- | --- | --- |`);
+    for (const h of excludedHit) {
+      L.push(
+        `| ${h.row} | ${esc(h.element)} | ${h.covered ? "yes" : "no"} | \`${h.x.reason}\` | ` +
+          `${h.x.adr} | ${h.x.dated} | ${h.x.target} |`,
+      );
+    }
+    for (const x of exclusionsNotMeasured) {
+      L.push(
+        `| ${x.row} | ${esc(x.element)} | *not measured this run* | \`${x.reason}\` | ` +
+          `${x.adr} | ${x.dated} | ${x.target} |`,
+      );
+    }
+    L.push(``);
+    L.push(
+      `${excludedHit.length} of ${EXCLUSIONS.length} declared exclusions applied to this run` +
+        `${exclusionsNotMeasured.length ? `; ${exclusionsNotMeasured.length} on rows it did not measure` : ``}.`,
+    );
+    L.push(``);
+  }
 
   L.push(`## Criticals`);
   L.push(``);
@@ -970,6 +1140,11 @@ async function main() {
   if (limit) rows = rows.slice(0, limit);
 
   const softDeadlines = softDeadlineLabels();
+
+  // Before the first model call: a stale exclusion must not cost a run.
+  // Validated against `all`, not `rows`, so a --only run still catches a
+  // declaration that has rotted on a row this run is not measuring.
+  validateExclusions(all);
 
   console.log(`\neval baseline run`);
   console.log(`set        : ${CSV} (${GOLDEN_VERSION})`);

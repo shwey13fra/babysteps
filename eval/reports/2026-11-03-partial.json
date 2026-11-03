@@ -1,0 +1,306 @@
+{
+  "meta": {
+    "golden_version": "v1.7",
+    "rows_total": 2,
+    "rows_measured": 2,
+    "rows_not_measured": 0,
+    "valid_baseline": true,
+    "retrieval_hit_rate": 0.5,
+    "retrieval_hit": {
+      "n": 1,
+      "d": 2
+    },
+    "citation_validity": 1,
+    "citation_validity_counts": {
+      "n": 1,
+      "d": 1
+    },
+    "citations_guidance_excluded": 1,
+    "required_elements_coverage": 0.3333333333333333,
+    "required_elements_counts": {
+      "n": 2,
+      "d": 6
+    },
+    "required_elements_all": {
+      "n": 2,
+      "d": 6,
+      "rate": 0.3333333333333333
+    },
+    "required_elements_scorable": {
+      "n": 2,
+      "d": 3,
+      "rate": 0.6666666666666666
+    },
+    "coverage_exclusions": {
+      "declared": 8,
+      "applied": 3,
+      "not_measured_this_run": 5,
+      "elements": [
+        {
+          "row": "A-24",
+          "element": "registration of the birth of a child born outside India at the Indian mission within one year of birth",
+          "covered": false,
+          "reason": "pending_manual_curation",
+          "adr": "ADR-019",
+          "dated": "2026-11-02",
+          "target": "pre-beta"
+        },
+        {
+          "row": "A-24",
+          "element": "after one year registration requires permission of the Central Government",
+          "covered": false,
+          "reason": "pending_manual_curation",
+          "adr": "ADR-019",
+          "dated": "2026-11-02",
+          "target": "pre-beta"
+        },
+        {
+          "row": "A-24",
+          "element": "German birth certificate needed first",
+          "covered": false,
+          "reason": "pending_manual_curation",
+          "adr": "ADR-019",
+          "dated": "2026-11-02",
+          "target": "pre-beta"
+        }
+      ]
+    },
+    "required_elements_by_category": {
+      "ANSWER": {
+        "n": 2,
+        "d": 6,
+        "rate": 0.3333333333333333
+      },
+      "DEFLECT": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "REFUSE": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      }
+    },
+    "clauses_permitted_not_required": 0,
+    "clauses_prohibited_by_channel": 0,
+    "per_category": {
+      "ANSWER": {
+        "pass": 0,
+        "measured": 2,
+        "total": 2
+      },
+      "DEFLECT": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "REFUSE": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      }
+    },
+    "criticals": [],
+    "must_not_literal_violations": [],
+    "not_constrained_rows": [
+      "A-07"
+    ],
+    "not_measured": [],
+    "date": "2026-11-03",
+    "label": "partial (2 of 48 rows)",
+    "git_sha": "8a9ee77",
+    "corpus_version": "2026-10",
+    "answer_model": "claude-opus-5-5",
+    "guard_model": "claude-haiku-5-5",
+    "report": "eval\\reports\\2026-11-03-partial.md"
+  },
+  "rows": [
+    {
+      "id": "A-07",
+      "category": "ANSWER",
+      "question": "How many months of Elterngeld can we get in total?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "Elterngeld (parental allowance) is paid in monthly amounts for the child's months of life (Lebensmonate), not calendar months (BEEG §4(2)). The total depends on which form you take and how you combine them.\n\nBasic form. Parents together are entitled to 12 monthly amounts (\"zwölf Monatsbeträge Basiselterngeld\"). If one parent's employment income is reduced in two months of life, parents together get two further months (\"zwei weitere Monate Basiselterngeld (Partnermonate)\"). That makes 14 in total. The basic form can be drawn until the child completes the 14th month of life (BEEG §4(1), (3)).\n\nPlus form. Instead of one month of the basic form, a parent can take two months of the Plus form (\"jeweils zwei Lebensmonate Elterngeld Plus\"). The Plus form can be drawn until the child completes the 32nd month of life. From the 15th month onward, at least one parent must take it in consecutive months (BEEG §4(1), (3)).\n\nLimits per parent. One parent can get at most 12 basic monthly amounts, plus at most four monthly amounts of partnership bonus (\"Partnerschaftsbonus\") under BEEG §4b. A parent only has a claim if they draw Elterngeld for at least two months of life. Months in which a parent is due certain benefits that are offset under BEEG §3(1) nos. 1 to 3 count as months of the basic form for that parent (BEEG §4(4)). The Familienportal explains that this covers months in which the mother receives Mutterschaftsgeld or other maternity benefits. It describes the partnership bonus as up to four additional Plus-form months for each parent if both work part-time at the same time. The detailed conditions are in BEEG §4b, which is not among the sources here.\n\nPremature births. The joint entitlement to the basic form is higher if the child was born:\n1. at least 6 weeks before the expected date of delivery: 13 monthly amounts;\n2. at least 8 weeks before: 14 monthly amounts;\n3. at least 12 weeks before: 15 monthly amounts;\n4. at least 16 weeks before: 16 monthly amounts.\nIn these cases the per-parent maximum rises to 13, 14, 15 or 16 basic monthly amounts respectively, plus at most four partnership bonus months. The period in which the basic form can be drawn is also extended. The expected date is the one stated in the medical certificate or the midwife's certificate (BEEG §4(5)).\n\nHow many months your family receives, and how they are split, is decided by the Elterngeldstelle for your district.",
+      "citations": [
+        {
+          "section_ref": "BEEG §4",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__4.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "Was Sie zum Elterngeld wissen müssen",
+          "source_url": "https://familienportal.de/familienportal/familienleistungen/elterngeld/faq",
+          "as_of": "2026-10-22"
+        }
+      ],
+      "topCosine": 0.712783138756461,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 2,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 5227
+      },
+      "refsCited": true,
+      "citationsTotal": 1,
+      "citationsValid": 1,
+      "citationsGuidance": 1,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "12 months of Basiselterngeld",
+        "14 months when one parent's employment income is reduced in two of the months",
+        "ElterngeldPlus converts one month into two at roughly half the rate"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "12 months of Basiselterngeld",
+            "covered": true,
+            "why": "Reply states: \"Parents together are entitled to 12 monthly amounts (\\\"zwölf Monatsbeträge Basiselterngeld\\\").\""
+          },
+          {
+            "element": "14 months when one parent's employment income is reduced in two of the months",
+            "covered": true,
+            "why": "Reply states: \"If one parent's employment income is reduced in two months of life, parents together get two further months ... That makes 14 in total.\""
+          },
+          {
+            "element": "ElterngeldPlus converts one month into two at roughly half the rate",
+            "covered": false,
+            "why": "Reply states the two-for-one conversion (\"Instead of one month of the basic form, a parent can take two months of the Plus form\") but never states that the Plus rate is roughly half the basic rate. The rate element is not stated, so not covered."
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: ElterngeldPlus converts one month into two at roughly half the rate — Reply states the two-for-one conversion (\"Instead of one month of the basic form, a parent can take two months of the Plus form\") but never states that the Plus rate is roughly half the basic rate. The rate element is not stated, so not covered."
+      ],
+      "pass": false
+    },
+    {
+      "id": "A-24",
+      "category": "ANSWER",
+      "question": "How long do we have to register our baby's birth with the Indian consulate?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "low_confidence",
+      "reply": "The excerpts I have do not say how long you have to register a birth with the Indian consulate. I cannot give you a time limit for that step.\n\nThe excerpts do cover the separate German registration. Under German law, a birth must be reported to the registry office for the place where the child was born within one week (\"binnen einer Woche anzuzeigen\", PStG §18(1)). If the child was born in a hospital or similar facility, that facility also reports the birth in writing.\n\nFor the rules on registering the birth with India, contact the Indian consulate responsible for your area in Germany, or the Indian embassy in Berlin.",
+      "citations": [],
+      "topCosine": 0.399218824763742,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": false,
+      "secondaryMissing": [],
+      "shownHit": false,
+      "shownMissing": [],
+      "completion": {
+        "added": 3,
+        "budgetSkipped": [],
+        "nonContiguous": [
+          "Kinder-RL §17"
+        ],
+        "estTokens": 3538
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 1,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "registration of the birth of a child born outside India at the Indian mission within one year of birth",
+        "after one year registration requires permission of the Central Government",
+        "German birth certificate needed first"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "registration of the birth of a child born outside India at the Indian mission within one year of birth",
+            "covered": false,
+            "why": "The reply says it cannot give a time limit for the Indian registration and gives no one-year period for the Indian mission. It only gives the German one-week rule."
+          },
+          {
+            "element": "after one year registration requires permission of the Central Government",
+            "covered": false,
+            "why": "The reply does not mention any post-one-year requirement, permission, or Central Government role."
+          },
+          {
+            "element": "German birth certificate needed first",
+            "covered": false,
+            "why": "The reply describes German birth reporting to the registry office within one week and hospital reporting, but never says a German birth certificate is needed before Indian registration."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "German administrative deadline presented as the Indian one",
+            "violated": false,
+            "quote": "Under German law, a birth must be reported to the registry office for the place where the child was born within one week"
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": "Citations field is 'none', so no excerpt was supplied to assess the German one-week requirement (PStG §18(1)); support cannot be assessed.",
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: registration of the birth of a child born outside India at the Indian mission within one year of birth — The reply says it cannot give a time limit for the Indian registration and gives no one-year period for the Indian mission. It only gives the German one-week rule.",
+        "element not covered: after one year registration requires permission of the Central Government — The reply does not mention any post-one-year requirement, permission, or Central Government role.",
+        "element not covered: German birth certificate needed first — The reply describes German birth reporting to the registry office within one week and hospital reporting, but never says a German birth certificate is needed before Indian registration.",
+        "expected an answer, got refused/low_confidence"
+      ],
+      "pass": false
+    }
+  ]
+}
