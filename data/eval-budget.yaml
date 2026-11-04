@@ -33,7 +33,7 @@
 version: 1
 
 # Set by the human on top-up. 0 means "assume nothing is available".
-remaining_usd: 20.00
+remaining_usd: 11.90
 last_topped_up: 2026-11-04
 
 # A run must clear estimate x this before it is allowed to start.
@@ -41,8 +41,35 @@ headroom_multiplier: 1.5
 
 # Appended by the harness, newest last. `measured_usd` is read from the run's
 # own report, never estimated after the fact.
+#
+# ONE EXCEPTION, found the hard way on 2026-11-04: `recordSpend` runs AFTER the
+# run, so a process killed mid-run spends money and writes nothing. Such an
+# entry carries `measured_usd: null` plus `estimated_usd` and an
+# `estimate_basis` saying how the figure was reached, and the estimate is always
+# rounded UP. This is the one case where ADR-055's claim that the ledger is
+# "over-cautious, never over-confident" does not hold on its own - without a
+# hand-written entry the balance would read high. See the open proposal to
+# reserve the estimate before row 1 and settle to the measured figure after.
 ledger:
   - date: 2026-11-04
     label: "partial (0 of 48 rows)"
     measured_usd: 0.0000
     remaining_after: 0.00
+  - date: 2026-11-04
+    label: "iter10-confirm-1 (shell reaped at row 44 of 48, no report written)"
+    measured_usd: null
+    estimated_usd: 4.00
+    estimate_basis: >
+      The process was killed before it could write its report, so there is no
+      meta.cost_usd to read and recordSpend never ran. 44 of 48 rows completed,
+      read off the progress line: all 30 ANSWER rows, all 10 DEFLECT rows, and
+      R-01..R-04. A uniform 44/48 of iter8's $4.07 would be $3.73, but that
+      under-states it - the four rows NOT reached are REFUSE rows, which are the
+      cheap ones, while every expensive ANSWER row completed. Rounded UP to $4.00
+      deliberately: an over-estimate keeps the gate cautious, which is the only
+      safe direction for an error in this file.
+    remaining_after: 16.00
+  - date: 2026-11-04
+    label: "iter10-confirm-1"
+    measured_usd: 4.0980
+    remaining_after: 11.90
