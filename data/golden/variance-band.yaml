@@ -88,6 +88,17 @@ bands:
       contributed a hit. So the movement of 0 hits carries over exactly, and
       the gate figure is 23/28 = 82.1% at n=3 against a bar of 80%.
 
+      GAP IN THIS MECHANISM, 2026-11-04: the GLOSSARY changes retrieval and is
+      not a component of `measured_under` or `depends_on`, so no band can go
+      stale on it. The glossary WAS widened today (A-20 Urkundsperson/Notar,
+      A-13 Übersetzung/Legalisation) and this band is nevertheless unaffected -
+      not by assumption but by direct measurement: probe-corpus-diff against
+      corpus-snapshot-control-a-2026-11-04 reports 0 rows that lost their ref,
+      0 that gained one and 0 rank moves, with exactly one row's top-8 changing
+      at all (A-20, one chunk swapped, BGB §1626a still at rank 2). Adding
+      `glossary` as a tracked component is owed and NOT done: it needs a
+      version or hash to compare against, which is a design question.
+
   citation_validity:
     observed_numerator: [53, 49, 52]
     observed_denominator: [56, 52, 55]

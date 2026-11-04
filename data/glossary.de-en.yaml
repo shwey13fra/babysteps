@@ -82,7 +82,14 @@ terms:
   - de: Standesamt
     en_gloss: civil registry office
     en_triggers: [register the birth, birth certificate, civil registry, registry office, standesamt]
-    expand_with: [Standesamt, Geburtsanzeige, Beurkundung, Geburtenregister, Geburtsurkunde]
+    # Übersetzung / Legalisation added 2026-11-04 (rule 14) for A-13's "certified German
+    # translations and legalisation for foreign documents", measured absent from the ranked
+    # top-8 by probe-element-reach while A-13's other missing element was already ranked #1.
+    # ADR-044 established that PStV §33 does NOT carry these - Übersetzung and Legalisation
+    # return 0 hits in it - so the only source is one guidance chunk, and the statute-led
+    # expansion never reached it.
+    expand_with: [Standesamt, Geburtsanzeige, Beurkundung, Geburtenregister, Geburtsurkunde,
+                  Übersetzung, Legalisation, Apostille]
 
   - de: Geburtsurkunde
     en_gloss: birth certificate
@@ -132,7 +139,20 @@ terms:
   - de: Sorgeerklärung
     en_gloss: declaration of joint custody
     en_triggers: [joint custody, shared custody, custody unmarried, parental responsibility]
-    expand_with: [Sorgeerklärung, gemeinsame elterliche Sorge, Jugendamt]
+    # expand_with widened 2026-11-04 (rule 14) for A-20, which missed all three of its
+    # elements. Measured with probe-element-reach: the chunks carrying "declared at the
+    # Jugendamt or notary" and "possible before the birth" were BOTH absent from the ranked
+    # top-8, while the question's only expansion was Sorgeerklärung / gemeinsame elterliche
+    # Sorge / Jugendamt - none of which is the vocabulary those chunks use. They say
+    # Urkundsperson, beurkunden and Notar.
+    # Every term is verbatim from ingested text: SGB VIII §59 ("Die Urkundsperson beim
+    # Jugendamt ist befugt ... zu beurkunden") and the Vaterschaftsanerkennung guidance page.
+    # NOT added: anything about cost. "free at the Jugendamt" returns 0 chunks corpus-wide -
+    # SGB X §64's exemption is "nach diesem Gesetzbuch", i.e. SGB X, while the Beurkundung is
+    # SGB VIII - so no expansion can reach it and pretending otherwise would manufacture a
+    # retrieval target for an element that has no source.
+    expand_with: [Sorgeerklärung, gemeinsame elterliche Sorge, Jugendamt, Urkundsperson,
+                  beurkunden, Beurkundung, Notar]
 
   - de: Aufenthaltserlaubnis
     en_gloss: residence permit
