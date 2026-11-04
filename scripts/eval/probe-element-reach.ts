@@ -33,7 +33,7 @@ import { expandQuery } from "../../lib/rag/expand";
 import type { Bundesland } from "../../lib/schemas";
 import { readCsv } from "./csv";
 
-const CSV = "data/golden/golden_set_v1.9.csv";
+const CSV = "data/golden/golden_set_v1.10.csv";
 
 /** Seventh copy. calibrate.ts:32 already flags the extraction as owed. */
 function bundeslandFor(override: string): Bundesland {

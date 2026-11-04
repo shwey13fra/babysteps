@@ -2,7 +2,7 @@
 //
 // Measures the refusal threshold instead of guessing it.
 //
-// Runs all 30 ANSWER rows and all 8 REFUSE rows of golden_set_v1.9.csv through
+// Runs all 30 ANSWER rows and all 8 REFUSE rows of golden_set_v1.10.csv through
 // RETRIEVAL ONLY — no guard, no answer model, no judge — and prints the
 // distribution of top cosine for each group. The two distributions are the
 // whole point: a threshold is only meaningful if the group we must answer and
@@ -27,7 +27,7 @@ import { retrieve } from "../../lib/rag/retrieve";
 import type { Bundesland } from "../../lib/schemas";
 import { readCsv } from "./csv";
 
-const CSV = "data/golden/golden_set_v1.9.csv";
+const CSV = "data/golden/golden_set_v1.10.csv";
 
 // Private copy, matching the convention in golden-drift.ts and
 // verify-golden.ts. Three copies is the point at which this should be

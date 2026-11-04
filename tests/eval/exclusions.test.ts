@@ -24,7 +24,7 @@ import {
 import { readCsv } from "@/scripts/eval/csv";
 
 const EXCLUSIONS_FILE = "data/golden/coverage-exclusions.yaml";
-const CSV = "data/golden/golden_set_v1.9.csv";
+const CSV = "data/golden/golden_set_v1.10.csv";
 
 const live = loadExclusions(EXCLUSIONS_FILE);
 const rows = readCsv(readFileSync(CSV, "utf8")) as ExcludableRow[];
@@ -35,7 +35,7 @@ describe("the shipped declaration", () => {
   });
 
   it("matches the golden set exactly — one requirement element per entry", () => {
-    expect(() => validateExclusions(live, rows, EXCLUSIONS_FILE, CSV, "v1.9")).not.toThrow();
+    expect(() => validateExclusions(live, rows, EXCLUSIONS_FILE, CSV, "v1.10")).not.toThrow();
   });
 
   it("excludes exactly A-24 and A-26 from the retrieval denominator", () => {
@@ -124,13 +124,13 @@ describe("the standing check can fail", () => {
   it("validateExclusions throws on an entry that matches no element", () => {
     const r = row("X-07", "alpha");
     expect(() =>
-      validateExclusions([excl("X-07", "not-an-element")], [r], EXCLUSIONS_FILE, CSV, "v1.9"),
+      validateExclusions([excl("X-07", "not-an-element")], [r], EXCLUSIONS_FILE, CSV, "v1.10"),
     ).toThrow(/no requirement element matches/);
   });
 
   it("validateExclusions throws on an entry naming an absent row", () => {
     expect(() =>
-      validateExclusions([excl("X-404", "alpha")], [row("X-07", "alpha")], EXCLUSIONS_FILE, CSV, "v1.9"),
+      validateExclusions([excl("X-404", "alpha")], [row("X-07", "alpha")], EXCLUSIONS_FILE, CSV, "v1.10"),
     ).toThrow(/no such row/);
   });
 });
