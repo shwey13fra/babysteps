@@ -1189,12 +1189,14 @@ function buildReport(
   // to passing, so no reader may be left able to mistake it for improvement.
   if (retrievalExcludedRows.length) {
     L.push(
+      // `pct` already renders "NN.N% (n/d)", so the fraction is NOT repeated here.
+      // It was in the first version of this sentence and printed "82.1% (23/28)
+      // (23/28)" on the iter8 report.
       `**Read the retrieval figure carefully.** ${pct(hitsScorable, hitDenScorable.length)} ` +
-        `(${hitsScorable}/${hitDenScorable.length}) after excluding ` +
-        `${retrievalExcludedRows.map((r) => r.id).join("/")} as unretrievable, consistent with ` +
-        `their prior exclusion from coverage (ADR-043). **Unchanged on the original ` +
-        `denominator: ${hits}/${hitDen.length} = ${pct(hits, hitDen.length)}. No retrieval ` +
-        `behaviour changed** (ADR-050).`,
+        `after excluding ${retrievalExcludedRows.map((r) => r.id).join("/")} as unretrievable, ` +
+        `consistent with their prior exclusion from coverage (ADR-043). **Unchanged on the ` +
+        `original denominator: ${pct(hits, hitDen.length)}. No retrieval behaviour changed** ` +
+        `(ADR-050).`,
     );
     L.push(``);
   }
