@@ -1,0 +1,48 @@
+# Declared remaining Anthropic API credit, in USD.
+#
+# WHY THIS FILE EXISTS (ADR-055)
+#
+# API-credit exhaustion has happened three times in nine days — 2026-10-27,
+# iter6 on 2026-11-03, iter9 on 2026-11-04 — so the harness treats it as a
+# standing operating condition rather than an incident. iter9 died at row 10 of
+# 48 having spent $1.08 for no usable result.
+#
+# There is NO provider endpoint that returns a remaining balance. The Admin API
+# exposes spend-to-date (`GET /v1/organizations/cost_report`) and token usage,
+# raw HTTP only, and both need an Admin API key or an `org:admin` OAuth
+# token that this project does not hold. Spend limits are an early-access
+# preview. So the coverage check runs against THIS DECLARED FIGURE, which is a
+# real limitation and is stated plainly: it tracks the human's number, not
+# Anthropic's. A top-up that is not recorded here makes the harness
+# over-cautious — it refuses to start a run it could afford — and never
+# over-confident.
+#
+# RULES FOR EDITING
+#   1. Set `remaining_usd` and `last_topped_up` when you top up. That is the
+#      only manual edit this file needs.
+#   2. The harness DECREMENTS `remaining_usd` after every run from the measured
+#      cost in that run's report, and appends a ledger entry. Do not hand-edit
+#      the ledger; it is the audit trail for the figure above it.
+#   3. `headroom_multiplier` is the margin a run must clear before it may
+#      start. 1.5 means a $4.07 run needs $6.11 declared. Raising it makes the
+#      harness more conservative; it never makes a run cheaper.
+#   4. A run is REFUSED, before the first model call, when the estimate times
+#      the multiplier exceeds `remaining_usd`. Override with
+#      `--ignore-budget`, which prints what it is overriding.
+
+version: 1
+
+# Set by the human on top-up. 0 means "assume nothing is available".
+remaining_usd: 0.00
+last_topped_up: null
+
+# A run must clear estimate x this before it is allowed to start.
+headroom_multiplier: 1.5
+
+# Appended by the harness, newest last. `measured_usd` is read from the run's
+# own report, never estimated after the fact.
+ledger:
+  - date: 2026-11-04
+    label: "partial (0 of 48 rows)"
+    measured_usd: 0.0000
+    remaining_after: 0.00

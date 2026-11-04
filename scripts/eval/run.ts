@@ -63,8 +63,16 @@ import {
   validateExclusions,
   type Exclusion,
 } from "./exclusions";
-import { formatUsage } from "../../lib/rag/usage";
+import { formatUsage, snapshot } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
+import {
+  anthropicAlive,
+  assertAlive,
+  assertBudget,
+  estimateRun,
+  loadBudget,
+  recordSpend,
+} from "../preflight";
 
 const CSV = "data/golden/golden_set_v1.9.csv";
 const GOLDEN_VERSION = "v1.9";
@@ -990,6 +998,11 @@ function buildReport(
 
   const scores = {
     golden_version: GOLDEN_VERSION,
+    // Machine-readable, because the budget ledger derives its cost-per-row
+    // estimate from past baselines and prose is not readable (ADR-055). The
+    // markdown's "What this run cost" lines come from the same snapshot.
+    cost_usd: Number(snapshot().totalUsd.toFixed(4)),
+    prompts: { answer: ANSWER_PROMPT_VERSION, judge: JUDGE_PROMPT_VERSION },
     rows_total: results.length,
     rows_measured: measured.length,
     rows_not_measured: notMeasured.length,
@@ -1459,6 +1472,17 @@ async function main() {
   // retrieval denominator cannot diverge from the coverage one without this
   // throwing, before any model call.
   assertSingleSource(EXCLUSIONS, all, EXCLUSIONS_FILE);
+
+  // PREFLIGHT, before the first model call (ADR-055). Liveness alone would not
+  // have caught iter9 - the key was alive at row 1 and died at row 10 - so the
+  // coverage gate is the one that matters.
+  assertAlive(await anthropicAlive());
+  const BUDGET = loadBudget();
+  assertBudget(
+    estimateRun(rows.length, ANSWER_PROMPT_VERSION, BUDGET),
+    BUDGET,
+    process.argv.includes("--ignore-budget"),
+  );
   validateVariance();
 
   console.log(`\neval baseline run`);
@@ -1586,6 +1610,12 @@ async function main() {
     console.log("spend (measured at the call sites):");
     for (const line of spendLines) console.log(`  ${line}`);
   }
+
+  // Decrement the declared balance from what this run ACTUALLY cost, not from
+  // the estimate (ADR-055). A partial run still spent what it spent — iter9
+  // burned $1.08 — so this runs whether or not the run was a valid baseline.
+  // Outside the eval_runs branch for exactly that reason.
+  recordSpend(partial ? `partial (${rows.length} of ${all.length} rows)` : label, snapshot().totalUsd);
 
   console.log(
     `\nsummary: ${JSON.stringify({

@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import type { Chunk } from "./chunk";
+import { assertAlive, embeddingAlive } from "../preflight";
 
 const IN = "data/cache/chunks.json";
 const OUT = "data/cache/embedded.json";
@@ -65,6 +66,13 @@ async function main() {
   const force = process.argv.includes("--force");
   const key = env().EMBEDDING_API_KEY;
   if (!key) throw new Error("EMBEDDING_API_KEY is empty in .env.local");
+
+  // Preflight, before the first embedding is bought (ADR-055). Liveness only:
+  // embedding spend is negligible here - ADR-044's 13 embeddings cost $0.0001 -
+  // so there is no coverage gate to apply. What this catches is the OTHER
+  // cliff: the OpenAI free credit lapses ~2026-11-21, and a dead key part-way
+  // through would leave data/cache/embedded.json half written.
+  assertAlive(await embeddingAlive());
 
   const chunks: Chunk[] = JSON.parse(readFileSync(IN, "utf8"));
   const prior: Embedded[] = !force && existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : [];
