@@ -66,8 +66,8 @@ import {
 import { formatUsage } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
 
-const CSV = "data/golden/golden_set_v1.8.csv";
-const GOLDEN_VERSION = "v1.8";
+const CSV = "data/golden/golden_set_v1.9.csv";
+const GOLDEN_VERSION = "v1.9";
 const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 // ---------------------------------------------------------------------------
@@ -122,6 +122,20 @@ type Band = {
    * configuration component moved for either.
    */
   invalidated_by?: string;
+  /**
+   * Components this band has been RE-SCOPED to, after proving the change could
+   * not move it (ADR-052). Checked before the global `measured_under`, so the
+   * band reads current for those components and stale for any other.
+   *
+   * The band file's rule 2 says to list a component in `depends_on` unless the
+   * band provably cannot move with it — conservative, and right. This is the
+   * other half of that rule: when the proof does exist for one specific change,
+   * the alternative is printing a stale warning that is known to be false, and
+   * a known-false warning is worse than none (human ruling 5c, 2026-11-04).
+   * Every entry needs `rescoped_why` carrying the proof.
+   */
+  rescoped_to?: Record<string, string>;
+  rescoped_why?: string;
   note: string;
 };
 
@@ -212,6 +226,20 @@ function validateVariance(): void {
     if (!b.depends_on?.length) {
       problems.push(`${key}: depends_on is empty - a band sensitive to nothing cannot go stale`);
     }
+    // ADR-052: a re-scope suppresses a stale warning, so it must carry its proof
+    // and must name a component the band actually depends on. Without this, a
+    // typo in `rescoped_to` would silently certify a band as current.
+    for (const comp of Object.keys(b.rescoped_to ?? {})) {
+      if (!b.depends_on.includes(comp)) {
+        problems.push(`${key}: rescoped_to names "${comp}", which is not in depends_on`);
+      }
+    }
+    if (b.rescoped_to && !b.rescoped_why?.trim()) {
+      problems.push(`${key}: rescoped_to is set with no rescoped_why - a re-scope needs its proof`);
+    }
+    if (b.rescoped_why && !b.rescoped_to) {
+      problems.push(`${key}: rescoped_why is set with no rescoped_to`);
+    }
   }
   if (problems.length) {
     throw new Error(
@@ -221,19 +249,28 @@ function validateVariance(): void {
 }
 
 /** A band's staleness: the components it depends on that have since moved. */
-function bandStale(key: string, drift: string[]): string[] {
+function bandStale(key: string, drift: string[], live: Record<string, string>): string[] {
   const b = VARIANCE.bands[key];
-  return b ? b.depends_on.filter((d) => drift.includes(d)) : [];
+  if (!b) return [];
+  // A component this band was re-scoped to is NOT stale for this band, even
+  // though it drifted globally (ADR-052). The re-scoped value is compared
+  // against the LIVE one: a band re-scoped to golden v1.9 must go stale again
+  // the moment the set becomes v2.0, or one proof would excuse every future
+  // change. `rescoped_why` carries the proof and validateVariance refuses a
+  // re-scope without one.
+  return b.depends_on.filter(
+    (d) => drift.includes(d) && (b.rescoped_to ?? {})[d] !== live[d],
+  );
 }
 
 /** The movement column: the band, or why it cannot be quoted. */
-function bandCell(key: string, drift: string[]): string {
+function bandCell(key: string, drift: string[], live: Record<string, string>): string {
   const b = VARIANCE.bands[key];
   if (!b) return `not measured`;
   // A changed measure outranks configuration drift: there is no point saying a
   // number moved by ±n units when n was counted on a different quantity.
   if (b.invalidated_by) return `**invalid** - ${b.invalidated_by}`;
-  const stale = bandStale(key, drift);
+  const stale = bandStale(key, drift, live);
   const base = `+/- ${b.movement} ${b.unit} (n=${VARIANCE.samples.n})`;
   return stale.length ? `**stale** - ${base}, measured before \`${stale.join("`, `")}\` changed` : base;
 }
@@ -886,7 +923,7 @@ function buildReport(
   // range across the very measure change that invalidated them (ADR-051). That
   // is strictly worse than no range — it would have published a 94.2–94.6%
   // lower bound computed partly on the url-only lookup ADR-049 removed.
-  if (citBand && !citBand.invalidated_by && !bandStale("citation_validity", drift).length) {
+  if (citBand && !citBand.invalidated_by && !bandStale("citation_validity", drift, liveConfig).length) {
     (citBand.observed_numerator ?? []).forEach((n, i) => {
       const d = (citBand.observed_denominator ?? [])[i];
       if (d) citSamples.push([n, d]);
@@ -991,7 +1028,7 @@ function buildReport(
           {
             movement: VARIANCE.bands[k].movement,
             unit: VARIANCE.bands[k].unit,
-            stale_because: bandStale(k, drift),
+            stale_because: bandStale(k, drift, liveConfig),
           },
         ]),
       ),
@@ -1111,13 +1148,13 @@ function buildReport(
   // all-rows figure beside it, never one alone. They are equal when nothing
   // is excluded. ADR-050.
   L.push(
-    `| Retrieval hit rate, **scorable** | ${pct(hitsScorable, hitDenScorable.length)} | ${bandCell("retrieval_hit", drift)} | ANSWER rows with an ingestable source — **the Phase 5 gate figure** |`,
+    `| Retrieval hit rate, **scorable** | ${pct(hitsScorable, hitDenScorable.length)} | ${bandCell("retrieval_hit", drift, liveConfig)} | ANSWER rows with an ingestable source — **the Phase 5 gate figure** |`,
   );
   L.push(
     `| Retrieval hit rate, all rows | ${pct(hits, hitDen.length)} | | every measured ANSWER row, nothing excluded |`,
   );
   L.push(
-    `| Citation validity | ${pctCoarse(citValid, citTotal)}${citRange} | ${bandCell("citation_validity", drift)} | citations claiming a § (${citGuidance} guidance citations excluded) |`,
+    `| Citation validity | ${pctCoarse(citValid, citTotal)}${citRange} | ${bandCell("citation_validity", drift, liveConfig)} | citations claiming a § (${citGuidance} guidance citations excluded) |`,
   );
   // ADR-019's amendment: "Every report from now on carries both figures,
   // never one: the scorable number the gate is assessed on, and the
@@ -1125,7 +1162,7 @@ function buildReport(
   // flattering figure does not go in this repo." Both lines are pushed
   // unconditionally — with nothing excluded they are equal, and printing the
   // pair anyway is what keeps the rule from decaying back into one number.
-  L.push(`| Required-elements coverage, **scorable** | ${pct(scorableCovered, scorableTotal)} | ${bandCell("coverage_scorable", drift)} | ANSWER elements with an ingestable source — **the Phase 5 gate figure** |`);
+  L.push(`| Required-elements coverage, **scorable** | ${pct(scorableCovered, scorableTotal)} | ${bandCell("coverage_scorable", drift, liveConfig)} | ANSWER elements with an ingestable source — **the Phase 5 gate figure** |`);
   L.push(`| Required-elements coverage, all elements | ${pct(elCovered, elTotal)} | | every ANSWER element, nothing excluded |`);
   for (const c of ["DEFLECT", "REFUSE"]) {
     const e = elementsByCategory[c];
@@ -1133,14 +1170,14 @@ function buildReport(
   }
   for (const c of ["ANSWER", "DEFLECT", "REFUSE"]) {
     const rows = byCat(c);
-    const band = c === "REFUSE" ? bandCell("refuse_rows", drift) : "";
+    const band = c === "REFUSE" ? bandCell("refuse_rows", drift, liveConfig) : "";
     L.push(`| ${c} rows passing | ${pct(rows.filter((r) => r.pass).length, rows.length)} | ${band} | measured rows in category |`);
   }
   // ADR-048 splits this row in two. The raw count is what the judge raised;
   // the gate is assessed on what survives adjudication, which is a human act
   // this script cannot perform. Printing only the raw count is what made a
   // judge false positive look like a failed phase.
-  L.push(`| Criticals, raw | ${criticals.length} | ${bandCell("criticals", drift)} | every critical the judge raised — **not the gate figure** |`);
+  L.push(`| Criticals, raw | ${criticals.length} | ${bandCell("criticals", drift, liveConfig)} | every critical the judge raised — **not the gate figure** |`);
   L.push(
     `| **Criticals, adjudicated** | **${criticals.length === 0 ? "0" : "pending"}** | | ADR-048 as amended 2026-11-04: reproduction means ≥2 samples of the SAME commit, and reproduction alone never confirms a judge-raised critical — the human reads the sentence. Seen once and clean on re-run = suspected instrument defect, investigated, not counted — **the gate figure** |`,
   );
@@ -1202,7 +1239,7 @@ function buildReport(
       ? b.observed.join(", ")
       : (b.observed_numerator ?? []).map((n, i) => `${n}/${(b.observed_denominator ?? [])[i]}`).join(", ");
     const adj = b.adjudicated ? ` (adjudicated ${b.adjudicated.join(", ")})` : "";
-    const stale = bandStale(key, drift);
+    const stale = bandStale(key, drift, liveConfig);
     L.push(
       `| \`${key}\` | ${obs}${adj}${b.denominator ? ` of ${b.denominator}` : ""} | ` +
         `${b.movement} ${b.unit}${b.movement_row_identity ? `, ${b.movement_row_identity} by row identity` : ""} | ` +

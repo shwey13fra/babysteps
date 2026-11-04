@@ -58,6 +58,17 @@ bands:
     denominator: 28
     denominator_all: 30
     depends_on: [corpus, golden]
+    rescoped_to:
+      golden: v1.9
+    rescoped_why: >-
+      v1.8 -> v1.9 removed two ANSWER required ELEMENTS (A-02, A-16) and nothing
+      else: the cell-by-cell migration reports exactly 2 differences, both in
+      required_answer_elements. retrievalHit is computed from
+      ground_truth_source and ground_truth_url, neither of which was touched on
+      any row, and the retrieval exclusion set is derived from
+      coverage-exclusions.yaml, which is unchanged and still matches v1.9
+      (A-24 3/3, A-26 5/5). So this golden change provably cannot move this
+      band, and marking it stale would print a warning known to be false.
     note: >
       Identical on all three samples, and no model judgement anywhere in the
       number. Query embeddings do drift - 21 of 48 rows returned a different
@@ -100,14 +111,23 @@ bands:
     observed: [60, 62, 60]
     movement: 2
     unit: elements
-    denominator: 87
+    # RE-EXPRESSED 87 -> 85 under golden v1.9 (ADR-051's rule): the two removed
+    # elements were measured UNCOVERED in all three samples - checked on disk,
+    # not assumed - so the numerator is untouched and only the denominator
+    # moves. The band stays STALE regardless, on `judge`: judge.v5 invalidated
+    # it and that has not been re-measured.
+    denominator: 85
+    denominator_v1_8: 87
     depends_on: [corpus, golden, answer, judge]
     note: >
-      60, 62, 60 of 87. Net movement 2, but the churn is larger than the net:
-      between iter7 and variance-2 alone, 7 elements moved across 7 rows, some
-      up and some down. A change that moves scorable coverage by fewer than 4
-      elements is not evidence of anything and must not get an ADR claiming
-      improvement (ADR-048). The gate needs 66.
+      60, 62, 60 - measured of 87 under golden v1.8, re-expressed of 85 under
+      v1.9. Net movement 2, but the churn is larger than the net: between iter7
+      and variance-2 alone, 7 elements moved across 7 rows, some up and some
+      down. A change that moves scorable coverage by fewer than 4 elements is
+      not evidence of anything and must not get an ADR claiming improvement
+      (ADR-048). The gate needs 66 of 87, which is 64 of 85 - and the bar fell
+      because two unmeetable elements left the set, which is not progress
+      toward it.
 
   criticals:
     observed: [0, 1, 1]
