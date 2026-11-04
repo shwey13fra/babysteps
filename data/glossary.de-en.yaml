@@ -127,7 +127,24 @@ terms:
     expand_with: [Krankenkasse, gesetzliche Krankenversicherung, Leistung, Kostenübernahme]
 
   - de: Familienversicherung
-    en_gloss: free family cover for dependants
+    # en_gloss was "free family cover for dependants" until 2026-11-04, when iter8
+    # raised a critical on it: "uncited legal claim - the reply says 'free family
+    # cover for dependants', a claim that the cover costs nothing. No supplied
+    # excerpt states that Familienversicherung is free of charge; the SGB V §10
+    # excerpt sets out eligibility and says the child is 'versichert' but says
+    # nothing about cost."
+    #
+    # The judge was right and the defect was HERE, not in the answer layer.
+    # answer.v3 requires a glossary gloss be used verbatim and never reworded, so
+    # the model obeyed the prompt and emitted this file's legal claim as its own.
+    # A gloss is vocabulary; it must not assert a rule. Human ruling, 2026-11-04.
+    #
+    # Note the knock-on, flagged not fixed: A-16's required element 1 still reads
+    # "Familienversicherung is free of charge for the child under statutory
+    # insurance", and SGB V §10 says nothing about contributions - the free-ness
+    # follows only by joining provisions. That is a golden question, not a
+    # glossary one, and it needs its own ruling.
+    en_gloss: family cover for dependants under statutory insurance
     en_triggers: [insure the baby, insurance for newborn, add baby to insurance, family insurance]
     expand_with: [Familienversicherung, beitragsfrei, Kind, Mitversicherung, Anmeldung]
 
