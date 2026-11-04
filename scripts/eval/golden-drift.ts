@@ -36,9 +36,21 @@ const REPORT = `eval/reports/golden-drift-${GOLDEN_VERSION}-${todayISO()}.md`;
 type Section = { section_ref: string | null; text: string; heading: string; source_url: string };
 
 
+// PStV, SGB VIII, SGB X and AO were ingested by ADR-044 and were MISSING here, so
+// drift on a citation to any of them was invisible: this checker reported
+// "confirmed 0 · drift? 0" on a corpus it could not see four statutes of, which is
+// false assurance rather than a pass. A-13's own ground truth is the clearest case —
+// `PStV §33 + PStG §18 + …` yielded only `PStG §18` before this fix.
+//
+// LONGEST PREFIX FIRST. `SGB V` would otherwise be tried against "SGB VIII §58",
+// match "SGB V", and leave `\s*§` facing "III §58". JS backtracks to the next
+// alternative and recovers, so both orders happen to work — but relying on
+// backtracking for correctness in a drift checker is how the four missing prefixes
+// went unnoticed in the first place. Ordered so it cannot depend on it.
 function statuteRefs(source: string): string[] {
   const out: string[] = [];
-  const re = /\b(MuSchG|BEEG|BKGG|SGB V|BGB|StAG|AufenthG|PStG|EStG)\s*§\s*(\d+[a-z]?)/g;
+  const re =
+    /\b(MuSchG|BEEG|BKGG|SGB VIII|SGB X|SGB V|BGB|StAG|AufenthG|PStV|PStG|EStG|AO)\s*§\s*(\d+[a-z]?)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(source))) out.push(`${m[1]} §${m[2]}`);
   // The Kinder-Richtlinie is §-structured authoritative text, ingested from the PDF. It is
@@ -91,7 +103,26 @@ function main() {
   for (const s of sections) if (s.section_ref && !byRef.has(s.section_ref)) byRef.set(s.section_ref, s);
 
   const allRows = readCsv(readFileSync(CSV, "utf8"));
-  const rows = allRows.filter((r) => r.verify_priority === "high" && r.category === "ANSWER");
+
+  // `--row A-13[,A-27]` re-checks named rows WHATEVER their verify_priority, prints
+  // to the console and writes NO report. Read-only by construction, so it cannot
+  // overwrite a human sign-off or a committed report — the two things the default
+  // path exists to protect.
+  //
+  // It exists because widening the statute prefixes (PStV, SGB VIII, SGB X, AO)
+  // could not otherwise be demonstrated: every row citing one of those four is
+  // already `verified`, so the default path never looks at it. A-13 is the case —
+  // its ground truth reads `PStV §33 + PStG §18 + …` and was signed off while the
+  // checker could not parse `PStV` at all, so that annotation has never actually
+  // been drift-checked. A fix I cannot show failing is not a fix.
+  const rowArg = process.argv.indexOf("--row");
+  const named = rowArg === -1 ? null : (process.argv[rowArg + 1] ?? "").split(",").map((s) => s.trim());
+  const rows = named
+    ? allRows.filter((r) => named.includes(r.id))
+    : allRows.filter((r) => r.verify_priority === "high" && r.category === "ANSWER");
+  if (named) {
+    console.log(`--row ${named.join(",")}: ${rows.length} row(s), console only, no report written\n`);
+  }
 
   // Derived, not hardcoded. This header used to read "v1 ... 675 chunks" while the tool was
   // pointed at v1.1 and the corpus had grown to 770 - a gate artifact stating two wrong
@@ -188,9 +219,14 @@ function main() {
     `| ${confirmed} | ${drifted} | ${unverifiable} |`,
     "",
   );
-  writeFileSync(REPORT, lines.join("\n"));
+  if (named) {
+    // Console only: see the --row comment above.
+    console.log(lines.join("\n"));
+  } else {
+    writeFileSync(REPORT, lines.join("\n"));
+  }
   console.log(`\nconfirmed ${confirmed} · drift? ${drifted} · unverifiable ${unverifiable}`);
-  console.log(`report: ${REPORT}`);
+  console.log(named ? `no report written (--row is read-only)` : `report: ${REPORT}`);
 }
 
 main();

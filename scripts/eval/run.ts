@@ -53,8 +53,16 @@ import { retrieve, type Retrieval } from "../../lib/rag/retrieve";
 import type { ChunkHit } from "../../lib/supabase/server";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
-import { parseElement, prohibitionCoverage } from "./clauses";
+import { clauses, parseElement, prohibitionCoverage } from "./clauses";
 import { normalizeRef, normalizeUrl, refsIn, scoreCitations } from "./citations";
+import {
+  assertSingleSource,
+  exclusionFor,
+  loadExclusions,
+  rowWhollyExcluded,
+  validateExclusions,
+  type Exclusion,
+} from "./exclusions";
 import { formatUsage } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
 
@@ -78,56 +86,14 @@ const ANSWER_PROMPT_VERSION = "answer.v2.md";
 
 const EXCLUSIONS_FILE = "data/golden/coverage-exclusions.yaml";
 
-type Exclusion = {
-  row: string;
-  element: string;
-  reason: string;
-  adr: string;
-  dated: string;
-  target: string;
-};
-
-const EXCLUSIONS: Exclusion[] = (() => {
-  const raw = parseYaml(readFileSync(join(process.cwd(), EXCLUSIONS_FILE), "utf8")) as {
-    version?: number;
-    exclusions?: Exclusion[];
-  };
-  return raw.exclusions ?? [];
-})();
-
-const exclusionFor = (rowId: string, element: string): Exclusion | undefined =>
-  EXCLUSIONS.find((e) => e.row === rowId && e.element === element);
-
-/** The requirement elements of a row, markers stripped. */
-function requirementTexts(row: Row): string[] {
-  return clauses(row.required_answer_elements)
-    .map(parseElement)
-    .filter((e) => e.kind === "requirement")
-    .map((e) => e.text);
-}
-
-/**
- * True when EVERY required element of the row is declared unreachable.
- *
- * ADR-043 took those elements out of the coverage denominator because no
- * ingestable source exists for them. The retrieval denominator was left
- * counting the rows, so the same two rows were excluded on one measure and
- * scored as misses on the other (ADR-050).
- *
- * A-24 and A-26 are the whole of it: 3 of 3 and 5 of 5 required elements
- * excluded, all 8 entries in the declaration, no partially-excluded row. Both
- * come back `kind: refused` with zero citations and a topCosine under the 0.43
- * floor — 0.3992 and 0.4251 — because the corpus holds nothing to retrieve.
- * Neither row can produce a hit, so counting them can only move the
- * denominator.
- *
- * `length > 0` is load-bearing: `every` on an empty list is true, and a row
- * with no required elements must not be silently excluded.
- */
-function rowWhollyExcluded(row: Row): boolean {
-  const req = requirementTexts(row);
-  return req.length > 0 && req.every((t) => Boolean(exclusionFor(row.id, t)));
-}
+// ONE list, two denominators. The coverage rule (ADR-043) and the retrieval rule
+// (ADR-050) both live in `exclusions.ts`, where the retrieval rule is defined as
+// a predicate OVER the coverage entries rather than as a second list that has to
+// agree with them by hand. `assertSingleSource` is the standing check the human
+// ruled for on 2026-11-04 and runs before the first model call.
+const EXCLUSIONS: Exclusion[] = loadExclusions(EXCLUSIONS_FILE);
+const exclusionIn = (rowId: string, element: string) => exclusionFor(EXCLUSIONS, rowId, element);
+const wholly = (row: Row) => rowWhollyExcluded(EXCLUSIONS, row);
 
 const VARIANCE_FILE = "data/golden/variance-band.yaml";
 
@@ -195,7 +161,24 @@ function configDrift(corpusVersion: string): string[] {
     answer: ANSWER_PROMPT_VERSION,
     corpus: corpusVersion,
   };
-  return Object.keys(live).filter((k) => VARIANCE.measured_under[k] !== live[k]);
+  // `"unknown"` means UNDETERMINED, not changed. corpus_version is read off a
+  // chunk this run retrieved, so a run that retrieved nothing — 0 rows, or
+  // --only on an id that does not exist — cannot know it, and every band
+  // depending on corpus then printed `stale - measured before corpus changed`
+  // against a corpus that had not moved at all. Verified: corpus_version is
+  // `2026-10` on all 30 ANSWER rows, matching measured_under.
+  //
+  // A known-false warning is worse than no warning: false ones get ignored, and
+  // then a true one gets ignored too. Undetermined components are reported as
+  // undetermined by the caller instead.
+  return Object.keys(live).filter(
+    (k) => live[k] !== "unknown" && VARIANCE.measured_under[k] !== live[k],
+  );
+}
+
+/** Components whose live value this run could not establish. Never "changed". */
+function configUndetermined(corpusVersion: string): string[] {
+  return corpusVersion === "unknown" ? ["corpus"] : [];
 }
 
 /**
@@ -253,45 +236,6 @@ function bandCell(key: string, drift: string[]): string {
   const stale = bandStale(key, drift);
   const base = `+/- ${b.movement} ${b.unit} (n=${VARIANCE.samples.n})`;
   return stale.length ? `**stale** - ${base}, measured before \`${stale.join("`, `")}\` changed` : base;
-}
-
-/**
- * Throws BEFORE the first model call if any declared exclusion no longer
- * matches exactly one requirement element of its row in the loaded golden set.
- *
- * Failing loud is the point. An entry that silently stopped matching would
- * re-admit an element to the scorable denominator and move a committed figure
- * with no diff to show for it; an entry that matched the WRONG element would
- * exclude something answerable. Either way the number moves and the audit
- * trail does not. golden-drift.ts's lesson, applied to the exclusion list.
- */
-function validateExclusions(rows: Row[]): void {
-  const problems: string[] = [];
-  for (const x of EXCLUSIONS) {
-    const row = rows.find((r) => r.id === x.row);
-    if (!row) {
-      problems.push(`${x.row}: no such row in ${CSV}`);
-      continue;
-    }
-    const requirements = clauses(row.required_answer_elements)
-      .map(parseElement)
-      .filter((e) => e.kind === "requirement")
-      .map((e) => e.text);
-    const hits = requirements.filter((t) => t === x.element).length;
-    if (hits !== 1) {
-      const what = hits === 0 ? "no requirement element matches" : `${hits} elements match`;
-      problems.push(`${x.row}: ${what} "${x.element}"`);
-    }
-  }
-  if (problems.length) {
-    throw new Error(
-      [
-        `${EXCLUSIONS_FILE} is stale against ${CSV} (${GOLDEN_VERSION}).`,
-        `Fix the declaration or the golden set before spending a run:`,
-        ...problems.map((t) => `  - ${t}`),
-      ].join("\n"),
-    );
-  }
 }
 
 /**
@@ -387,9 +331,6 @@ function bundeslandFor(override: string): { value: Bundesland; bundeslandOverrid
   return { value: DEFAULT_PROFILE.bundesland, bundeslandOverrideUnsupported: null };
 }
 
-function clauses(cell: string): string[] {
-  return cell.split(";").map((c) => c.trim()).filter(Boolean);
-}
 
 
 /** Strips thousand separators so '250.000 €' and '250 000' both match '250000'. */
@@ -606,7 +547,7 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     measured: true,
     notMeasured: null,
     retrievalHit: null,
-    retrievalExcluded: rowWhollyExcluded(row),
+    retrievalExcluded: wholly(row),
     secondaryMissing: [],
     shownHit: null,
     shownMissing: [],
@@ -929,6 +870,7 @@ function buildReport(
     corpus: meta.corpus_version,
   };
   const drift = configDrift(meta.corpus_version);
+  const undetermined = configUndetermined(meta.corpus_version);
 
   // Citation validity is reported as a range across the samples available,
   // and the gate is met only when the LOWER bound clears 95%. Both halves of
@@ -938,7 +880,13 @@ function buildReport(
   // be worse than no range at all (ADR-029).
   const citBand = VARIANCE.bands.citation_validity;
   const citSamples: Array<[number, number]> = [[citValid, citTotal]];
-  if (citBand && !bandStale("citation_validity", drift).length) {
+  // `invalidated_by` has to be honoured here as well as in the movement column,
+  // and it is checked FIRST: an invalidated band has no config drift to find, so
+  // bandStale alone returns clean and the old samples would be blended into this
+  // range across the very measure change that invalidated them (ADR-051). That
+  // is strictly worse than no range — it would have published a 94.2–94.6%
+  // lower bound computed partly on the url-only lookup ADR-049 removed.
+  if (citBand && !citBand.invalidated_by && !bandStale("citation_validity", drift).length) {
     (citBand.observed_numerator ?? []).forEach((n, i) => {
       const d = (citBand.observed_denominator ?? [])[i];
       if (d) citSamples.push([n, d]);
@@ -973,7 +921,7 @@ function buildReport(
   for (const r of answer) {
     r.verdict?.elements.forEach((e, i) => {
       const text = r.requirements[i];
-      const x = text === undefined ? undefined : exclusionFor(r.id, text);
+      const x = text === undefined ? undefined : exclusionIn(r.id, text);
       if (x) excludedHit.push({ row: r.id, element: text, covered: e.covered, x });
     });
   }
@@ -1194,9 +1142,36 @@ function buildReport(
   // judge false positive look like a failed phase.
   L.push(`| Criticals, raw | ${criticals.length} | ${bandCell("criticals", drift)} | every critical the judge raised — **not the gate figure** |`);
   L.push(
-    `| **Criticals, adjudicated** | **${criticals.length === 0 ? "0" : "pending"}** | | ADR-048: confirmed only if reproduced across runs or ruled genuine on the sentence — **the gate figure** |`,
+    `| **Criticals, adjudicated** | **${criticals.length === 0 ? "0" : "pending"}** | | ADR-048 as amended 2026-11-04: reproduction means ≥2 samples of the SAME commit, and reproduction alone never confirms a judge-raised critical — the human reads the sentence. Seen once and clean on re-run = suspected instrument defect, investigated, not counted — **the gate figure** |`,
   );
   L.push(``);
+
+  // REQUIRED BY THE HUMAN'S RULING ON ADR-050, and rendered from the live numbers
+  // rather than written by hand so it cannot drift from them or be forgotten.
+  // This is the second denominator change in Phase 5 and it moved a failing gate
+  // to passing, so no reader may be left able to mistake it for improvement.
+  if (retrievalExcludedRows.length) {
+    L.push(
+      `**Read the retrieval figure carefully.** ${pct(hitsScorable, hitDenScorable.length)} ` +
+        `(${hitsScorable}/${hitDenScorable.length}) after excluding ` +
+        `${retrievalExcludedRows.map((r) => r.id).join("/")} as unretrievable, consistent with ` +
+        `their prior exclusion from coverage (ADR-043). **Unchanged on the original ` +
+        `denominator: ${hits}/${hitDen.length} = ${pct(hits, hitDen.length)}. No retrieval ` +
+        `behaviour changed** (ADR-050).`,
+    );
+    L.push(``);
+  }
+
+  if (undetermined.length) {
+    L.push(
+      `Configuration component(s) **undetermined** on this run: \`${undetermined.join("`, `")}\`. ` +
+        `\`corpus_version\` is read off a chunk the run retrieved, and this run retrieved none, ` +
+        `so it is unknown rather than changed. Bands depending on it are neither marked stale ` +
+        `nor certified current here.`,
+    );
+    L.push(``);
+  }
+
   L.push(
     `Phase 5's exit bar, as amended by ADR-048: ANSWER hit ≥ 80% · citation validity with its ` +
       `**lower bound** ≥ 95% · scorable coverage ≥ 75% · DEFLECT 10/10 · REFUSE ≥ 7/8 · ` +
@@ -1440,7 +1415,11 @@ async function main() {
   // Before the first model call: a stale exclusion must not cost a run.
   // Validated against `all`, not `rows`, so a --only run still catches a
   // declaration that has rotted on a row this run is not measuring.
-  validateExclusions(all);
+  validateExclusions(EXCLUSIONS, all, EXCLUSIONS_FILE, CSV, GOLDEN_VERSION);
+  // The standing single-source check the human ruled for on 2026-11-04: the
+  // retrieval denominator cannot diverge from the coverage one without this
+  // throwing, before any model call.
+  assertSingleSource(EXCLUSIONS, all, EXCLUSIONS_FILE);
   validateVariance();
 
   console.log(`\neval baseline run`);
@@ -1453,7 +1432,7 @@ async function main() {
   // wholly-excluded rows is a property of the declaration and the golden set,
   // not of the rows this run happens to measure. Printed so a --only or 0-row
   // invocation shows it without spending a model call (ADR-050).
-  const whollyExcluded = all.filter((r) => r.category === "ANSWER" && rowWhollyExcluded(r));
+  const whollyExcluded = all.filter((r) => r.category === "ANSWER" && wholly(r));
   console.log(
     `retr. excl : ${whollyExcluded.length} ANSWER row(s) with EVERY required element ` +
       `unreachable${whollyExcluded.length ? ` — ${whollyExcluded.map((r) => r.id).join(", ")}` : ""} (ADR-050)`,

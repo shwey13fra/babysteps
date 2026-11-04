@@ -27,6 +27,9 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
    that scope is necessary (renaming files, adding dependencies, altering schemas, refactoring,
    changing configs, touching another module), STOP and ask me first, stating what and why.
    This applies even to "obvious improvements."
+   Exception, ruled 2026-11-04: extracting a shared helper to make a module pure or testable is
+   WITHIN scope when the alternative is duplicating it. Duplicating is the scope violation. Move
+   it, never copy it, and say so in the summary.
 2. PLAN FIRST: Before writing any code in a session, present a short plan (files to create/change,
    approach, edge cases). Wait for my approval.
 3. NO SILENT FIXES: If a test fails or a type error appears, tell me what broke and your proposed

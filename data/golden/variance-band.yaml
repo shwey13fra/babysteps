@@ -125,6 +125,12 @@ bands:
       alone for a judge-raised critical; the sentence still has to be read.
       Adjudicated is 0 on all three.
 
+      RULED 2026-11-04, and ADR-048 is amended accordingly: "reproducible
+      across runs" means observed in >=2 samples of the SAME COMMIT, and a
+      critical seen once whose row re-verifies clean is recorded as a suspected
+      instrument defect and investigated, not counted against the gate.
+      Reproduction still never confirms a judge-raised critical on its own.
+
   refuse_rows:
     observed: [7, 7, 8]
     adjudicated: [7, 8, 8]

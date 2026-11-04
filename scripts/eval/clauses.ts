@@ -89,3 +89,15 @@ export function prohibitionCoverage(element: ParsedElement, category: string): s
   if (!channel) return null;
   return channel.ranOn(category) ? channel.label : null;
 }
+
+/**
+ * A `required_answer_elements` / `must_not_contain` cell split into clauses.
+ *
+ * Moved here from run.ts so `exclusions.ts` can use it without a second copy:
+ * splitting a clause cell is this module's subject. run.ts is the only other
+ * caller and imports it from here (CLAUDE.md rule 1 — extraction to avoid
+ * duplication, per the 2026-11-04 ruling).
+ */
+export function clauses(cell: string): string[] {
+  return cell.split(";").map((c) => c.trim()).filter(Boolean);
+}

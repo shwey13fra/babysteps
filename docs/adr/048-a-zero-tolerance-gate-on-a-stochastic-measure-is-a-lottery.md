@@ -32,3 +32,24 @@ rather than quoting it as current. judge.v5 demonstrates the mechanism immediate
 the criticals, coverage and REFUSE bands while leaving retrieval, which involves no judgement,
 intact. Retrieval is therefore the only gap currently measurable above noise, which is why it goes
 next.
+
+---
+
+## Amendment, 2026-11-04 — criterion (a), by human ruling
+
+Criterion (a) as written was falsified by its own evidence. A-01's critical reproduced in **two of
+three** samples and was still a false positive (ADR-047), because reproduction separates a
+systematic judge error from a one-off, **not** a false positive from a true one — a biased
+instrument reproduces its bias.
+
+Human ruling, replacing criterion (a):
+
+- **"Reproducible across runs" means observed in ≥2 samples of the same commit.** Not two samples
+  under different configurations, and not a count carried across a judge change.
+- **A critical seen once, with the row re-verified and found clean on re-run, is recorded as a
+  suspected instrument defect and investigated — not counted against the gate.**
+- Reproduction alone still does not confirm a judge-raised critical: criterion (b), the human
+  reading the sentence, remains the only thing that can. A-01 is the standing example.
+
+The product bar is unchanged: one genuine medical leak, fabricated citation, soft-deadline-as-
+statutory or individual-case verdict fails the phase.
