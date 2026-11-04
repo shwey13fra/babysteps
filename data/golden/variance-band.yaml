@@ -18,6 +18,13 @@
 #      suggestive its rows were.
 #   4. `observed` is what was measured, verbatim. Never smooth it, never drop
 #      the inconvenient sample.
+#   5. When the MEASURE changes rather than the configuration, set
+#      `invalidated_by` on the affected band and say why. `depends_on` cannot
+#      express this: it answers "has something this band is sensitive to
+#      moved", not "is this still the same quantity". A band may only be
+#      RE-EXPRESSED in a new denominator without new samples when the rows
+#      leaving it are deterministic across every existing sample, and the
+#      evidence for that goes in the note (ADR-051).
 
 version: 1
 
@@ -46,7 +53,10 @@ bands:
     observed: [23, 23, 23]
     movement: 0
     unit: hits
-    denominator: 30
+    # RE-EXPRESSED, not re-measured, under ADR-051: the scorable denominator
+    # drops A-24 and A-26, whose every required element is unreachable.
+    denominator: 28
+    denominator_all: 30
     depends_on: [corpus, golden]
     note: >
       Identical on all three samples, and no model judgement anywhere in the
@@ -57,12 +67,28 @@ bands:
       figure trustworthy to the unit, which is why ADR-048 sends the next
       iteration here.
 
+      RE-EXPRESSED under ADR-050 and ADR-051 from 23/30 to 23/28, with no new samples and
+      none needed. The two rows leaving the denominator are deterministic
+      misses across every existing sample, checked on disk rather than argued:
+      A-24 and A-26 were retrievalHit false in iter7, variance-2 AND
+      variance-3, with topCosine 0.3992 / 0.3992 / 0.3992 and 0.4251 / 0.4252
+      / 0.4251 - both under the 0.43 floor, because the corpus holds nothing to
+      retrieve for them. The numerator is untouched: neither row ever
+      contributed a hit. So the movement of 0 hits carries over exactly, and
+      the gate figure is 23/28 = 82.1% at n=3 against a bar of 80%.
+
   citation_validity:
     observed_numerator: [53, 49, 52]
     observed_denominator: [56, 52, 55]
     movement: 4
     unit: citations
     depends_on: [corpus, golden, answer]
+    invalidated_by: >-
+      ADR-049 changed how validity is computed - the cited chunk is resolved by
+      (url, ref) rather than by url alone - so these three samples measured a
+      different quantity. Not re-expressible: the fix moves the NUMERATOR
+      (A-17 goes 0/3 to 3/3 at least), not just the denominator. Needs new
+      samples.
     note: >
       Both halves move - the denominator spans 52 to 56, about 7% - yet the
       RATE is tight: 94.6, 94.2, 94.5%. So the gate is not noise-bound, it is

@@ -54,6 +54,7 @@ import type { ChunkHit } from "../../lib/supabase/server";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 import { parseElement, prohibitionCoverage } from "./clauses";
+import { normalizeRef, normalizeUrl, refsIn, scoreCitations } from "./citations";
 import { formatUsage } from "../../lib/rag/usage";
 import { readCsv } from "./csv";
 
@@ -97,6 +98,37 @@ const EXCLUSIONS: Exclusion[] = (() => {
 const exclusionFor = (rowId: string, element: string): Exclusion | undefined =>
   EXCLUSIONS.find((e) => e.row === rowId && e.element === element);
 
+/** The requirement elements of a row, markers stripped. */
+function requirementTexts(row: Row): string[] {
+  return clauses(row.required_answer_elements)
+    .map(parseElement)
+    .filter((e) => e.kind === "requirement")
+    .map((e) => e.text);
+}
+
+/**
+ * True when EVERY required element of the row is declared unreachable.
+ *
+ * ADR-043 took those elements out of the coverage denominator because no
+ * ingestable source exists for them. The retrieval denominator was left
+ * counting the rows, so the same two rows were excluded on one measure and
+ * scored as misses on the other (ADR-050).
+ *
+ * A-24 and A-26 are the whole of it: 3 of 3 and 5 of 5 required elements
+ * excluded, all 8 entries in the declaration, no partially-excluded row. Both
+ * come back `kind: refused` with zero citations and a topCosine under the 0.43
+ * floor — 0.3992 and 0.4251 — because the corpus holds nothing to retrieve.
+ * Neither row can produce a hit, so counting them can only move the
+ * denominator.
+ *
+ * `length > 0` is load-bearing: `every` on an empty list is true, and a row
+ * with no required elements must not be silently excluded.
+ */
+function rowWhollyExcluded(row: Row): boolean {
+  const req = requirementTexts(row);
+  return req.length > 0 && req.every((t) => Boolean(exclusionFor(row.id, t)));
+}
+
 const VARIANCE_FILE = "data/golden/variance-band.yaml";
 
 type Band = {
@@ -108,7 +140,22 @@ type Band = {
   movement_row_identity?: number;
   unit: string;
   denominator?: number;
+  /** The all-rows denominator, where the gate figure uses a smaller one. */
+  denominator_all?: number;
   depends_on: string[];
+  /**
+   * Set when the MEASURE itself changed, not a configuration component.
+   *
+   * `depends_on` and `measured_under` can only express "something this band is
+   * sensitive to has moved" — they cannot express "this number is no longer
+   * the same quantity". ADR-051's mechanism; ADR-049 is the case that needed it: it changed how
+   * citation validity is computed, so the 94.2–94.6% band describes a measure
+   * that no longer exists, while the retrieval band re-expressed exactly
+   * (A-24 and A-26 were misses in all three samples, so dropping them moves
+   * only the denominator). One band invalid, one band carried over, and no
+   * configuration component moved for either.
+   */
+  invalidated_by?: string;
   note: string;
 };
 
@@ -200,6 +247,9 @@ function bandStale(key: string, drift: string[]): string[] {
 function bandCell(key: string, drift: string[]): string {
   const b = VARIANCE.bands[key];
   if (!b) return `not measured`;
+  // A changed measure outranks configuration drift: there is no point saying a
+  // number moved by ±n units when n was counted on a different quantity.
+  if (b.invalidated_by) return `**invalid** - ${b.invalidated_by}`;
   const stale = bandStale(key, drift);
   const base = `+/- ${b.movement} ${b.unit} (n=${VARIANCE.samples.n})`;
   return stale.length ? `**stale** - ${base}, measured before \`${stale.join("`, `")}\` changed` : base;
@@ -342,57 +392,6 @@ function clauses(cell: string): string[] {
 }
 
 
-// ---------------------------------------------------------------------------
-// Reference and URL normalisation
-// ---------------------------------------------------------------------------
-
-/**
- * 'BEEG §7(1)' and 'BEEG § 7' both normalise to 'BEEG §7'. The golden set
- * names sub-paragraphs; chunk section_refs stop at the §. Comparing them raw
- * would score every statutory row a miss.
- */
-// A statute prefix may be several words ("SGB V", "SGB VIII", "SGB X") or
-// hyphenated ("Kinder-RL"). The original pattern was a single word of 2+
-// letters, which silently mis-read every one of those:
-//
-//   SGB V §24d   -> null          invisible to every ref comparison
-//   SGB X §64    -> null          same
-//   SGB VIII §59 -> "VIII §59"   prefix dropped
-//   Kinder-RL §2  -> "RL §2"     prefix dropped
-//
-// `null` was the damaging case. The citation loop treats an unparseable ref as
-// a GUIDANCE citation and `continue`s on the reasoning that it "claims no §" —
-// so SGB V and SGB X citations were dropped from the validity denominator AND
-// skipped the fabricated-reference check, which raises a critical. A
-// hallucinated `SGB V §27b` could not be caught. Measured on the 2026-11-03
-// baseline: 5 statute citations counted as guidance (SGB V §24i x2, §24d x2,
-// §10 x1), so citation validity reported a denominator of 51 where 56 was due.
-//
-// The two truncating cases matched each other on both sides of every
-// comparison, so they worked by accident rather than by design. Roman-numeral
-// continuation only, deliberately: every ref_prefix in corpus_manifest.yaml is
-// covered by it, and allowing any capital letter would let the pattern swallow
-// the first letter of a following word.
-const REF_PATTERN = /([A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß-]{1,}(?:\s+[IVXL]+)?)\s*§+\s*(\d+[a-z]?)/;
-
-function normalizeRef(ref: string): string | null {
-  const m = ref.match(REF_PATTERN);
-  return m ? `${m[1].toUpperCase()} §${m[2]}` : null;
-}
-
-/** Every § reference in a ground-truth cell, in order. First is the primary. */
-function refsIn(text: string): string[] {
-  const out: string[] = [];
-  const re = new RegExp(REF_PATTERN.source, "g");
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) out.push(`${m[1].toUpperCase()} §${m[2]}`);
-  return out;
-}
-
-function normalizeUrl(url: string): string {
-  return url.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/+$/, "");
-}
-
 /** Strips thousand separators so '250.000 €' and '250 000' both match '250000'. */
 function normalizeDigits(text: string): string {
   return text.replace(/(\d)[., \s](?=\d{3}\b)/g, "$1");
@@ -528,6 +527,13 @@ type Result = {
 
   /** Scored against the RANKED top-8. Comparable to every run before ADR-032. */
   retrievalHit: boolean | null;
+  /**
+   * Every required element of this row is declared unreachable, so it leaves
+   * the SCORABLE retrieval denominator (ADR-050). `retrievalHit` is still
+   * measured and still printed: nulling it would destroy the all-rows figure
+   * that every recorded number is expressed in.
+   */
+  retrievalExcluded: boolean;
   secondaryMissing: string[];
   /** Scored against what the model was shown: ranked + section completion. */
   shownHit: boolean | null;
@@ -600,6 +606,7 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     measured: true,
     notMeasured: null,
     retrievalHit: null,
+    retrievalExcluded: rowWhollyExcluded(row),
     secondaryMissing: [],
     shownHit: null,
     shownMissing: [],
@@ -729,14 +736,11 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     }
   }
 
-  // Hoisted: both the citation-validity check and the judge need to get from a
-  // citation back to the chunk it came from.
-  const byUrl = new Map((retrieval?.hits ?? []).map((h) => [normalizeUrl(h.source_url), h]));
-
-  // The same hits, GROUPED rather than reduced.
+  // The hits GROUPED by url rather than reduced to one per url.
   //
-  // `byUrl` above is `new Map(list.map(...))`, which keeps only the last chunk
-  // per URL. Where a cited source is stored in parts — every split §, and every
+  // There used to be a second map here, `byUrl`, built as
+  // `new Map(hits.map(h => [url, h]))` — which keeps only the LAST chunk per
+  // URL. Where a cited source is stored in parts — every split §, and every
   // guidance page, one of which is 95 chunks — that discarded all but one of
   // them silently. Handing the judge a single fragment made it report, truthfully
   // about its own input and falsely about the product, that the rest of the law
@@ -747,8 +751,11 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   // the § the right way round — ranked order is rrf order and had A-16's §10
   // arriving as (3)(4) then (1)(2).
   //
-  // `byUrl` is deliberately left as it was: it also feeds citation validity, and
-  // changing that too would put two instrument changes in one run.
+  // The judge context was fixed then; citation validity kept the reducing map
+  // because changing both would have put two instrument changes in one run.
+  // That was the right call and the debt came due: on the one source in the
+  // corpus holding 72 sections behind a single URL, it failed three correct
+  // citations per run. `citations.ts` now resolves by (url, ref) — ADR-049.
   const chunksByUrl = new Map<string, ChunkHit[]>();
   for (const h of retrieval?.hits ?? []) {
     const key = normalizeUrl(h.source_url);
@@ -768,30 +775,14 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   };
 
   // --- deterministic: citation validity and fabrication --------------------
+  // Scored in `citations.ts`, which is unit-tested; this file cannot be, since
+  // `main()` runs at import. The lookup is keyed by (url, ref) — ADR-049.
   if (answer.kind === "answered") {
-    const retrievedRefs = new Set(
-      (retrieval?.hits ?? [])
-        .map((h) => (h.section_ref ? normalizeRef(h.section_ref) : null))
-        .filter(Boolean) as string[],
-    );
-    for (const c of r.citations) {
-      const norm = c.section_ref ? normalizeRef(c.section_ref) : null;
-      // A guidance citation carries its doc_title in section_ref, because the
-      // Citation contract forbids null there (generate.ts:108). It claims no §,
-      // so there is nothing to validate and counting it would drag citation
-      // validity down for a claim the answer never made. Counted separately
-      // instead of dropped, so the denominator stays auditable.
-      if (!norm) {
-        r.citationsGuidance++;
-        continue;
-      }
-      r.citationsTotal++;
-      const chunk = byUrl.get(normalizeUrl(c.source_url));
-      const number = norm.split("§")[1]?.trim();
-      // The cited chunk must itself contain the § it is cited for.
-      if (chunk && number && new RegExp(`§+\\s*${number}\\b`).test(chunk.content)) r.citationsValid++;
-      if (!retrievedRefs.has(norm)) r.fabricated.push(c.section_ref ?? norm);
-    }
+    const cs = scoreCitations(r.citations, retrieval?.hits ?? []);
+    r.citationsTotal = cs.total;
+    r.citationsValid = cs.valid;
+    r.citationsGuidance = cs.guidance;
+    r.fabricated = cs.fabricated;
   }
 
   // --- must_not: literal channel, before the judge --------------------------
@@ -917,6 +908,15 @@ function buildReport(
   const answer = byCat("ANSWER");
   const hitDen = answer.filter((r) => r.retrievalHit !== null);
   const hits = hitDen.filter((r) => r.retrievalHit).length;
+
+  // ADR-050: the scorable retrieval denominator drops rows whose EVERY required
+  // element is declared unreachable, on the same structural ground ADR-043 used
+  // for coverage. Both figures print unconditionally and are equal when nothing
+  // is excluded, so `retrieval_hit` keeps the meaning every recorded figure
+  // carries and the gate reads the scorable one.
+  const hitDenScorable = hitDen.filter((r) => !r.retrievalExcluded);
+  const hitsScorable = hitDenScorable.filter((r) => r.retrievalHit).length;
+  const retrievalExcludedRows = hitDen.filter((r) => r.retrievalExcluded);
   const citTotal = answer.reduce((a, r) => a + r.citationsTotal, 0);
   const citValid = answer.reduce((a, r) => a + r.citationsValid, 0);
   const citGuidance = answer.reduce((a, r) => a + r.citationsGuidance, 0);
@@ -1011,6 +1011,11 @@ function buildReport(
     valid_baseline: notMeasured.length === 0,
     retrieval_hit_rate: hitDen.length ? hits / hitDen.length : null,
     retrieval_hit: { n: hits, d: hitDen.length },
+    // New keys, ADR-050. The two above keep their all-rows meaning so every
+    // figure recorded before today stays comparable.
+    retrieval_hit_scorable: { n: hitsScorable, d: hitDenScorable.length },
+    retrieval_hit_rate_scorable: hitDenScorable.length ? hitsScorable / hitDenScorable.length : null,
+    retrieval_exclusions: retrievalExcludedRows.map((r) => r.id),
     citation_validity: citTotal ? citValid / citTotal : null,
     citation_validity_counts: { n: citValid, d: citTotal },
     citations_guidance_excluded: citGuidance,
@@ -1153,8 +1158,15 @@ function buildReport(
   L.push(``);
   L.push(`| measure | value | run-to-run movement | denominator |`);
   L.push(`| --- | --- | --- | --- |`);
+  // Both figures, unconditionally and in this order, for the same reason
+  // ADR-019's amendment gives for coverage: the gate figure first, the
+  // all-rows figure beside it, never one alone. They are equal when nothing
+  // is excluded. ADR-050.
   L.push(
-    `| Retrieval hit rate | ${pct(hits, hitDen.length)} | ${bandCell("retrieval_hit", drift)} | ANSWER rows measured |`,
+    `| Retrieval hit rate, **scorable** | ${pct(hitsScorable, hitDenScorable.length)} | ${bandCell("retrieval_hit", drift)} | ANSWER rows with an ingestable source — **the Phase 5 gate figure** |`,
+  );
+  L.push(
+    `| Retrieval hit rate, all rows | ${pct(hits, hitDen.length)} | | every measured ANSWER row, nothing excluded |`,
   );
   L.push(
     `| Citation validity | ${pctCoarse(citValid, citTotal)}${citRange} | ${bandCell("citation_validity", drift)} | citations claiming a § (${citGuidance} guidance citations excluded) |`,
@@ -1239,6 +1251,32 @@ function buildReport(
         `exists for these. A retrieval failure is never grounds for an entry. Each element is ` +
         `still judged and still shown in its row below — exclusion touches this denominator only.`,
     );
+    L.push(``);
+    // ADR-050: the same declaration now also carries the retrieval denominator,
+    // for rows where it excludes EVERY required element. Named explicitly so a
+    // reader can see which rows left which denominator, and why.
+    if (retrievalExcludedRows.length) {
+      L.push(
+        `**Retrieval, too (ADR-050).** ${retrievalExcludedRows
+          .map((r) => `\`${r.id}\``)
+          .join(", ")} ${retrievalExcludedRows.length === 1 ? "has" : "have"} every required ` +
+          `element declared unreachable, so ${retrievalExcludedRows.length === 1 ? "it" : "they"} ` +
+          `also leave the scorable retrieval denominator: ${hitDenScorable.length} rows rather ` +
+          `than ${hitDen.length}. The hit is still measured and still printed per row. A ` +
+          `partially-excluded row stays in.`,
+      );
+    } else {
+      // Deliberately a claim about THIS RUN and not about the declaration.
+      // The two are different on any partial run, and a sentence that
+      // conflated them would be the narration-disagrees-with-the-code defect
+      // ADR-043 exists to prevent.
+      L.push(
+        `No **measured** row had every required element excluded, so the two retrieval figures ` +
+          `above are identical for this run. Which rows carry a whole-row exclusion is a ` +
+          `property of \`${EXCLUSIONS_FILE}\` and the golden set, not of this run: the harness ` +
+          `prints that set at startup, before the first model call (ADR-050).`,
+      );
+    }
     L.push(``);
     L.push(`| row | element | covered | reason | authority | dated | target |`);
     L.push(`| --- | --- | --- | --- | --- | --- | --- |`);
@@ -1411,6 +1449,15 @@ async function main() {
   console.log(`judge      : ${JUDGE_MODEL} · ${JUDGE_PROMPT_VERSION}`);
   console.log(`threshold  : ${REFUSAL_MIN_TOP_COSINE} (ADR-009)`);
   console.log(`soft rules : ${softDeadlines.length} soft/advisory deadlines passed to the judge`);
+  // Derived from `all`, for the same reason the validator above is: the set of
+  // wholly-excluded rows is a property of the declaration and the golden set,
+  // not of the rows this run happens to measure. Printed so a --only or 0-row
+  // invocation shows it without spending a model call (ADR-050).
+  const whollyExcluded = all.filter((r) => r.category === "ANSWER" && rowWhollyExcluded(r));
+  console.log(
+    `retr. excl : ${whollyExcluded.length} ANSWER row(s) with EVERY required element ` +
+      `unreachable${whollyExcluded.length ? ` — ${whollyExcluded.map((r) => r.id).join(", ")}` : ""} (ADR-050)`,
+  );
   console.log(
     `variance   : band from ${VARIANCE_FILE}, n=${VARIANCE.samples.n}, ` +
       `measured under judge ${VARIANCE.measured_under.judge} / golden ${VARIANCE.measured_under.golden}`,
