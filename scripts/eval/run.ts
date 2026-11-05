@@ -74,7 +74,7 @@ import {
   recordSpend,
 } from "../preflight";
 
-const CSV = "data/golden/golden_set_v1.11.csv";
+const CSV = "data/golden/golden_set_v1.12.csv";
 // DERIVED, not declared, since 2026-11-05 (ADR-064). These were two constants
 // holding one fact. Bumping CSV to v1.11 and leaving GOLDEN_VERSION at "v1.10"
 // mislabelled BOTH iter12 baselines: they loaded v1.11 — proved by R-06's
@@ -797,6 +797,12 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
     category: row.category,
     question: row.question,
     reply: r.reply,
+    // The jurisdiction the reply was generated for (ADR-066). Without it the
+    // judge read a correctly Hessen-scoped sentence as an invented claim,
+    // because its substitution test looked for a state in the QUESTION and the
+    // state lives in the PROFILE. `r.bundesland` is the same value retrieval
+    // was scoped to, so the judge and the pipeline cannot disagree about it.
+    bundesland: r.bundesland,
     // With the chunk text, so 'uncited legal claim' is judged against the
     // excerpt rather than against the citation's label (see judge.ts).
     citations: r.citations.map((c) => ({

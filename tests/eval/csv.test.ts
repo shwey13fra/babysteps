@@ -82,7 +82,7 @@ describe("readCsv", () => {
     // tolerated v1.7's two ragged rows. The historical files are NOT repaired:
     // they are the committed record of what each past run measured, and
     // rewriting them would falsify that record to make a test pass.
-    const text = readFileSync(join(process.cwd(), "data/golden/golden_set_v1.11.csv"), "utf8");
+    const text = readFileSync(join(process.cwd(), "data/golden/golden_set_v1.12.csv"), "utf8");
     const rows = readCsv(text);
     expect(rows).toHaveLength(48);
     expect(rows.every((r) => r.id)).toBe(true);

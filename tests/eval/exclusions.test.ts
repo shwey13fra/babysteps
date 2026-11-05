@@ -24,7 +24,7 @@ import {
 import { readCsv } from "@/scripts/eval/csv";
 
 const EXCLUSIONS_FILE = "data/golden/coverage-exclusions.yaml";
-const CSV = "data/golden/golden_set_v1.11.csv";
+const CSV = "data/golden/golden_set_v1.12.csv";
 
 const live = loadExclusions(EXCLUSIONS_FILE);
 const rows = readCsv(readFileSync(CSV, "utf8")) as ExcludableRow[];

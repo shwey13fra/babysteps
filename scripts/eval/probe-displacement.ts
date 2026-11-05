@@ -34,7 +34,7 @@ import type { Bundesland } from "../../lib/schemas";
 import { readCsv } from "./csv";
 import { todayISO } from "../../lib/timeline/dates";
 
-const CSV = "data/golden/golden_set_v1.11.csv";
+const CSV = "data/golden/golden_set_v1.12.csv";
 const GOLDEN_VERSION = "v1.10";
 // Was `const TODAY = "2026-11-02"`. A hardcoded date in an output path does not
 // date the report, it names ONE file that every later run overwrites: running

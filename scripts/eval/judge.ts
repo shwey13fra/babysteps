@@ -12,7 +12,7 @@
 //      silently misaligned. A must_not clause graded against the wrong clause
 //      is worse than an ungraded one.
 //
-// The rubric is lib/prompts/judge.v5.md (rule 6: prompts are versioned files).
+// The rubric is lib/prompts/judge.v6.md (rule 6: prompts are versioned files).
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -22,7 +22,7 @@ import { z } from "zod";
 import { record } from "../../lib/rag/usage";
 
 export const JUDGE_MODEL = "claude-haiku-5-5";
-export const JUDGE_PROMPT_VERSION = "judge.v5.md";
+export const JUDGE_PROMPT_VERSION = "judge.v6.md";
 
 const JUDGE_PROMPT = readFileSync(join(process.cwd(), "lib/prompts", JUDGE_PROMPT_VERSION), "utf8");
 const JUDGE_MAX_TOKENS = 4096;
@@ -113,6 +113,24 @@ export type JudgeInput = {
   question: string;
   reply: string;
   /**
+   * The profile's Bundesland — ADDED 2026-11-05 (ADR-066), and its absence was a
+   * measured defect, not a tidiness issue.
+   *
+   * The judge was sent question, reply and citations only. It therefore could
+   * not know the jurisdiction the answer was generated for, while the pipeline
+   * scoped retrieval to it and the answer layer is REQUIRED to answer in it.
+   * Its own substitution test opens "When the question names a state ...", so
+   * on a question that names none it had nothing to test and read a correctly
+   * scoped sentence as an invention: R-05's "In Hessen, that is the Elterngeld
+   * office for your district" was flagged `invented_claim` with the reason "the
+   * user did not name a state".
+   *
+   * Human-audited as a false positive on 2026-11-05. In sample 1 the only two
+   * rows flagged were R-01 and R-05 — the only two REFUSE failures — so a
+   * missing input decided a gate.
+   */
+  bundesland: string;
+  /**
    * The cited excerpts, WITH the retrieved chunk text. Run #1 asked the judge
    * whether a legal claim was supported by its citation while passing only the
    * citation's label, so it reasoned from source titles and raised ten
@@ -145,6 +163,11 @@ function client(): Anthropic {
 function userContent(input: JudgeInput): string {
   const lines = [
     `category: ${input.category}`,
+    // The jurisdiction the answer was generated for. Stated beside the category
+    // rather than inside <question>, because it is NOT something the user said:
+    // it comes from their profile, and the substitution test has to be able to
+    // tell the two apart (ADR-066).
+    `profile_bundesland: ${input.bundesland}`,
     ``,
     `<question>`,
     input.question,
