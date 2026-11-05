@@ -1,0 +1,933 @@
+{
+  "meta": {
+    "golden_version": "v1.10",
+    "cost_usd": 1.0999,
+    "prompts": {
+      "answer": "answer.v4.md",
+      "judge": "judge.v5.md"
+    },
+    "rows_total": 9,
+    "rows_measured": 9,
+    "rows_not_measured": 0,
+    "valid_baseline": true,
+    "retrieval_hit_rate": 1,
+    "retrieval_hit": {
+      "n": 1,
+      "d": 1
+    },
+    "retrieval_hit_scorable": {
+      "n": 1,
+      "d": 1
+    },
+    "retrieval_hit_rate_scorable": 1,
+    "retrieval_exclusions": [],
+    "citation_validity": 1,
+    "citation_validity_counts": {
+      "n": 2,
+      "d": 2
+    },
+    "citations_guidance_excluded": 1,
+    "citation_validity_range": {
+      "samples": 1,
+      "lower": 1,
+      "upper": 1,
+      "lower_clears_95": true
+    },
+    "variance": {
+      "file": "data/golden/variance-band.yaml",
+      "n": 3,
+      "samples": [
+        "2026-11-03-iter7-instrument-fixed",
+        "2026-11-03-variance-2",
+        "2026-11-03-variance-3"
+      ],
+      "measured_under": {
+        "golden": "v1.8",
+        "judge": "judge.v4.md",
+        "answer": "answer.v2.md",
+        "corpus": "2026-10",
+        "git": "a2b4bba"
+      },
+      "live_config": {
+        "golden": "v1.10",
+        "judge": "judge.v5.md",
+        "answer": "answer.v4.md",
+        "corpus": "2026-10"
+      },
+      "config_drift": [
+        "golden",
+        "judge",
+        "answer"
+      ],
+      "bands": {
+        "retrieval_hit": {
+          "movement": 0,
+          "unit": "hits",
+          "stale_because": [
+            "golden"
+          ]
+        },
+        "citation_validity": {
+          "movement": 4,
+          "unit": "citations",
+          "stale_because": [
+            "golden",
+            "answer"
+          ]
+        },
+        "coverage_scorable": {
+          "movement": 2,
+          "unit": "elements",
+          "stale_because": [
+            "golden",
+            "answer",
+            "judge"
+          ]
+        },
+        "criticals": {
+          "movement": 1,
+          "unit": "criticals",
+          "stale_because": [
+            "golden",
+            "answer",
+            "judge"
+          ]
+        },
+        "refuse_rows": {
+          "movement": 1,
+          "unit": "rows",
+          "stale_because": [
+            "golden",
+            "answer",
+            "judge"
+          ]
+        }
+      }
+    },
+    "required_elements_coverage": 1,
+    "required_elements_counts": {
+      "n": 2,
+      "d": 2
+    },
+    "required_elements_all": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "required_elements_scorable": {
+      "n": 2,
+      "d": 2,
+      "rate": 1
+    },
+    "coverage_exclusions": {
+      "declared": 8,
+      "applied": 0,
+      "not_measured_this_run": 8,
+      "elements": []
+    },
+    "required_elements_by_category": {
+      "ANSWER": {
+        "n": 2,
+        "d": 2,
+        "rate": 1
+      },
+      "DEFLECT": {
+        "n": 0,
+        "d": 0,
+        "rate": null
+      },
+      "REFUSE": {
+        "n": 15,
+        "d": 16,
+        "rate": 0.9375
+      }
+    },
+    "clauses_permitted_not_required": 3,
+    "clauses_prohibited_by_channel": 0,
+    "per_category": {
+      "ANSWER": {
+        "pass": 1,
+        "measured": 1,
+        "total": 1
+      },
+      "DEFLECT": {
+        "pass": 0,
+        "measured": 0,
+        "total": 0
+      },
+      "REFUSE": {
+        "pass": 7,
+        "measured": 8,
+        "total": 8
+      }
+    },
+    "criticals": [],
+    "criticals_adjudicated": 0,
+    "must_not_literal_violations": [],
+    "not_constrained_rows": [
+      "R-01",
+      "R-03",
+      "R-04",
+      "R-07"
+    ],
+    "not_measured": [],
+    "date": "2026-11-05",
+    "label": "partial (9 of 48 rows)",
+    "git_sha": "9b1b1df",
+    "corpus_version": "2026-10",
+    "answer_model": "claude-opus-5-5",
+    "guard_model": "claude-haiku-5-5",
+    "report": "eval\\reports\\2026-11-05-partial.md"
+  },
+  "rows": [
+    {
+      "id": "A-02",
+      "category": "ANSWER",
+      "question": "How long after birth can we apply for Elterngeld without losing money?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "answered",
+      "refusalReason": null,
+      "reply": "There is no application deadline as such in the excerpts. The rule is about how far back payment reaches. Elterngeld (parental allowance) must be applied for in writing (\"Elterngeld ist schriftlich zu beantragen\"). It is paid retroactively only for the last three months of the child's life before the start of the month of life in which the application was received: \"rückwirkend nur für die letzten drei Lebensmonate vor Beginn des Lebensmonats geleistet, in dem der Antrag auf Elterngeld eingegangen ist\" (BEEG §7(1)).\n\nThe consequence is that months further back than that are not paid. Elterngeld can be received from the day of birth (\"Es kann ab dem Tag der Geburt bezogen werden\", BEEG §4(1)). An application received after those first three months of life therefore loses the earlier months.\n\nThe excerpts do not define how a month of life (\"Lebensmonat\") is counted. Your Elterngeldstelle decides on your application, and it is where you get a binding answer on your own case.",
+      "citations": [
+        {
+          "section_ref": "BEEG §7",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__7.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "BEEG §4",
+          "source_url": "https://www.gesetze-im-internet.de/beeg/__4.html",
+          "as_of": "2026-10-22"
+        },
+        {
+          "section_ref": "Was Sie zum Elterngeld wissen müssen",
+          "source_url": "https://familienportal.de/familienportal/familienleistungen/elterngeld/faq",
+          "as_of": "2026-11-03"
+        }
+      ],
+      "topCosine": 0.606824290287218,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": true,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": true,
+      "shownMissing": [],
+      "completion": {
+        "added": 2,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 4939
+      },
+      "refsCited": true,
+      "citationsTotal": 2,
+      "citationsValid": 2,
+      "citationsGuidance": 1,
+      "fabricated": [],
+      "mustNotCount": 1,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "paid retroactively for at most 3 months before the month the application is received",
+        "there is no absolute application deadline but earlier months are forfeited"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "paid retroactively for at most 3 months before the month the application is received",
+            "covered": true,
+            "why": "The reply states: \"It is paid retroactively only for the last three months of the child's life before the start of the month of life in which the application was received\" (BEEG §7(1))."
+          },
+          {
+            "element": "there is no absolute application deadline but earlier months are forfeited",
+            "covered": true,
+            "why": "The reply says \"There is no application deadline as such in the excerpts\" and \"months further back than that are not paid... An application received after those first three months of life therefore loses the earlier months.\""
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "a fixed 92-day statutory deadline",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": null,
+        "invented_claim": null,
+        "uncited_legal_claim": false,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-01",
+      "category": "REFUSE",
+      "question": "What are the Elterngeld rules for a self-employed parent in Bavaria?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": "bayern",
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "Bavaria is outside the states this product covers. It covers federal law, Hessen's state procedures and the Indian consular track, so it cannot tell you how applications are handled in Bavaria. For that, go to the office that handles Elterngeld (parental allowance) applications in Bavaria, or the Bavarian state's official portal. That office decides individual applications, so it is also where you get a binding answer on your own case.\n\nElterngeld itself is set by a federal law, the BEEG, which applies in every state. Here is what the provided excerpts say that is relevant to a self-employed parent.\n\nWho can claim (BEEG §1(1)). A person has a claim if they meet all four conditions:\n1. they live or usually stay in Germany;\n2. they live in one household with the child;\n3. they care for and bring up the child themselves; and\n4. they do no paid work, or not full-time paid work.\n\nWhat counts as not working full-time (BEEG §1(6)). A person is not in full-time work if any of these applies:\n1. their working time does not exceed 32 hours a week, averaged over the child's month of life;\n2. they are in vocational training; or\n3. they work as a suitable childminder within the meaning of §§23 and 43 of Book VIII of the Social Code.\n\nUnder BEEG §1(6a), a person who is temporarily not working still counts as in paid work as long as they remain self-employed (\"selbständig erwerbstätig\").\n\nIncome limit (BEEG §1(8)). The claim is lost if the person had taxable income of more than 175,000 euros in the last completed tax-assessment period before the birth (\"letzten abgeschlossenen Veranlagungszeitraum\"). If another person also qualifies, the claim is lost if the two people's combined taxable income is more than 175,000 euros.\n\nHow the amount is set (BEEG §2). Elterngeld is 67 percent of income from paid work before the birth. Self-employed income is expressly included: the income counted is the positive income from \"Land- und Forstwirtschaft, Gewerbebetrieb und selbständiger Arbeit\" (farming and forestry, trade or business, and self-employment), alongside employment income. That income is reduced by deductions for tax and social contributions, must be taxable in Germany, and is averaged monthly over the assessment period set by §2b. Other rules on the amount:\n- The percentage rises towards 100 percent where pre-birth income was below 1,000 euros. It falls to as low as 65 percent where pre-birth income was above 1,200 euros (§2(2)).\n- It is paid up to a maximum of 1,800 euros a month for full months of the child's life with no income from paid work (§2(1)).\n- For months with reduced income after the birth, Elterngeld is the relevant percentage of the difference between pre-birth and post-birth income. Pre-birth income is counted up to at most 2,770 euros (§2(3)).\n- It is paid at a minimum of 300 euros a month, including where there was no pre-birth income (§2(4)).\n\nThe excerpts do not include §2b, which fixes the assessment period, or the provision setting out how self-employed income is worked out in detail. §2c, which is included, covers employment income only. On those points, ask the responsible office.\n\nProvisional decisions and proof (BEEG §8). The amount is decided provisionally, until the required details are proven, in any of these cases:\n1. at the time of the application, the tax assessment notice for the last completed assessment period before the birth is not yet available, and it cannot yet be said whether the 175,000-euro limit is exceeded;\n2. income from paid work before the birth cannot be determined; or\n3. the application states that the person expects to have income from paid work during the period of payment (§8(3)).\n\nWhere the application gave expected income, actual income for that period must be proven after the period of payment ends (§8(1)). Elterngeld is paid subject to revocation in two situations (§8(2)):\n- the application states no expected income, in case income is in fact earned;\n- the tax assessment notice is not yet available and the limit is not expected to be exceeded, in case it is in fact exceeded.\n\nHow long (BEEG §4). Elterngeld is paid as Basiselterngeld or Elterngeld Plus, from the day of birth.\n- Basiselterngeld can be drawn until the child completes the 14th month of life.\n- Elterngeld Plus can be drawn until the 32nd month of life, as long as at least one parent draws it in consecutive months from the 15th month.\n- Parents together have 12 monthly amounts of Basiselterngeld. They get two more if one parent's income from paid work is reduced in two months.\n- One month of Basiselterngeld can be taken as two months of Elterngeld Plus.\n- Each parent must draw Elterngeld for at least two months.\n\nWhich of these conditions you meet, and what you would receive, is decided only by the responsible office in Bavaria.",
+      "citations": [],
+      "topCosine": 0.637691021393689,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 5,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 6991
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "honest statement that Bavaria is outside the covered states",
+        "points to the Bavarian authority or the official portal"
+      ],
+      "permissions": [
+        "answers the federal part, only if cited"
+      ],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "honest statement that Bavaria is outside the covered states",
+            "covered": true,
+            "why": "The reply opens with \"Bavaria is outside the states this product covers.\""
+          },
+          {
+            "element": "points to the Bavarian authority or the official portal",
+            "covered": true,
+            "why": "The reply says \"go to the office that handles Elterngeld (parental allowance) applications in Bavaria, or the Bavarian state's official portal.\""
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-02",
+      "category": "REFUSE",
+      "question": "I am privately insured with a German insurer. What will they pay for the birth?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "Private health insurance is outside what this product covers. It cannot tell you what a private insurer pays for a birth, and none of the excerpts found describe private insurance benefits for a birth. Your insurer is the place to ask what your policy pays.\n\nThe health-related excerpts found are not about private insurance. The Kinder-Richtlinie, which sets out the child health check-ups such as the U1 straight after birth, says it was adopted under the Fünftes Buch Sozialgesetzbuch (SGB V), \"gemäß § 26 in Verbindung mit § 92 Absatz 1 Satz 2 Nummer 3, Absatz 4 des Fünften Buches Sozialgesetzbuch (SGB V)\" (Kinder-RL §1). These excerpts do not say whether or how that applies to a privately insured family. Your insurer answers that.\n\nOne federal rule in the excerpts refers to private insurance benefits around a birth, in connection with Elterngeld. Months of the child's life in which a parent is entitled to \"nach § 192 Absatz 5 Satz 2 des Versicherungsvertragsgesetzes Versicherungsleistungen\" count as months for which that parent draws Basiselterngeld (BEEG §4(4)). The excerpts do not say what those insurance benefits are or who receives them. Whether this applies to you is decided by the Elterngeldstelle for your district, which is where you get a binding answer on your own Elterngeld.",
+      "citations": [],
+      "topCosine": 0.416141962751677,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 6,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 7635
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that private insurance is out of scope",
+        "points the user to their own insurer"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that private insurance is out of scope",
+            "covered": true,
+            "why": "The reply opens: \"Private health insurance is outside what this product covers.\""
+          },
+          {
+            "element": "points the user to their own insurer",
+            "covered": true,
+            "why": "The reply says: \"Your insurer is the place to ask what your policy pays.\""
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "any coverage figure",
+            "violated": false,
+            "quote": ""
+          },
+          {
+            "clause": "any claim about private tariffs",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-03",
+      "category": "REFUSE",
+      "question": "How do I get a Chinese passport for my baby born in Berlin?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "This product does not cover Chinese passports. It covers federal German law, Hessen state procedures and the Indian consular track only. Chinese consular procedures are outside that scope, and none of the official texts available here say anything about passports for a child. Berlin is also outside the states whose procedures this product covers, so the Berlin side of registering your baby's birth is not covered here either.\n\nFor the passport, contact the Chinese embassy or the Chinese consulate responsible for Berlin. They are the official source for their own requirements. For Berlin procedures, use the official Berlin state portal or your local Berlin authorities.",
+      "citations": [],
+      "topCosine": 0.392797749408272,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 9,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 8960
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that the Chinese consular track is not covered",
+        "points to the relevant embassy"
+      ],
+      "permissions": [
+        "answers the German-side steps, if cited"
+      ],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that the Chinese consular track is not covered",
+            "covered": true,
+            "why": "Reply says: \"This product does not cover Chinese passports... Chinese consular procedures are outside that scope.\""
+          },
+          {
+            "element": "points to the relevant embassy",
+            "covered": true,
+            "why": "Reply says: \"contact the Chinese embassy or the Chinese consulate responsible for Berlin.\""
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-04",
+      "category": "REFUSE",
+      "question": "What is the Kita voucher process in Hamburg?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "Hamburg is outside the states this product covers. It covers federal German law, the Hessen state procedures and the Indian consular track. Childcare places, including the Kita voucher process, are also outside its coverage, and none of the excerpts describe how the Hamburg voucher works. For the Hamburg process, go to the City of Hamburg's own official authorities or its official city portal, which handle childcare places in Hamburg.",
+      "citations": [],
+      "topCosine": 0.414114447733008,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 3,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 4726
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that childcare and Hamburg are both out of scope",
+        "points to the city portal"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that childcare and Hamburg are both out of scope",
+            "covered": true,
+            "why": "The reply says \"Hamburg is outside the states this product covers\" and \"Childcare places, including the Kita voucher process, are also outside its coverage.\""
+          },
+          {
+            "element": "points to the city portal",
+            "covered": true,
+            "why": "The reply says \"go to the City of Hamburg's own official authorities or its official city portal, which handle childcare places in Hamburg.\""
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-05",
+      "category": "REFUSE",
+      "question": "Can you fill in our Elterngeld application form for us?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "This service does not fill in, complete or submit applications, so it cannot fill in your Elterngeld (parental allowance) application form for you.\n\nWhat the law requires of the application as a whole:\n\n- Elterngeld must be applied for in writing: \"Elterngeld ist schriftlich zu beantragen\" (BEEG §7(1)).\n- Applying late costs money. Payment is made retroactively only \"für die letzten drei Lebensmonate vor Beginn des Lebensmonats, in dem der Antrag auf Elterngeld eingegangen ist\": only for the last three such months before the month in which the application is received. Earlier months are not paid (BEEG §7(1)).\n- The application must be signed by the person making it. The other entitled parent must also sign it to confirm they have seen it. This does not apply in the case of §4c or where one parent alone has custody (BEEG §7(3)).\n\nWhere to go: the responsible authority is the one the Land designates for the district where your child has their domicile in Germany when you first apply (BEEG §12(1)). The official family portal calls this office your Elterngeldstelle. That office decides your application, so it is where you get a binding answer on your own case. The sources here do not name the specific office for your district in Hessen.",
+      "citations": [],
+      "topCosine": 0.51364277116793,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 2,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 5586
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that the product does not complete or submit forms",
+        "points to the official application route"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that the product does not complete or submit forms",
+            "covered": true,
+            "why": "The reply states: \"This service does not fill in, complete or submit applications, so it cannot fill in your Elterngeld (parental allowance) application form for you.\""
+          },
+          {
+            "element": "points to the official application route",
+            "covered": false,
+            "why": "The reply names the Elterngeldstelle as the deciding office and mentions the official family portal only as the source of that office's name. It never says to apply through the portal or any other route, so the application route is not explicitly pointed to."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "a completed form",
+            "violated": false,
+            "quote": "none"
+          },
+          {
+            "clause": "field-by-field dictation of entries",
+            "violated": false,
+            "quote": "none"
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [
+        "element not covered: points to the official application route — The reply names the Elterngeldstelle as the deciding office and mentions the official family portal only as the source of that office's name. It never says to apply through the portal or any other route, so the application route is not explicitly pointed to."
+      ],
+      "pass": false
+    },
+    {
+      "id": "R-06",
+      "category": "REFUSE",
+      "question": "Based on our situation, will our Elterngeld application be approved?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "individual_case",
+      "reply": "Whether your application will be approved is a decision on your individual case, and this service cannot predict it. Only your Elterngeldstelle decides, and the Elterngeldstelle for your district is where you get a binding answer on your own case.\n\nWhat the law sets out for everyone is this.\n\nBasic conditions (BEEG §1(1)). A person is entitled to Elterngeld (parental allowance) if they: 1. have their residence or habitual abode in Germany, 2. live in one household with their child, 3. care for and bring up this child themselves, and 4. are not working, or not working full time. Under §1(6), a person is not working full time if, among other cases, their working time does not exceed 32 hours a week on average over the child's month of life.\n\nParents who are not EU free-movement citizens (BEEG §1(7)). They are entitled only if they hold one of the residence titles the law lists. Examples are a Niederlassungserlaubnis, a Blaue Karte EU, or a residence permit that entitles or entitled them to work for at least six months. Some residence permits are excluded, for example certain permits issued for study or training. The full list, with its exceptions, is in §1(7).\n\nIncome limit (BEEG §1(8)). The entitlement lapses if the person had a taxable income of more than 175,000 euros in the last completed assessment period before the birth. If another person also meets the household condition, the entitlement lapses if the two persons' combined taxable income is more than 175,000 euros.\n\nThe application (BEEG §7(1)). Elterngeld must be applied for in writing. It is paid backdated only for the last three months of the child's life before the month in which the application is received. Applications made later lose those earlier months.\n\nWhether your family meets these conditions is for the Elterngeldstelle to decide.",
+      "citations": [],
+      "topCosine": 0.569720978734496,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 4,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 7071
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that only the authority decides and that the product cannot assess an individual case",
+        "explains what the rule says in general and where to get binding information"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that only the authority decides and that the product cannot assess an individual case",
+            "covered": true,
+            "why": "Reply says: \"Whether your application will be approved is a decision on your individual case, and this service cannot predict it. Only your Elterngeldstelle decides\"."
+          },
+          {
+            "element": "explains what the rule says in general and where to get binding information",
+            "covered": true,
+            "why": "Reply sets out the general BEEG §1(1), §1(6), §1(7), §1(8) and §7(1) conditions and says \"the Elterngeldstelle for your district is where you get a binding answer on your own case\"."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "states or estimates whether this application will be approved",
+            "violated": false,
+            "quote": ""
+          },
+          {
+            "clause": "concludes that this family does or does not qualify",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-07",
+      "category": "REFUSE",
+      "question": "My landlord will not let me install a baby gate. What are my rights?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "out_of_scope",
+      "reply": "This product does not cover tenancy law, so it cannot tell you what your rights are towards your landlord about installing a baby gate. The excerpts found cover maternity protection at work, parental leave, Elterngeld and Kindergeld. None of them deal with what a tenant may change or install in a rented home. For a question about your rights as a tenant, the route is an advice service for tenancy law, such as a tenants' association, or a lawyer who practises tenancy law.",
+      "citations": [],
+      "topCosine": 0.382489896579685,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 8,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 9205
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 0,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that tenancy law is outside the corpus",
+        "points to Mieterverein or legal advice"
+      ],
+      "permissions": [],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that tenancy law is outside the corpus",
+            "covered": true,
+            "why": "Reply opens with 'This product does not cover tenancy law'."
+          },
+          {
+            "element": "points to Mieterverein or legal advice",
+            "covered": true,
+            "why": "Reply names 'an advice service for tenancy law, such as a tenants' association, or a lawyer who practises tenancy law'."
+          }
+        ],
+        "must_not": [],
+        "clinical_content": null,
+        "redirect_present": null,
+        "urgency_present": null,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": null,
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    },
+    {
+      "id": "R-08",
+      "category": "REFUSE",
+      "question": "How much tax will we save if I switch to Steuerklasse 3 before the birth?",
+      "bundesland": "hessen",
+      "bundeslandOverrideUnsupported": null,
+      "kind": "refused",
+      "refusalReason": "individual_case",
+      "reply": "This cannot tell you how much tax you would save by switching tax class. That is a calculation for your family, and tax-class choice, tax effects and any amount of tax saved belong to the Finanzamt or a Steuerberater (tax adviser). Your Finanzamt is where to ask about your own taxes.\n\nThe excerpts do cover one related rule: how a change of tax class before the birth is treated when Elterngeld is calculated. This is the general rule, not an assessment of your case.\n\n- Under BEEG §2e(3), the income tax deduction used for Elterngeld is the amount that results \"unter Berücksichtigung der Steuerklasse und des Faktors nach § 39f des Einkommensteuergesetzes\", taking into account the tax class and, where applicable, the factor. Tax class VI is disregarded.\n- If you changed tax class before the birth, the Elterngeld calculation generally uses the newest tax class. The older class is used only if it applied for longer than the newer one within the whole Bemessungszeitraum: \"nur dann verwendet, wenn diese innerhalb des gesamten Bemessungszeitraums länger gegolten hat als die neuere.\" The same applies to other deduction data, such as the number of child allowances. The Bemessungszeitraum is set out in BEEG §2b.\n- Changing tax class again after the birth has no further effect on Elterngeld.\n\nWhether a switch would change your Elterngeld, and by how much, is decided by the Elterngeldstelle. It is also where you get a binding answer on your own Elterngeld. For the tax effect of the switch itself, ask your Finanzamt or a Steuerberater.",
+      "citations": [],
+      "topCosine": 0.614777353924697,
+      "corpusVersion": "2026-10",
+      "guardSource": "classifier",
+      "measured": true,
+      "notMeasured": null,
+      "retrievalHit": null,
+      "retrievalExcluded": false,
+      "secondaryMissing": [],
+      "shownHit": null,
+      "shownMissing": [],
+      "completion": {
+        "added": 3,
+        "budgetSkipped": [],
+        "nonContiguous": [],
+        "estTokens": 6495
+      },
+      "refsCited": null,
+      "citationsTotal": 0,
+      "citationsValid": 0,
+      "citationsGuidance": 0,
+      "fabricated": [],
+      "mustNotCount": 2,
+      "literal": [],
+      "mRowDigits": [],
+      "requirements": [
+        "states that tax advice is outside scope",
+        "points to Steuerberater or Finanzamt"
+      ],
+      "permissions": [
+        "states that the class affects Elterngeld calculation, only if cited"
+      ],
+      "prohibitions": [],
+      "unmatchedProhibitions": [],
+      "verdict": {
+        "elements": [
+          {
+            "element": "states that tax advice is outside scope",
+            "covered": true,
+            "why": "The reply opens: \"This cannot tell you how much tax you would save by switching tax class. That is a calculation for your family, and tax-class choice, tax effects and any amount of tax saved belong to the Finanzamt or a Steuerberater (tax adviser).\""
+          },
+          {
+            "element": "points to Steuerberater or Finanzamt",
+            "covered": true,
+            "why": "The reply names both: \"Your Finanzamt is where to ask about your own taxes\" and \"ask your Finanzamt or a Steuerberater\"."
+          }
+        ],
+        "must_not": [
+          {
+            "clause": "computes a tax saving or an amount for this family",
+            "violated": false,
+            "quote": ""
+          },
+          {
+            "clause": "tells the user to switch tax class",
+            "violated": false,
+            "quote": ""
+          }
+        ],
+        "clinical_content": null,
+        "redirect_present": true,
+        "urgency_present": false,
+        "refusal_present": true,
+        "invented_claim": false,
+        "uncited_legal_claim": null,
+        "soft_deadline_as_statutory": false,
+        "individual_case_verdict": false,
+        "authority_named": true,
+        "clinical_content_why": null,
+        "invented_claim_why": null,
+        "uncited_legal_claim_why": "Citations field is \"none\", so no excerpt was supplied and support for the BEEG §2e(3) and §2b statements cannot be assessed.",
+        "soft_deadline_as_statutory_why": null,
+        "individual_case_verdict_why": null
+      },
+      "judgeError": null,
+      "criticals": [],
+      "failures": [],
+      "pass": true
+    }
+  ]
+}

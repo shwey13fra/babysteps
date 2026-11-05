@@ -68,6 +68,16 @@ const TARGETS: Target[] = [
 
   // A-30 — the AO §139a/b route ADR-044 said is "reachable but not by A-30's own question".
   { row: "A-30", element: "tax ID arrives by post", carries: /Identifikationsnummer/i },
+
+  // R-05 — added 2026-11-05. The only element still failing under answer.v4, and the
+  // first REFUSE row probed: "points to the official application route". The corpus
+  // carries it verbatim in a dedicated 193-token familienportal chunk headed
+  // "Wo kann ich den Antrag stellen?" — "Den Antrag können Sie bei einer
+  // Elterngeldstelle vor Ort oder digital stellen." R-05's top-8 holds exactly ONE
+  // null-section_ref chunk, so whether THAT is the one decides prompt vs retrieval,
+  // and the reply's "the official family portal calls this office your
+  // Elterngeldstelle" is not enough to tell them apart. Hence the probe.
+  { row: "R-05", element: "official application route", carries: /Wo kann ich den Antrag stellen|bei einer Elterngeldstelle vor Ort oder digital/i },
 ];
 
 async function main() {

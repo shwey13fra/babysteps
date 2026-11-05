@@ -76,7 +76,7 @@ import {
 
 const CSV = "data/golden/golden_set_v1.10.csv";
 const GOLDEN_VERSION = "v1.10";
-const ANSWER_PROMPT_VERSION = "answer.v3.md";
+const ANSWER_PROMPT_VERSION = "answer.v4.md";
 
 // ---------------------------------------------------------------------------
 // Structural coverage exclusions (ADR-019 amendment, 2026-11-02)

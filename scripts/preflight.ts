@@ -295,7 +295,7 @@ async function main() {
   const rows = rowsIdx === -1 ? null : Number(argv[rowsIdx + 1]);
   const onlyEmbedding = argv.includes("--embedding");
   const answerIdx = argv.indexOf("--answer-prompt");
-  const answerPrompt = answerIdx === -1 ? "answer.v3.md" : argv[answerIdx + 1];
+  const answerPrompt = answerIdx === -1 ? "answer.v4.md" : argv[answerIdx + 1];
 
   if (onlyEmbedding) {
     assertAlive(await embeddingAlive());
