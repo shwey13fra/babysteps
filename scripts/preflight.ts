@@ -70,8 +70,23 @@ export function loadBudget(file = BUDGET_FILE): Budget {
  * rows that were measured, and iter9 shows why that is wrong to reuse: its
  * nine rows were all ANSWER rows, the most expensive kind, so its per-row mean
  * is far above a full run's.
+ *
+ * FIXED 2026-11-05 (ADR-061), and the comment above was describing a guard that
+ * did not exist. `valid_baseline` is written as `notMeasured.length === 0` — it
+ * means "every row this run ATTEMPTED was measured", not "this was a full
+ * baseline". So `2026-11-05-partial.json` (9 of 9 rows, all REFUSE but one)
+ * carried `valid_baseline: true` with `rows_total: 9`, was accepted here, and
+ * priced iter11 at $0.12/row against a true $0.0955. Over-cautious that time,
+ * which is the safe direction and is exactly why it went unnoticed.
+ *
+ * `fullSetRows` closes it: a cost baseline must have measured the WHOLE golden
+ * set. Callers pass the live set's row count rather than a literal, so this
+ * cannot drift when the set grows.
  */
-export function meanCostPerRow(answerPrompt: string): { usd: number; from: string } | null {
+export function meanCostPerRow(
+  answerPrompt: string,
+  fullSetRows: number,
+): { usd: number; from: string } | null {
   const dir = join(process.cwd(), REPORTS_DIR);
   const candidates: Array<{ file: string; usd: number; rows: number }> = [];
 
@@ -86,6 +101,11 @@ export function meanCostPerRow(answerPrompt: string): { usd: number; from: strin
     if (!m || m.valid_baseline !== true) continue;
     const rows = m.rows_measured;
     if (typeof rows !== "number" || rows <= 0) continue;
+    // A full-set run, or it is not a cost baseline. Both halves are required:
+    // rows_total guards against a --only/--limit subset, and the equality
+    // guards against a run that attempted the whole set and lost rows to an
+    // outage or a judge guard (iter11 lost A-29 to ADR-026).
+    if (m.rows_total !== fullSetRows || rows !== m.rows_total) continue;
 
     // `cost_usd` and `prompts` were added to meta on 2026-11-04. Reports
     // written before that carry the same figures only in their MARKDOWN, so
@@ -127,8 +147,13 @@ export function meanCostPerRow(answerPrompt: string): { usd: number; from: strin
 
 export type Estimate = { rows: number; perRow: number; total: number; required: number; from: string };
 
-export function estimateRun(rows: number, answerPrompt: string, budget: Budget): Estimate | null {
-  const mean = meanCostPerRow(answerPrompt);
+export function estimateRun(
+  rows: number,
+  answerPrompt: string,
+  budget: Budget,
+  fullSetRows: number,
+): Estimate | null {
+  const mean = meanCostPerRow(answerPrompt, fullSetRows);
   if (!mean) return null;
   const total = mean.usd * rows;
   return {
@@ -146,13 +171,46 @@ const usd = (n: number) => `$${n.toFixed(2)}`;
  * Throws BEFORE the first model call when the declared balance will not cover
  * the run with headroom. The message says every number it used, because a gate
  * that blocks a run has to be arguable.
+ *
+ * FIXED 2026-11-05 (ADR-061): a null estimate used to print "coverage NOT
+ * checked" and RETURN. That is a gate that fails open, and it failed open
+ * precisely when the configuration had just changed — a new answer prompt has
+ * no prior baseline by definition, so the first run on every new prompt version
+ * started unprotected. Credit exhaustion has killed three runs in nine days
+ * (2026-10-27, iter6, iter9), so the one moment the gate was guaranteed to be
+ * dark was the one moment it was most needed. Worse, it was trusted: the line
+ * scrolls past and reads like a check that ran.
+ *
+ * It now refuses. An unpriceable run is not a cheap run.
  */
 export function assertBudget(est: Estimate | null, budget: Budget, ignore: boolean): void {
   if (!est) {
-    console.log(
-      `budget     : no comparable full baseline on disk for this answer prompt — coverage NOT checked`,
+    if (ignore) {
+      console.log(
+        `budget     : NOT PRICEABLE — no full-set baseline on disk for this answer prompt. ` +
+          `--ignore-budget: starting anyway, with no coverage check at all.`,
+      );
+      return;
+    }
+    throw new Error(
+      [
+        `REFUSING TO START: this run cannot be priced, so the budget gate cannot run.`,
+        `  no report in ${REPORTS_DIR} measured the FULL golden set under this answer prompt.`,
+        `  declared remaining  ${usd(budget.remaining_usd)}   (${BUDGET_FILE}, topped up ${budget.last_topped_up ?? "never"})`,
+        ``,
+        `A new prompt version has no baseline by definition, which is why this used to`,
+        `print "coverage NOT checked" and start anyway — a gate that went dark exactly`,
+        `when the configuration changed, and was trusted while doing it.`,
+        ``,
+        `Either way, decide it deliberately:`,
+        `  - price it by hand from the nearest prior full run and pass --ignore-budget, or`,
+        `  - run the previous prompt version, or`,
+        `  - raise remaining_usd so a worst-case run is covered whatever it costs.`,
+        ``,
+        `A partial run (--only / --limit) is NOT a cost baseline: its per-row mean is`,
+        `computed over whichever rows it happened to measure.`,
+      ].join("\n"),
     );
-    return;
   }
   const line =
     `budget     : est ${usd(est.total)} (${est.rows} rows x ${usd(est.perRow)}/row, from ${est.from}), ` +
@@ -306,8 +364,24 @@ async function main() {
   assertAlive(await embeddingAlive());
 
   if (rows && Number.isFinite(rows)) {
+    // `--full-set` is required rather than defaulted: defaulting it to `rows`
+    // would re-open ADR-061's hole from the other side, by making any subset
+    // look like a full-set baseline to the pricing lookup.
+    const fullIdx = argv.indexOf("--full-set");
+    const fullSet = fullIdx === -1 ? null : Number(argv[fullIdx + 1]);
+    if (!fullSet || !Number.isFinite(fullSet)) {
+      throw new Error(
+        `--rows needs --full-set <n>, the row count of the whole golden set. Pricing only ` +
+          `accepts a baseline that measured the full set (ADR-061), so it cannot be inferred ` +
+          `from the size of this run.`,
+      );
+    }
     const budget = loadBudget();
-    assertBudget(estimateRun(rows, answerPrompt, budget), budget, argv.includes("--ignore-budget"));
+    assertBudget(
+      estimateRun(rows, answerPrompt, budget, fullSet),
+      budget,
+      argv.includes("--ignore-budget"),
+    );
   }
   console.log("preflight  : OK");
 }

@@ -89,9 +89,16 @@ describe("the gate allows", () => {
     expect(() => assertBudget(est(4.07, b), b, false)).not.toThrow();
   });
 
-  it("does not block when no comparable baseline exists — it says so instead", () => {
+  // REVERSED 2026-11-05 (ADR-061). This test asserted the old behaviour —
+  // "does not block when no comparable baseline exists — it says so instead" —
+  // and that behaviour was the defect: the gate failed open on exactly the runs
+  // it could not price, which is every first run on a new prompt version. The
+  // hole was tested IN, which is why it survived. A declared balance of 0 is
+  // the sharpest case: there is nothing to spend and the gate used to wave it
+  // through.
+  it("blocks when no comparable baseline exists, rather than saying so and starting", () => {
     const b = loadBudget(tempLedger(0));
-    expect(() => assertBudget(null, b, false)).not.toThrow();
+    expect(() => assertBudget(null, b, false)).toThrow(/REFUSING TO START/);
   });
 
   it("--ignore-budget overrides a refusal", () => {
@@ -155,7 +162,7 @@ describe("loadBudget validates rather than guessing", () => {
 
 describe("the per-row mean is derived from a matching baseline", () => {
   it("reads iter8's real cost for answer.v3 and matches the committed figure", () => {
-    const m = meanCostPerRow("answer.v3.md");
+    const m = meanCostPerRow("answer.v3.md", 48);
     expect(m).not.toBeNull();
     // iter8: $4.07 over 48 rows. The figure is read off the committed report,
     // so this test fails if that report's cost line ever changes.
@@ -164,8 +171,8 @@ describe("the per-row mean is derived from a matching baseline", () => {
   });
 
   it("does not reuse an answer.v2 baseline for an answer.v3 run", () => {
-    const v2 = meanCostPerRow("answer.v2.md");
-    const v3 = meanCostPerRow("answer.v3.md");
+    const v2 = meanCostPerRow("answer.v2.md", 48);
+    const v3 = meanCostPerRow("answer.v3.md", 48);
     expect(v2).not.toBeNull();
     expect(v3).not.toBeNull();
     // v3 replies are longer, so its per-row cost is strictly higher. A v2 mean
@@ -174,19 +181,71 @@ describe("the per-row mean is derived from a matching baseline", () => {
   });
 
   it("returns null for a prompt version no baseline used", () => {
-    expect(meanCostPerRow("answer.v99.md")).toBeNull();
+    expect(meanCostPerRow("answer.v99.md", 48)).toBeNull();
+  });
+
+  // ADR-061. `valid_baseline` is written as `notMeasured.length === 0`, so it
+  // means "every row this run attempted was measured" — a 9-row --only run
+  // qualifies. 2026-11-05-partial.json did, and priced iter11 at $0.12/row
+  // against a true $0.0955.
+  it("ignores a partial run, however complete that run was in its own terms", () => {
+    // answer.v4 ran exactly twice: the 9-row partial (valid_baseline true,
+    // rows_total 9) and iter11 (rows_total 48, rows_measured 47 — A-29 lost to
+    // ADR-026). Neither is a full-set baseline, so v4 must not be priceable.
+    expect(meanCostPerRow("answer.v4.md", 48)).toBeNull();
+  });
+
+  it("ignores a full-set run that lost rows mid-flight", () => {
+    // Guards the second half of the condition. If only rows_total were checked,
+    // iter11 (48 attempted, 47 measured) would price a run off a mean computed
+    // over a denominator it does not have.
+    const m = meanCostPerRow("answer.v3.md", 48);
+    expect(m!.from).not.toContain("iter11");
+  });
+
+  it("rejects a baseline whose set size differs from the live set", () => {
+    // If the golden set grows to 50, a 48-row baseline is no longer comparable.
+    expect(meanCostPerRow("answer.v3.md", 50)).toBeNull();
   });
 });
 
 describe("estimateRun", () => {
   it("scales with row count and applies the multiplier", () => {
     const b = loadBudget(tempLedger(20));
-    const full = estimateRun(48, "answer.v3.md", b);
-    const one = estimateRun(1, "answer.v3.md", b);
+    const full = estimateRun(48, "answer.v3.md", b, 48);
+    const one = estimateRun(1, "answer.v3.md", b, 48);
     expect(full).not.toBeNull();
     expect(full!.total).toBeCloseTo(4.07, 2);
     expect(full!.required).toBeCloseTo(4.07 * 1.5, 2);
     expect(one!.total).toBeCloseTo(4.07 / 48, 4);
+  });
+
+  it("prices a subset from a full-set mean, not from another subset", () => {
+    const b = loadBudget(tempLedger(20));
+    // The --only case: 9 rows priced at the full run's per-row cost.
+    const some = estimateRun(9, "answer.v3.md", b, 48);
+    expect(some!.perRow).toBeCloseTo(4.07 / 48, 4);
+  });
+});
+
+describe("the budget gate fails closed when a run cannot be priced", () => {
+  it("throws rather than printing 'NOT checked' and starting anyway", () => {
+    // ADR-061. This is the hole that would have silently corrupted the two
+    // baselines bought on 2026-11-05: a new answer prompt has no prior
+    // baseline BY DEFINITION, so the gate went dark on exactly the runs whose
+    // cost was least known — and printed a line that read like a check.
+    const b = loadBudget(tempLedger(20));
+    expect(() => assertBudget(null, b, false)).toThrow(/cannot be priced/);
+  });
+
+  it("names the declared balance in the refusal, so the gate is arguable", () => {
+    const b = loadBudget(tempLedger(20));
+    expect(() => assertBudget(null, b, false)).toThrow(/\$20\.00/);
+  });
+
+  it("still lets --ignore-budget through, deliberately and loudly", () => {
+    const b = loadBudget(tempLedger(20));
+    expect(() => assertBudget(null, b, true)).not.toThrow();
   });
 });
 

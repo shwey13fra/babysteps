@@ -28,9 +28,9 @@
 //
 // Run: npx tsx scripts/eval/run.ts [--limit N] [--only A-02,M-09]
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 
 // .env.local into process.env before anything reads it. The lib modules read
 // env lazily inside their functions, so static imports below this are safe.
@@ -1442,6 +1442,33 @@ function buildReport(
 // main
 // ---------------------------------------------------------------------------
 
+/**
+ * The answer prompt of the newest report on disk other than this run's own, or
+ * null if there is none. Used only to decide whether to print ADR-062's
+ * reminder, so a missing or unreadable report means "say nothing" rather than
+ * an error.
+ */
+function previousAnswerPrompt(selfSidecar: string): string | null {
+  const dir = join(process.cwd(), "eval/reports");
+  const self = basename(selfSidecar);
+  const names = readdirSync(dir)
+    .filter((n) => n.endsWith(".json") && n !== self)
+    .sort()
+    .reverse();
+  for (const name of names) {
+    try {
+      const r = JSON.parse(readFileSync(join(dir, name), "utf8")) as {
+        meta?: { prompts?: { answer?: string } };
+      };
+      const p = r.meta?.prompts?.answer;
+      if (p) return p;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
 async function main() {
   const onlyIdx = process.argv.indexOf("--only");
   const only = onlyIdx > -1 && process.argv[onlyIdx + 1] ? process.argv[onlyIdx + 1].split(",") : null;
@@ -1479,7 +1506,10 @@ async function main() {
   assertAlive(await anthropicAlive());
   const BUDGET = loadBudget();
   assertBudget(
-    estimateRun(rows.length, ANSWER_PROMPT_VERSION, BUDGET),
+    // `all.length` is the live golden set, so a cost baseline must have measured
+    // the WHOLE set to be used for pricing (ADR-061). `rows.length` is what THIS
+    // run will attempt, which is smaller under --only or --limit.
+    estimateRun(rows.length, ANSWER_PROMPT_VERSION, BUDGET, all.length),
     BUDGET,
     process.argv.includes("--ignore-budget"),
   );
@@ -1570,6 +1600,28 @@ async function main() {
     "utf8",
   );
   console.log(`raw replies + verdicts: ${sidecar}`);
+
+  // ADR-062: the blast-radius grep, printed rather than remembered. ADR-059's
+  // defect showed in the gate table as ONE critical on A-30 and was in 20 of
+  // 48 replies; the judge raises such a sentence stochastically, so the gate
+  // table reported 5% of the real radius. The reminder fires when this run's
+  // answer prompt differs from the newest earlier report's, which is exactly
+  // when a new phrasing can have propagated.
+  const priorPrompt = previousAnswerPrompt(sidecar);
+  if (priorPrompt && priorPrompt !== ANSWER_PROMPT_VERSION) {
+    console.log(
+      `
+PHRASING GREP OWED (ADR-062): answer prompt changed ${priorPrompt} -> ${ANSWER_PROMPT_VERSION}.
+` +
+        `  Grep ${sidecar} for the wording this version added or changed, count the rows, and
+` +
+        `  report that count BEFORE the gate table. Compare against a ${priorPrompt} run so the
+` +
+        `  radius is attributed rather than assumed. If a new phrasing has propagated widely,
+` +
+        `  stop and report rather than buying the next sample.`,
+    );
+  }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
