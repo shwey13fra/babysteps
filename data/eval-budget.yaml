@@ -33,8 +33,24 @@
 version: 1
 
 # Set by the human on top-up. 0 means "assume nothing is available".
-remaining_usd: 1.15
-last_topped_up: 2026-11-04
+#
+# RESET to an OBSERVED figure on 2026-11-05, not decremented to it. The console
+# read $22.59 organization credits remaining, with $46.20 spent month-to-date.
+# The running figure had drifted to $1.15 because a top-up earlier that day was
+# never recorded here - the human was asked twice for the number and it was not
+# supplied, so it was left alone rather than guessed. That is the drift this
+# file's own header predicts: an unrecorded top-up makes the harness
+# over-cautious, never over-confident, and it refused nothing today only
+# because both v5 baselines ran under --ignore-budget for an unrelated reason
+# (answer.v5 had no full-set baseline to price from - ADR-061).
+#
+# The ledger below is NOT reconciled to this figure and must not be: its
+# entries are measured costs of individual runs, each read from that run's own
+# report. They are correct. It is `remaining_after` that silently assumed no
+# money arrived. Treat a `remaining_after` older than this line as a lower
+# bound on what was actually available at the time.
+remaining_usd: 22.59
+last_topped_up: 2026-11-05
 
 # A run must clear estimate x this before it is allowed to start.
 headroom_multiplier: 1.5
