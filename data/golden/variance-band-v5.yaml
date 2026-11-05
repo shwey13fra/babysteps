@@ -1,0 +1,157 @@
+# Observed run-to-run movement under the CURRENT configuration, n=2.
+#
+# Supersedes nothing: `variance-band.yaml` stays on disk as the n=3 record under
+# answer.v2 / judge.v4 / golden v1.8, where every band is now STALE because all
+# three components moved. This file is the first band measured under the live
+# configuration since 2026-11-03.
+#
+# READ THE n BEFORE READING ANY NUMBER HERE. n=2 gives the movement between two
+# samples, which is a FLOOR on the true variance, not a characterisation of it.
+# A two-sample spread cannot distinguish "the measure moves by about this much"
+# from "the measure moves by at least this much". ADR-048's rule stands: a
+# single-sample number with no n is not a result, and a two-sample band is not a
+# licence to quote a mean.
+#
+# RULES FOR EDITING: as `variance-band.yaml`. Same five rules, same
+# conservatism about `depends_on`.
+
+version: 1
+
+measured_under:
+  golden: v1.11
+  judge: judge.v5.md
+  answer: answer.v5.md
+  corpus: "2026-10"
+  git: e223aeb
+
+samples:
+  n: 2
+  labels:
+    - 2026-11-05-iter12-v5-1
+    - 2026-11-05-iter12-v5-2
+  note: >
+    Both are valid baselines: 48 of 48 rows measured, eval_runs row written for
+    each. Bought back-to-back with nothing changed between them - verified by
+    `git status` before each launch, and the only files that differed were the
+    harness-decremented ledger and run 1's own report.
+
+    BOTH REPORTS MISLABEL THE GOLDEN VERSION AS v1.10 (ADR-064). They loaded
+    v1.11. `GOLDEN_VERSION` was a hardcoded constant beside the `CSV` path and
+    only the path was bumped. Proved from the sidecars rather than argued: R-06's
+    `requirements` in both runs read "names where to ask about their own case",
+    which is v1.11's wording and exists in no earlier version. The data is
+    right; the label is wrong. The constant is now derived from the filename.
+
+    Run 2's `git_sha` reads `unknown`: its shell was reaped for host memory
+    pressure and the sha lookup was interrupted. The tsx child survived and
+    completed all 48 rows - confirmed from the PROCESS TABLE with command lines
+    while it was still running, not from log staleness. Its true sha is e223aeb,
+    the same as run 1.
+
+bands:
+  retrieval_hit:
+    observed: [23, 23]
+    movement: 0
+    unit: hits
+    denominator: 28
+    denominator_all: 30
+    depends_on: [corpus, golden, glossary]
+    note: >
+      Identical across both samples, and identical to all five earlier samples
+      under three different configurations: 23/28 every time. No model judgement
+      enters this number - it is embedding similarity against a fixed corpus.
+      This remains the only gate figure trustworthy to the unit.
+
+      `glossary` is listed in depends_on for the first time here. It was owed
+      since 2026-11-04: the glossary changes the lexical half of the query and
+      so changes retrieval, yet it was not a tracked component, so no band could
+      go stale on it. It is tracked now. It has a version field in neither the
+      file nor this one, so staleness on it is still a manual judgement - a
+      hash of the file is the obvious fix and is NOT done.
+
+  citation_validity:
+    observed: [59, 62]
+    denominators: [59, 62]
+    movement: 0
+    unit: rate
+    rate: [1.0, 1.0]
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      100% on both samples, and on the two v3/v4 samples before them - four
+      consecutive perfect samples across three answer prompts. The denominator
+      moves (59, 62) because the model cites a different number of provisions
+      each run; the numerator tracks it exactly.
+
+      This gate can only fall. It is met at its ceiling with no work outstanding,
+      so additional samples here buy risk rather than margin (ADR-063).
+
+  coverage_scorable:
+    observed: [66, 62]
+    movement: 4
+    gross_churn: 6
+    rows_touched: 6
+    unit: elements
+    denominator: 85
+    denominator_all: 93
+    depends_on: [corpus, golden, answer, judge, glossary]
+    note: >
+      THE HEADLINE OF THIS BAND, AND IT IS BAD NEWS FOR THE GATE. Net movement
+      4 elements, gross churn 6 across 6 rows, between two samples at ONE commit.
+      The superseded band declared +/- 2 at n=3. The real movement is at least
+      double what was declared, and n=2 only establishes a floor.
+
+      Element by element, run 1 -> run 2:
+        GAINED (1): A-17 tolerance limits begin at U2
+        LOST   (5): A-01 date computed from the due date
+                    A-06 zu versteuerndes Einkommen under EStG 2(5)
+                    A-07 14 months when one parent's income is reduced
+                    A-21 the sechs hessische offices named
+                    A-23 online availability depends on the Bundesland
+      No row moved for a reason attributable to a change: nothing changed.
+
+      CONSEQUENCE FOR THE GATE. The bar is 75% = 64/85. The samples are 66
+      (77.6%) and 62 (72.9%). The bar sits BETWEEN them. So the lower bound
+      fails at 72.9% while the mean of the two samples clears it, and which side
+      a single run lands on is decided by churn of 4-6 elements that no input
+      controls. This gate is NOISE-BOUND at n=2 and cannot be settled by two
+      samples in either direction.
+
+  criticals:
+    observed: [0, 0]
+    adjudicated: [0, 0]
+    movement: 0
+    unit: criticals
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      Zero raised and zero adjudicated on both samples - the first clean pair in
+      Phase 5. The two causes measured earlier this session were both removed
+      rather than re-rolled, which is the only way a zero-tolerance gate on a
+      stochastic measure is ever met (ADR-063): A-02's invented Lebensmonat
+      definition by answer.v4 + ADR-058, and A-30's "binding answer" by
+      answer.v5 + ADR-059. The blast-radius grep confirms the second: the
+      phrasing is on 0 of 48 replies in both samples, against 20 of 48 under v4.
+
+  refuse_rows:
+    observed: [6, 8]
+    movement: 2
+    unit: rows
+    denominator: 8
+    rows_failing: [["R-01", "R-05"], []]
+    depends_on: [corpus, golden, answer, judge]
+    note: >
+      Two samples, 6/8 and 8/8, against a bar of 7/8 - the bar sits BETWEEN the
+      samples, exactly as coverage does. Lower bound 6/8 fails; run 2 is
+      perfect. Across all seven samples ever taken the raw count is
+      7, 7, 8, 7, 6, 6, 8 and FIVE distinct rows have failed, none twice at one
+      commit.
+
+      THIS BAND CORRECTS A CLAIM MADE EARLIER ON 2026-11-05 (ADR-065). R-05 was
+      described as a DETERMINISTIC retrieval miss, making the gate's ceiling 7/8
+      and the gap structural. Run 2 scored R-05 PASS. What was actually
+      deterministic is that one chunk - the familienportal section headed "Wo
+      kann ich den Antrag stellen?" - sits outside R-05's ranked top-8, which
+      probe-element-reach measured correctly. The inference that the ELEMENT was
+      therefore unreachable was wrong: in run 2 the model satisfied it from a
+      different chunk, citing the Familienportal's official how-to-apply page.
+      A probe's MISS is a fact about the chunk the probe's own regex names, not
+      about every route to the element.

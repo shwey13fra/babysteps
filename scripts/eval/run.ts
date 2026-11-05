@@ -75,7 +75,21 @@ import {
 } from "../preflight";
 
 const CSV = "data/golden/golden_set_v1.11.csv";
-const GOLDEN_VERSION = "v1.10";
+// DERIVED, not declared, since 2026-11-05 (ADR-064). These were two constants
+// holding one fact. Bumping CSV to v1.11 and leaving GOLDEN_VERSION at "v1.10"
+// mislabelled BOTH iter12 baselines: they loaded v1.11 — proved by R-06's
+// requirement text in their own sidecars — and reported golden v1.10 in the
+// report header, the meta and the eval_runs note. The data was right and the
+// label was wrong, which is the harder defect to catch, because every figure
+// reconciles.
+//
+// Throws rather than falling back: a version string that silently degrades to a
+// default is the same class of defect one step quieter.
+const GOLDEN_VERSION = (() => {
+  const m = CSV.match(/_v(\d+\.\d+)\.csv$/);
+  if (!m) throw new Error(`cannot derive the golden version from ${CSV} — rename it or fix the pattern`);
+  return `v${m[1]}`;
+})();
 const ANSWER_PROMPT_VERSION = "answer.v5.md";
 
 // ---------------------------------------------------------------------------
