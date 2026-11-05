@@ -33,7 +33,7 @@
 version: 1
 
 # Set by the human on top-up. 0 means "assume nothing is available".
-remaining_usd: 14.80
+remaining_usd: 10.31
 last_topped_up: 2026-11-04
 
 # A run must clear estimate x this before it is allowed to start.
@@ -55,3 +55,7 @@ ledger:
     label: "partial (9 of 48 rows)"
     measured_usd: 1.0999
     remaining_after: 14.80
+  - date: 2026-11-05
+    label: "iter11-v4-1"
+    measured_usd: 4.4855
+    remaining_after: 10.31

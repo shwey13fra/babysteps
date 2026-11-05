@@ -74,9 +74,9 @@ import {
   recordSpend,
 } from "../preflight";
 
-const CSV = "data/golden/golden_set_v1.10.csv";
+const CSV = "data/golden/golden_set_v1.11.csv";
 const GOLDEN_VERSION = "v1.10";
-const ANSWER_PROMPT_VERSION = "answer.v4.md";
+const ANSWER_PROMPT_VERSION = "answer.v5.md";
 
 // ---------------------------------------------------------------------------
 // Structural coverage exclusions (ADR-019 amendment, 2026-11-02)

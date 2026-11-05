@@ -47,7 +47,7 @@ import { readCsv } from "./csv";
 import { refsIn, normalizeRef, normalizeUrl } from "./citations";
 import { todayISO } from "../../lib/timeline/dates";
 
-const CSV = "data/golden/golden_set_v1.10.csv";
+const CSV = "data/golden/golden_set_v1.11.csv";
 const GOLDEN_VERSION = "v1.10";
 const OUT_DIR = "eval/reports";
 
