@@ -1,0 +1,287 @@
+/* app/globals.css
+ *
+ * Tokens and type scale from docs/design-system.md §2 and §3; every value is
+ * copied from there or from docs/mockup.html, never invented here.
+ *
+ * Stage A of Phase 6 is the foundation only: tokens, the type scale, the German
+ * language rules, focus, motion, and the primitives the landing / how-it-works /
+ * footer need. The timeline, intake, birth-diff and answer-card component styles
+ * arrive with their own stages so that each stage's CSS can be read against the
+ * screen it builds.
+ */
+
+/* --------------------------------------------------------------------------
+   §2 Colour · §3 Type · §4 Layout
+   -------------------------------------------------------------------------- */
+
+:root {
+  --paper: #f4f7f7;
+  --surface: #ffffff;
+  --ink: #15242b;
+  --ink-2: #4c5f68;
+  --ink-3: #7b8f96;
+  --rule: #dce4e4;
+  --de: #0b6b60;
+  --de-soft: #e4efed;
+  --in: #4a3d8f;
+  --in-soft: #eae8f5;
+  --warn: #8a5300;
+  --warn-soft: #fbf1dc;
+  --stop: #96282a;
+  --stop-soft: #faeae9;
+  --done: #93a6ab;
+
+  /* §4: the 56px date gutter is the one structural decision that makes the
+     timeline read as a deadline instrument rather than a task list. */
+  --gutter: 56px;
+  /* §4: one max-width. A desktop two-column layout would break the metaphor. */
+  --measure: 560px;
+
+  /* Each subset is its own family; a missing glyph falls through to the next
+     family in this list. See app/fonts.ts for why it cannot be one family. */
+  --sans: var(--font-plex-sans), var(--font-plex-sans-ext), "Segoe UI", system-ui,
+    -apple-system, sans-serif;
+  --mono: var(--font-plex-mono), var(--font-plex-mono-ext), ui-monospace, "SF Mono", Menlo,
+    monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  /* §3 body: 15/24, 400. */
+  font: 400 15px/24px var(--sans);
+  /* §3: dates and countdowns keep the gutter column aligned. Set globally
+     because every screen in this product is mostly dates. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* §3: left-aligned everywhere. Justified German at 380px produces rivers. */
+body,
+p,
+li,
+h1,
+h2,
+h3,
+h4 {
+  text-align: left;
+}
+
+/* --------------------------------------------------------------------------
+   §3 German compounds — item 9
+   -------------------------------------------------------------------------- */
+
+/* `Mutterschutzfristen` and `Steuer-Identifikationsnummer` overflow a 380px
+   column. The browser needs the language attribute to apply German hyphenation
+   patterns; getting this wrong is the most common cause of broken layout in
+   bilingual German UI. Applied globally, then again on [lang="de"] because the
+   page is lang="en" and German runs are marked inline. */
+html {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+[lang="de"] {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* §3 the gloss pattern: German term in --ink with a dotted underline, the
+   English gloss immediately after in parentheses in --ink-2, first occurrence
+   per screen only. Not tap-to-reveal: that hides the exact word the user needs
+   at a counter, and it does not survive printing. */
+.term {
+  border-bottom: 1px dotted var(--ink-3);
+}
+
+.gloss {
+  color: var(--ink-2);
+}
+
+/* --------------------------------------------------------------------------
+   §3 Type scale
+   -------------------------------------------------------------------------- */
+
+.title {
+  font: 600 27px/32px var(--sans);
+  letter-spacing: -0.01em;
+  margin: 20px 0 6px;
+}
+
+.sub-title {
+  font: 500 17px/24px var(--sans);
+  margin: 26px 0 8px;
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+/* §3 secondary: 15/22, --ink-2. */
+.lede {
+  font: 400 15px/22px var(--sans);
+  color: var(--ink-2);
+}
+
+/* §3 metadata: 13/18, --ink-3. Restricted to 13px metadata and never used for
+   anything a user must read to act — it is the one pairing near the AA line. */
+.meta {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+}
+
+/* §3: Plex Mono appears in exactly one place, the § reference. */
+code,
+.ref {
+  font: 400 13px/18px var(--mono);
+}
+
+/* --------------------------------------------------------------------------
+   §4 Layout shell
+   -------------------------------------------------------------------------- */
+
+.shell {
+  max-width: var(--measure);
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+.shell > main {
+  flex: 1;
+}
+
+/* Header carries state, not branding (§4). */
+.head {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.head .state {
+  font: 500 15px/22px var(--sans);
+}
+
+.head .sub {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+
+.pad {
+  padding: 0 18px;
+}
+
+/* --------------------------------------------------------------------------
+   §7 Voice — buttons name their effect
+   -------------------------------------------------------------------------- */
+
+.btn-primary {
+  font: 500 15px/20px var(--sans);
+  background: var(--de);
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 16px;
+  cursor: pointer;
+  width: 100%;
+  /* 44px minimum touch target. */
+  min-height: 44px;
+}
+
+.btn-ghost {
+  font: 500 15px/20px var(--sans);
+  background: transparent;
+  color: var(--de);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+a {
+  color: var(--de);
+}
+
+/* --------------------------------------------------------------------------
+   §5 Source chip — loud rather than quiet
+   -------------------------------------------------------------------------- */
+
+.src {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  text-decoration: none;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+  border-radius: 7px;
+  padding: 3px 9px;
+  margin: 4px 6px 0 0;
+  min-height: 28px;
+}
+
+.src code {
+  color: var(--de);
+}
+
+.src em {
+  font: 400 13px/18px var(--sans);
+  font-style: normal;
+  color: var(--ink-3);
+}
+
+.src.consular code {
+  color: var(--in);
+}
+
+/* --------------------------------------------------------------------------
+   Permanent disclaimer footer — item 8, PRD §8
+   -------------------------------------------------------------------------- */
+
+.foot {
+  border-top: 1px solid var(--rule);
+  margin: 26px 18px 0;
+  padding: 12px 0 24px;
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+}
+
+.foot a {
+  color: var(--ink-3);
+}
+
+/* --------------------------------------------------------------------------
+   Focus and motion
+   -------------------------------------------------------------------------- */
+
+:focus-visible {
+  outline: 2px solid var(--de);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* §6: one transition in the whole product, the birth-date diff. Everything
+   else is static, and prefers-reduced-motion replaces even that one with a
+   static before/after. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
