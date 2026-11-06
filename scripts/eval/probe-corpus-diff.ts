@@ -48,7 +48,7 @@ import { refsIn, normalizeRef, normalizeUrl } from "./citations";
 import { todayISO } from "../../lib/timeline/dates";
 
 const CSV = "data/golden/golden_set_v1.13.csv";
-const GOLDEN_VERSION = "v1.10";
+const GOLDEN_VERSION = CSV.split("_").pop()?.replace(".csv", "") ?? "unknown";
 const OUT_DIR = "eval/reports";
 
 /** Seventh copy. calibrate.ts:32 already flags the extraction as owed (CLAUDE.md rule 1). */
