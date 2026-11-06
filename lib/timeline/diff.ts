@@ -10,6 +10,7 @@
 import type { IntakeProfile, TimelineItem } from "../schemas";
 import type { ISODate } from "./dates";
 import { buildTimeline } from "./index";
+import { keyDate } from "./key-date";
 
 export type DateChange = {
   id: string;
@@ -17,15 +18,6 @@ export type DateChange = {
   from: ISODate;
   to: ISODate;
 };
-
-/**
- * The date a user thinks of as "the date for this item": its deadline when it has
- * one, otherwise the day its window opens. Both offsets hang off the same anchor,
- * so when the anchor moves they move together by the same number of days.
- */
-function keyDate(item: TimelineItem): ISODate {
-  return item.deadline?.date ?? item.window_open;
-}
 
 /**
  * Items whose date moved between two profiles.

@@ -132,6 +132,29 @@ export const TimelinePeriod = z.object({
 
 export type TimelinePeriod = z.infer<typeof TimelinePeriod>;
 
+/**
+ * The wire contract of GET/POST /api/timeline.
+ *
+ * Phase 6 put an HTTP seam between the engine and the screen (ADR-069): the
+ * rules live on disk so `buildTimeline` is server-only, while the profile lives
+ * in localStorage and is therefore client-only. Those two cannot meet in a
+ * Server Component.
+ *
+ * This is validated on the way OUT as well as in. Once a date crosses a wire it
+ * is a string in a JSON blob, and the screen renders whatever arrives; the
+ * engine's internal `Timeline` type stops protecting anything at that boundary.
+ * `tests/ui/timeline-rows.test.ts` also asserts that the engine's own output
+ * satisfies this schema, so the two cannot drift apart silently.
+ */
+export const TimelineResponse = z.object({
+  items: z.array(TimelineItem),
+  period: TimelinePeriod,
+  /** The date every status was derived against. Echoed so output is reproducible. */
+  as_of: z.iso.date(),
+});
+
+export type TimelineResponse = z.infer<typeof TimelineResponse>;
+
 // ---------------------------------------------------------------------------
 // Answer contract (consumed from Phase 3; defined here so the type is stable)
 // ---------------------------------------------------------------------------

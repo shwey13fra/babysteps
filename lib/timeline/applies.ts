@@ -52,7 +52,14 @@ export function bundeslandToJurisdiction(bundesland: IntakeProfile["bundesland"]
 
 const INDIA = new Set(["in", "ind", "india", "indian"]);
 
-function hasIndianParent(profile: IntakeProfile): boolean {
+/**
+ * EXPORTED for the timeline header (Phase 6 stage B), which names the tracks a
+ * profile can see. The header must agree with `allowedJurisdictions` below, so
+ * it asks the same function rather than re-testing the nationalities with its
+ * own narrower idea of what counts as Indian. This module has type-only
+ * imports, so it is safe in a client bundle.
+ */
+export function hasIndianParent(profile: IntakeProfile): boolean {
   return profile.nationalities.some((n) => INDIA.has(n.trim().toLowerCase()));
 }
 

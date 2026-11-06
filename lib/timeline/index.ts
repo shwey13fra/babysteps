@@ -103,4 +103,5 @@ export function buildTimeline(profile: IntakeProfile, options: BuildOptions = {}
 }
 
 export { computeDateChanges } from "./diff";
+export { keyDate } from "./key-date";
 export type { DateChange } from "./diff";

@@ -285,3 +285,437 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* ==========================================================================
+   Phase 6 stage B — timeline and intake components
+   Ported from docs/mockup.html. Values are the mockup's, not re-derived.
+   ========================================================================== */
+
+/* --- do-next: the only filled card in the product (§4) ------------------- */
+
+.donext {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 14px 16px 6px;
+  margin: 16px 0 20px;
+}
+
+.donext h2 {
+  font: 500 13px/18px var(--sans);
+  color: var(--ink-3);
+  margin: 0 0 10px;
+}
+
+.donext ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: d;
+}
+
+.donext li {
+  counter-increment: d;
+  display: flex;
+  gap: 10px;
+  padding: 0 0 12px;
+}
+
+.donext li::before {
+  content: counter(d);
+  font: 500 13px/20px var(--sans);
+  color: var(--ink-3);
+  width: 18px;
+  flex: 0 0 18px;
+}
+
+.donext li b {
+  font: 500 15px/20px var(--sans);
+  display: block;
+}
+
+.donext li span {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+}
+
+/* --- track legend: two words, never colour alone (§2) -------------------- */
+
+.legend {
+  display: flex;
+  gap: 16px;
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-2);
+  padding: 0 18px 14px;
+}
+
+.legend i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: 1px;
+  font-style: normal;
+}
+
+.legend .de i {
+  background: var(--de);
+}
+
+.legend .in i {
+  background: var(--in);
+}
+
+/* --- the timeline itself (§4) -------------------------------------------- */
+
+.tl {
+  position: relative;
+  padding: 0 18px;
+}
+
+.tl ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: var(--gutter) 22px 1fr;
+  align-items: start;
+  padding: 0 0 22px;
+}
+
+.row .date {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+  padding-top: 2px;
+}
+
+.row .date b {
+  display: block;
+  font: 500 15px/18px var(--sans);
+  color: var(--ink-2);
+}
+
+.rail {
+  position: relative;
+  justify-self: center;
+  width: 1px;
+  background: var(--rule);
+  min-height: 100%;
+  align-self: stretch;
+}
+
+.dot {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  transform: translateX(-50%);
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--de);
+  border: 1px solid var(--de);
+}
+
+.dot.hollow {
+  background: var(--paper);
+}
+
+.dot.consular {
+  background: var(--in);
+  border-color: var(--in);
+}
+
+.dot.consular.hollow {
+  background: var(--paper);
+}
+
+.dot.done {
+  background: var(--paper);
+  border-color: var(--done);
+}
+
+.item h3 {
+  font: 500 17px/23px var(--sans);
+  margin: 0 0 3px;
+}
+
+.item h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.item h3 a:hover {
+  text-decoration: underline;
+}
+
+.item .line {
+  font: 400 13px/19px var(--sans);
+  color: var(--ink-3);
+}
+
+/* Consular items carry a 3px violet left border (§5). */
+.item.consular {
+  border-left: 3px solid var(--in);
+  padding-left: 11px;
+  margin-left: -14px;
+}
+
+/* Estimated: dashed rather than solid, plus the word and a hollow dot. */
+.item.consular.est {
+  border-left-style: dashed;
+}
+
+.item.est {
+  border-left: 3px dashed var(--rule);
+  padding-left: 11px;
+  margin-left: -14px;
+}
+
+/* Done: --done text, no strikethrough — a line through "Register the birth"
+   reads badly (§5). */
+.item.done h3 {
+  color: var(--done);
+  font-weight: 400;
+}
+
+.item.done .line {
+  color: var(--done);
+}
+
+.item.current {
+  background: var(--surface);
+  border: 1px solid var(--de);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-left: -14px;
+}
+
+.item.current.consular {
+  border-color: var(--in);
+}
+
+/* --- chips: a number, never an exclamation mark (§5) --------------------- */
+
+.chip {
+  display: inline-block;
+  font: 500 13px/18px var(--sans);
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+.chip.warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.chip.stop {
+  background: var(--stop-soft);
+  color: var(--stop);
+}
+
+/* --- the today band: the one bold moment, the only 2px rule (§4) --------- */
+
+.today {
+  display: grid;
+  grid-template-columns: var(--gutter) 1fr;
+  align-items: center;
+  margin: 0 0 22px;
+  padding: 0 18px;
+}
+
+.today .lbl {
+  font: 500 13px/18px var(--sans);
+  color: var(--ink);
+}
+
+.today-inner {
+  display: flex;
+  align-items: center;
+}
+
+.today .bar {
+  height: 2px;
+  background: var(--ink);
+  flex: 1;
+}
+
+.today .cap {
+  font: 500 13px/18px var(--sans);
+  color: var(--ink);
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+/* --- prompt to record the birth ----------------------------------------- */
+
+.prompt {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--de);
+  border-radius: 10px;
+  padding: 13px 15px;
+  margin: 0 18px 20px;
+}
+
+.prompt b {
+  font: 500 15px/22px var(--sans);
+  display: block;
+}
+
+.prompt span {
+  display: block;
+  font: 400 13px/19px var(--sans);
+  color: var(--ink-2);
+}
+
+.prompt a {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* --- quiet aside: loading and failure, no alarm (§5, §7) ----------------- */
+
+.aside {
+  border-left: 2px solid var(--rule);
+  padding: 2px 0 2px 14px;
+  margin: 0 18px 16px;
+  color: var(--ink-2);
+}
+
+.aside b {
+  display: block;
+  font: 500 15px/22px var(--sans);
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.skeleton {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 15px 16px;
+  margin: 0 18px;
+}
+
+.skeleton i {
+  display: block;
+  height: 11px;
+  border-radius: 3px;
+  background: #edf1f1;
+  margin-bottom: 9px;
+}
+
+.skeleton i:nth-child(2) {
+  width: 88%;
+}
+
+.skeleton i:nth-child(3) {
+  width: 64%;
+}
+
+.skeleton p {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+  margin: 6px 0 0;
+}
+
+/* --- intake: 7 questions, one per screen -------------------------------- */
+
+.dots {
+  display: flex;
+  gap: 6px;
+  padding: 16px 18px 0;
+}
+
+.dots i {
+  height: 3px;
+  flex: 1;
+  background: var(--rule);
+  border-radius: 2px;
+}
+
+.dots i.on {
+  background: var(--de);
+}
+
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px 15px;
+  margin: 0 0 9px;
+  font: 400 15px/21px var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.choice b {
+  font-weight: 500;
+  display: block;
+}
+
+.choice em {
+  font-style: normal;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.choice[aria-pressed="true"] {
+  border-color: var(--de);
+  box-shadow: inset 0 0 0 1px var(--de);
+}
+
+.field {
+  display: block;
+  margin: 0 0 16px;
+}
+
+.field > span {
+  display: block;
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  font: 400 17px/24px var(--sans);
+  padding: 12px 14px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 44px;
+}
+
+.field .err {
+  display: block;
+  font: 400 13px/18px var(--sans);
+  color: var(--stop);
+  margin-top: 6px;
+}
+
+.nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.nav .back {
+  font: 500 15px/20px var(--sans);
+  background: transparent;
+  color: var(--ink-2);
+  border: 0;
+  padding: 11px 4px;
+  cursor: pointer;
+  min-height: 44px;
+}
