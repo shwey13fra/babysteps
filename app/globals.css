@@ -962,3 +962,70 @@ a {
     content: " (" attr(href) ")";
   }
 }
+
+/* ==========================================================================
+   Phase 6 stage D — Q&A panel and thread
+   ========================================================================== */
+
+.qa {
+  margin: 0 0 6px;
+}
+
+.question {
+  font: 500 15px/22px var(--sans);
+  background: var(--de-soft);
+  border-radius: 12px;
+  padding: 11px 14px;
+  margin: 0 0 14px;
+}
+
+/* White surface, no border (§5). */
+.answer {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 15px 16px 13px;
+  margin: 0 0 8px;
+}
+
+.answer .scope {
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-3);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ==========================================================================
+   Phase 6 stage D — shared view
+   ========================================================================== */
+
+.banner {
+  border-left: 3px solid var(--de);
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 16px 18px;
+}
+
+.banner b {
+  display: block;
+  font: 500 15px/22px var(--sans);
+}
+
+.banner span {
+  display: block;
+  font: 400 13px/19px var(--sans);
+  color: var(--ink-2);
+}
+
+/* The stale-view banner is the one that must be noticed, so it carries the
+   amber ground the design system reserves for a real deadline condition -
+   never red, which is for an overdue date. */
+.banner.stale {
+  border-left-color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.banner.stale span {
+  color: var(--warn);
+}

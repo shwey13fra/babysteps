@@ -16,7 +16,9 @@ import { useRouter } from "next/navigation";
 import { TimelineResponse } from "@/lib/schemas";
 import type { TimelineResponse as Wire } from "@/lib/schemas";
 import { readProfile, type StoredProfile } from "@/lib/ui/profile-store";
-import { termToShow, toView, type TimelineRow, type TimelineView } from "@/lib/ui/timeline-rows";
+import { toView, type TimelineView } from "@/lib/ui/timeline-rows";
+import { DoNext, TimelineBody, TimelineHeader } from "./body";
+import { ShareLink } from "./share-link";
 
 // No "no-profile" phase: that case redirects to intake from inside the effect
 // rather than becoming state. Setting state synchronously in an effect triggers
@@ -26,55 +28,6 @@ type State =
   | { phase: "loading" }
   | { phase: "ready"; view: TimelineView; hasBirth: boolean }
   | { phase: "failed"; reason: "offline" | "server" };
-
-/** One row: gutter, rail, content. */
-function Row({ row }: { row: TimelineRow }) {
-  const itemClasses = [
-    "item",
-    row.state === "done" ? "done" : "",
-    row.state === "current" ? "current" : "",
-    row.estimated ? "est" : "",
-    row.consular ? "consular" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const dotClasses = [
-    "dot",
-    row.dot === "hollow" ? "hollow" : "",
-    row.dot === "done" ? "done" : "",
-    row.consular ? "consular" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  return (
-    <li className="row">
-      <div className="date">
-        <b>{row.date}</b>
-        {row.dateNote}
-      </div>
-      <div className="rail">
-        <span className={dotClasses} aria-hidden="true" />
-      </div>
-      <div className={itemClasses}>
-        <h3>
-          <Link href={`/item/${row.id}`}>
-            {row.title_en}
-            {termToShow(row.title_en, row.term_de) ? (
-              <>
-                {" "}
-                <span lang="de">({termToShow(row.title_en, row.term_de)})</span>
-              </>
-            ) : null}
-          </Link>
-        </h3>
-        <div className="line">{row.metaLine}</div>
-        {row.chip ? <span className={`chip ${row.chip.kind}`}>{row.chip.text}</span> : null}
-      </div>
-    </li>
-  );
-}
 
 export default function TimelinePage() {
   const router = useRouter();
@@ -177,35 +130,9 @@ export default function TimelinePage() {
 
   return (
     <>
-      <div className="head">
-        <div className="state">
-          {view.header.week === null ? "Your timeline" : `Week ${view.header.week}`} · due{" "}
-          {view.header.dueDate}
-          {view.header.birthDate === null ? "" : `, born ${view.header.birthDate}`}
-        </div>
-        <div className="sub">{view.header.profileLine}</div>
-      </div>
+      <TimelineHeader view={view} />
 
-      {view.doNext.length > 0 ? (
-        <div className="pad">
-          <div className="donext">
-            <h2>Do next</h2>
-            <ol>
-              {view.doNext.map((row) => (
-                <li key={row.id}>
-                  <div>
-                    <b>{row.title_en}</b>
-                    <span>
-                      {row.chip ? `${row.chip.text} · ` : ""}
-                      {row.metaLine}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-      ) : null}
+      <DoNext rows={view.doNext} />
 
       {hasBirth ? null : (
         <div className="prompt">
@@ -218,46 +145,15 @@ export default function TimelinePage() {
         </div>
       )}
 
-      <div className="legend">
-        <span className="de">
-          <i />
-          German offices
-        </span>
-        <span className="in">
-          <i />
-          Indian consulate
-        </span>
+      <TimelineBody view={view} />
+
+      <div className="pad">
+        <ShareLink />
+        <p className="meta" style={{ marginTop: "14px" }}>
+          <Link href="/ask">Ask a question about any of this</Link>
+        </p>
       </div>
 
-      {view.before.length > 0 ? (
-        <div className="tl">
-          <ol>
-            {view.before.map((row) => (
-              <Row key={row.id} row={row} />
-            ))}
-          </ol>
-        </div>
-      ) : null}
-
-      <div className="today">
-        <div className="lbl">{view.today.date}</div>
-        <div className="today-inner">
-          <div className="bar" />
-          <div className="cap">
-            today{view.today.week === null ? "" : ` · week ${view.today.week}`}
-          </div>
-        </div>
-      </div>
-
-      {view.after.length > 0 ? (
-        <div className="tl">
-          <ol>
-            {view.after.map((row) => (
-              <Row key={row.id} row={row} />
-            ))}
-          </ol>
-        </div>
-      ) : null}
     </>
   );
 }
