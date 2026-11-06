@@ -49,7 +49,7 @@ version: 1
 # report. They are correct. It is `remaining_after` that silently assumed no
 # money arrived. Treat a `remaining_after` older than this line as a lower
 # bound on what was actually available at the time.
-remaining_usd: 22.59
+remaining_usd: 18.43
 last_topped_up: 2026-11-05
 
 # A run must clear estimate x this before it is allowed to start.
@@ -83,3 +83,7 @@ ledger:
     label: "iter12-v5-2"
     measured_usd: 4.5875
     remaining_after: 1.15
+  - date: 2026-11-06
+    label: "iter13-judge-v6-1"
+    measured_usd: 4.1649
+    remaining_after: 18.43
