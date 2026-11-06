@@ -38,14 +38,23 @@ export type DiffRow = {
  * the obvious mistake here and it is silent: "16 Nov" sorts before "9 Feb"
  * alphabetically, so a February deadline would be listed above a November one.
  */
-export function toDiffRows(changes: DateChangeWire[]): DiffRow[] {
+export function toDiffRows(changes: DateChangeWire[], asOf: string): DiffRow[] {
+  const thisYear = asOf.slice(0, 4);
+  // A date outside the year the diff was made in shows its year. Without this a
+  // consular item a year away renders as "10 Nov -> 4 Nov" and reads as days
+  // away - on the one screen whose job is to be believable.
+  const fmt = (iso: string) =>
+    iso.slice(0, 4) === thisYear
+      ? formatGutterDate(iso)
+      : `${formatGutterDate(iso)} ${iso.slice(0, 4)}`;
+
   return [...changes]
     .sort((a, b) => a.to.localeCompare(b.to) || a.id.localeCompare(b.id))
     .map((c) => ({
       id: c.id,
       title: c.title,
-      from: formatGutterDate(c.from),
-      to: formatGutterDate(c.to),
+      from: fmt(c.from),
+      to: fmt(c.to),
       // The engine's own day counting. lib/timeline/dates.ts has no imports at
       // all, so it is safe on the client.
       movedDays: diffDays(c.from, c.to),
@@ -196,7 +205,7 @@ export type DiffView = {
 
 /** Everything the screen needs, from one preview response. */
 export function toDiffView(response: BirthPreviewResponse): DiffView {
-  const rows = toDiffRows(response.changes);
+  const rows = toDiffRows(response.changes, response.as_of);
   return {
     rows,
     heading: diffHeading(rows.length),

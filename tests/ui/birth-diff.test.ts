@@ -33,6 +33,8 @@ const PROFILE: IntakeProfile = {
 };
 
 /** Derived from the clock: IntakeProfile refuses a birth_date in the future. */
+const ASOF = "2026-11-06";
+
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
 
 function post(body: unknown, raw?: string): Request {
@@ -57,24 +59,25 @@ describe("diff rows are ordered by date, not by formatted string", () => {
     const rows = toDiffRows([
       { id: "b", title: "Later", from: "2026-11-01", to: "2026-11-16" },
       { id: "a", title: "Sooner", from: "2027-02-20", to: "2027-02-09" },
-    ]);
+    ], ASOF);
     // Sorted on ISO: 2026-11-16 comes first. Sorted on "16 Nov" vs "9 Feb" it
     // would not.
     expect(rows.map((r) => r.id)).toEqual(["b", "a"]);
     expect(rows[0].to).toBe("16 Nov");
-    expect(rows[1].to).toBe("9 Feb");
+    // Carries its year, because it is not in the year the diff was made.
+    expect(rows[1].to).toBe("9 Feb 2027");
   });
 
   it("breaks a tie on id, so the order is stable", () => {
     const rows = toDiffRows([
       { id: "z", title: "Z", from: "2026-01-01", to: "2026-03-03" },
       { id: "a", title: "A", from: "2026-01-01", to: "2026-03-03" },
-    ]);
+    ], ASOF);
     expect(rows.map((r) => r.id)).toEqual(["a", "z"]);
   });
 
   it("reports how far each date moved, using the engine's day counting", () => {
-    const rows = toDiffRows([{ id: "x", title: "X", from: "2026-11-22", to: "2026-11-16" }]);
+    const rows = toDiffRows([{ id: "x", title: "X", from: "2026-11-22", to: "2026-11-16" }], ASOF);
     expect(rows[0].movedDays).toBe(-6);
     expect(describeMove(rows[0].movedDays)).toBe("6 days earlier");
   });
@@ -233,19 +236,19 @@ describe("describeAllMoves checks rather than assumes", () => {
   const row = (id: string, from: string, to: string) => ({ id, title: id, from, to });
 
   it("states the shared move when every date moved the same distance", () => {
-    const rows = toDiffRows([row("a", "2026-11-22", "2026-11-09"), row("b", "2027-01-14", "2027-01-01")]);
+    const rows = toDiffRows([row("a", "2026-11-22", "2026-11-09"), row("b", "2027-01-14", "2027-01-01")], ASOF);
     expect(describeAllMoves(rows)).toBe("Every date above moved 13 days earlier.");
   });
 
   it("refuses to claim a shared move when they disagree", () => {
     // The claim "every date moved 13 days earlier" is false the moment one of
     // them did not, and this screen's only job is to be believable.
-    const rows = toDiffRows([row("a", "2026-11-22", "2026-11-09"), row("b", "2027-01-14", "2027-01-05")]);
+    const rows = toDiffRows([row("a", "2026-11-22", "2026-11-09"), row("b", "2027-01-14", "2027-01-05")], ASOF);
     expect(describeAllMoves(rows)).toBe("These dates did not all move by the same amount.");
   });
 
   it("uses the singular for one row", () => {
-    expect(describeAllMoves(toDiffRows([row("a", "2026-11-22", "2026-11-09")]))).toBe(
+    expect(describeAllMoves(toDiffRows([row("a", "2026-11-22", "2026-11-09")], ASOF))).toBe(
       "It moved 13 days earlier.",
     );
   });
@@ -263,5 +266,36 @@ describe("describeAllMoves checks rather than assumes", () => {
     );
     const view = toDiffView(body);
     expect(view.moves ?? "").not.toMatch(/standesamt|elterngeld|kindergeld/);
+  });
+});
+
+describe("a date outside the current year shows its year", () => {
+  it("renders a consular item a year out as 4 Nov 2027, not 4 Nov", () => {
+    // Found in the browser during the Phase 6 VERIFY: the consular rows read
+    // "10 Nov -> 4 Nov" for dates in 2027, which looks like days away rather
+    // than a year away.
+    const rows = toDiffRows(
+      [{ id: "consular", title: "Register with the mission", from: "2027-11-10", to: "2027-11-04" }],
+      "2026-11-06",
+    );
+    expect(rows[0].from).toBe("10 Nov 2027");
+    expect(rows[0].to).toBe("4 Nov 2027");
+  });
+
+  it("leaves a date in the current year unadorned", () => {
+    const rows = toDiffRows(
+      [{ id: "x", title: "X", from: "2026-11-17", to: "2026-11-11" }],
+      "2026-11-06",
+    );
+    expect(rows[0].to).toBe("11 Nov");
+  });
+
+  it("marks only the side that leaves the year", () => {
+    const rows = toDiffRows(
+      [{ id: "x", title: "X", from: "2027-01-02", to: "2026-12-27" }],
+      "2026-11-06",
+    );
+    expect(rows[0].from).toBe("2 Jan 2027");
+    expect(rows[0].to).toBe("27 Dec");
   });
 });

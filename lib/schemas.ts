@@ -189,6 +189,12 @@ export const BirthPreviewResponse = z.object({
   days_early: z.number().int(),
   /** The threshold the engine uses for the twelve-week period. MuSchG §3(2). */
   premature_threshold_days: z.number().int(),
+  /**
+   * The day the diff was derived against. The screen needs it to decide when a
+   * date must show its year: a consular item a year out otherwise renders as
+   * "10 Nov -> 4 Nov" and reads as days away.
+   */
+  as_of: z.iso.date(),
 });
 
 export type BirthPreviewResponse = z.infer<typeof BirthPreviewResponse>;

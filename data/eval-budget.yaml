@@ -49,6 +49,17 @@ version: 1
 # report. They are correct. It is `remaining_after` that silently assumed no
 # money arrived. Treat a `remaining_after` older than this line as a lower
 # bound on what was actually available at the time.
+# 2026-11-06, Phase 6 VERIFY: two /api/ask calls were made through the UI - A-13
+# (retrieval + answer) and M-01 (medical guard only). They are NOT in the ledger
+# below and `remaining_usd` is NOT decremented for them, because /api/ask does
+# not persist its usage and this file's rule is that measured_usd is read from a
+# run's own report and never estimated after the fact. Writing a guess here would
+# corrupt the one column that is trustworthy.
+#
+# So: `remaining_usd` is now an UPPER bound, over-stating the balance by roughly
+# a dime. The drift is in the safe direction for a gate that refuses runs it
+# cannot afford, and it is recorded here rather than left to be discovered.
+# Making /api/ask report its cost is owed if the UI is ever used for eval work.
 remaining_usd: 18.43
 last_topped_up: 2026-11-05
 

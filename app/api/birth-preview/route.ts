@@ -15,7 +15,7 @@ import { NextResponse } from "next/server";
 import { IntakeProfile, BirthPreviewResponse } from "@/lib/schemas";
 import { computeDateChanges } from "@/lib/timeline";
 import { computeMutterschutz, PREMATURE_THRESHOLD_DAYS } from "@/lib/timeline/mutterschutz";
-import { diffDays } from "@/lib/timeline/dates";
+import { diffDays, todayISO } from "@/lib/timeline/dates";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       period_after: computeMutterschutz(after.data),
       days_early: diffDays(after.data.birth_date as string, before.data.due_date),
       premature_threshold_days: PREMATURE_THRESHOLD_DAYS,
+      as_of: todayISO(),
     };
   } catch {
     return fail("engine_unavailable", 503);
