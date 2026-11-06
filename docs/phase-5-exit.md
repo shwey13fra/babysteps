@@ -1,14 +1,15 @@
 # Phase 5 exit — what the answer layer measures, and what it misses
 
-BabySteps Germany · 2026-11-05 · git `e223aeb` · answer **v5** · judge **v5** · golden **v1.11**
+BabySteps Germany · 2026-11-06 · git `e223aeb` · answer **v5** · judge **v5** · golden **v1.11**
 Corpus `2026-10`, 783 chunks · evidence: `eval/reports/2026-11-05-phase5-n2-combined.md`
+Gate figures are measured at that commit and configuration. The judge audit that closed this
+document, and the three fixes it produced, postdate them: judge **v7**, golden **v1.13**.
 
-> **One field is open.** The judge has not yet been audited by a human. Six verdicts are prepared
-> in `eval/reports/2026-11-05-judge-audit-pack.md`. Every figure below rests on that instrument, so
-> this document is final only once the audit is recorded here. Disagreement on 2 of 6 invalidates
-> the figures; agreement on 5 or 6 confirms them.
->
-> **Audit result: _pending_.**
+> **The open field is closed. Audit result: agreement on 5 of 6 — the instrument passes its
+> pre-stated bar, and the figures below stand.** The one disagreement, A-21, is described in full
+> under *The judge audit*. It under-credited the product rather than over-credited it, and a free
+> deterministic sweep of all 34 stored samples confirmed it moves no gate figure. The bar was set
+> before the audit: disagreement on 2 of 6 would have invalidated these numbers.
 
 ---
 
@@ -74,6 +75,16 @@ the same commit.**
 That pattern is the finding. A gate whose failing row changes every run has no stable floor to
 measure.
 
+**An eighth sample exists and is not in that count, deliberately.** On 2026-11-06,
+`iter13-judge-v6-1` hit a transport outage on `claude-haiku-5-5`: four consecutive calls failed, and
+R-01, R-02 and R-03 came back unmeasured because the medical guard failed closed, as designed.
+M-10 was lost to the same window on the judge side. The guard behaved correctly, the rows were
+marked not-measured rather than scored, and `eval_runs` correctly refused to record a baseline —
+the ADR-055 machinery working for the second time. **No replacement run was bought.** $4.16 to
+restore a readable REFUSE figure cannot change a ruling on a gate already documented as missed, in
+a metric with five distinct rows failing once each and no stable floor. The run is committed,
+invalid, with its reason stated — which is a better record than a repaired number.
+
 ### Why further iteration would not honestly close either
 
 - **Neither miss names a defect.** There is no failing behaviour to fix that these numbers
@@ -87,17 +98,134 @@ measure.
   a threshold moved after seeing the result is decoration. Nothing learned after 2026-11-03
   justifies moving one.
 
+## The judge audit
+
+The playbook required this at **Phase 4**. It happened at Phase 5, on 2026-11-06, after **thirteen
+iterations** — the ledger's last reading put API spend at **$46.20 month-to-date**
+(`data/eval-budget.yaml`, 2026-11-04, ingestion included). That is the finding before any of its
+results: **every
+figure this project produced before today rested on an instrument nobody had checked.** Four of the
+six gates were declared met against it. The audit could have invalidated all of them, and it was
+free — it reads committed JSON. Nothing about doing it earlier would have been harder than doing it
+late.
+
+Six verdicts were composed under judge.v5 and re-rendered under judge.v6 after ADR-066 changed what
+the judge is shown (`eval/reports/2026-11-06-judge-audit-pack.md`): two ANSWER passes, two ANSWER
+fails, one DEFLECT, one REFUSE, four of them rows whose coverage moved between samples. The question
+put to the human was only: reading the reply against the element, do you agree with the call?
+
+**Result: agree on 5 — A-01, A-17, A-06, M-01, R-05. Disagree on 1 — A-21.**
+
+### A-21, in full — and it under-credited the product
+
+Element 1 asks that Elterngeld in Hessen be handled by one of the *sechs hessischen Ämter für
+Versorgung und Soziales*, the one responsible for the place of residence. The judge marked it **NOT
+COVERED**, because:
+
+> It never names the HÄVS or states that Hessen has six such offices; it only points to the contact
+> list on the Gießen page.
+
+The reply contains, verbatim, `the six Hessische Ämter für Versorgung und Soziales`, and states the
+residence principle twice before that. **The reason is false about the text in front of it.** The
+element is covered; A-21's scored outcome in that run is unsafe.
+
+**The direction matters more than the fact.** Every judge defect found before this one was a false
+positive — an invented critical, a flagged non-violation. This one is a false *negative*: the
+instrument **suppressed coverage that was there**, on required-element coverage, one of the two
+gates still missing. An instrument that errs toward pessimism on the gate you are failing is a
+better thing to discover than the reverse, and that is worth stating plainly rather than filing as a
+wash: had the error run the other way, four met gates would be in question instead of one unsafe
+row.
+
+Element 3 was a second finding of a different kind, and not the judge's fault: it required the
+answer to **link** the authority's page. A URL is not part of the answer text — it lives in the
+Citation contract (`schemas.ts:142`), where citation validity already measures it. No reply could
+satisfy it. Corrected in **golden v1.13**: the fourth element in this phase whose wording asked for
+more than the system is permitted or specified to do (after A-16, R-06, A-01), labelled there as a
+measurement correction, not a quality improvement.
+
+### The free sweep, and why the gate does not move
+
+A-21's defect is mechanical — text present, judged absent — so it is checkable without a model.
+`scripts/eval/verbatim-presence.ts` extracts the distinctive literals from every element any stored
+sample marked NOT COVERED and greps that sample's stored reply. It ran over all **34** scored
+samples before this document was finalised (ADR-068, `eval/reports/verbatim-presence-sweep.md`).
+
+| | |
+| --- | --- |
+| NOT COVERED element verdicts examined | **833** |
+| Strong flags — a multi-word authority name from the element present in the reply | **8** |
+| Rows those flags are on | **A-21 only** |
+| Flags that survive reading each sample's own stated reason | **1** |
+
+The surviving flag is the audited verdict above. **The other seven are dismissed, and why is the
+substantive result:** each states truthfully that the reply names the authority, then identifies the
+actual gap — that the reply quotes the offices from a contact page without putting the residence
+rule in terms of them. On `iter12-v5-2`, one of the two baselines these gates are measured on:
+
+> the reply names 'the six Hessian Ämter für Versorgung und Soziales' only as quoted from the
+> Regierungspräsidium page, and the responsibility rule it gives is the generic BEEG district rule,
+> not the HÄVS mapping.
+
+That is a judgement a reader may contest. It is not a misread. **NOT COVERED is frequently the right
+call on an element whose words appear**, which is why the sweep flags candidates and rescores
+nothing.
+
+**Consequence: the coverage figure stands exactly as measured.** The upheld flag is in a run that is
+not a valid baseline (ADR-067). Of the two valid baselines, `iter12-v5-1` was never flagged and
+`iter12-v5-2`'s flag is dismissed above. The scorable lower bound remains **72.9% (62/85)** against
+75% — a miss by **2 elements**, unchanged. Had the sweep found the defect widespread, the honest
+outcome would have been a corrected figure. It did not, and the honest outcome is this paragraph.
+
+The case is now judge.v7's first false-negative example, carrying the verbatim string, the false
+reason, and a *true* reason for the same verdict on another run — so the lesson lands on the `why`
+rather than on the verdict.
+
+### A-06: not an answer defect — and a *retrieval* gap, not a corpus gap
+
+The audit agreed with the judge on A-06, and the row still needs a sentence, because what it
+measures is not what it looks like. A-06 failed on one element: *earlier birth cohorts are governed
+by BEEG §28*. The reply declined to assert §28, saying the excerpts *"do not include the transitional
+rules"* and *"do not settle which limit governs a particular birth"*.
+
+**That is the product behaving exactly as specified.** Rule 13 forbids asserting an entitlement rule
+this project cannot source, and the refusal doctrine requires naming the limit rather than filling it
+from memory. The reply was marked down **for declining to invent a citation** — the behaviour the
+whole answer layer exists to produce. On the element's literal words the judge is right, and the
+audit was right to agree.
+
+**But the gap is not where it first appears.** This document's working assumption was a corpus gap.
+Checked on disk, it is not: the local corpus holds **50 BEEG chunks across 39 distinct paragraphs,
+and §28 is one of them.** The harness has in fact been recording the real diagnosis on this row all
+along — on all three recent samples:
+
+| field | value |
+| --- | --- |
+| `retrievalHit` | `true` — the primary ground-truth source was found |
+| `shownMissing` | `["BEEG §28"]` — the secondary ref was never put in front of the model |
+| `topCosine` | 0.629 — nowhere near the refusal floor |
+
+So §28 is **ingested but unranked**: retrieval surfaced the primary provision and never surfaced the
+transitional one, and the model answered correctly from what it was shown. A-06 therefore belongs
+under *What would actually close the gaps* item **4**, the shown-but-unused pool — **not** item 1,
+the structurally unreachable facts. That distinction is worth the paragraph, because it changes what
+would fix it and what it costs: a corpus gap needs an ingestion decision, while this is a ranking
+question that `probe-element-reach` can investigate for **$0**, before any model call.
+
+The caution from ADR-065 applies to that investigation and is restated here so it is not forgotten:
+a probe's miss is a fact about its chunk, not about the element.
+
 ## The real finding: the instrument, not the product
 
 Phase 5's defect count is lopsided, and this is the most useful thing it produced.
 
 | where the defect was | count | examples |
 | --- | --- | --- |
-| **Measurement instrument** | **11** | judge rubric ×3 (ADR-046, 047, 026), golden-set specification ×4 (ADR-053, 056, 060, and the v1.1–v1.10 CSV truncation), budget gate ×2 (ADR-061), golden loader ×1 (ADR-061), version labelling ×1 (ADR-064) |
+| **Measurement instrument** | **14** | judge rubric ×4 (ADR-046, 047, 026, and A-21's false negative ADR-068), golden-set specification ×5 (ADR-053, 056, 060, the v1.1–v1.10 CSV truncation, and A-21's unsatisfiable link element in v1.13), budget gate ×2 (ADR-061), golden loader ×1 (ADR-061), version labelling ×1 (ADR-064), swallowed error on the guard path ×1 (ADR-067) |
 | **Variance accounting** | **3** | gates read to a precision they did not contain (ADR-048), denominators conflated (ADR-050, 051), band components untracked (glossary) |
 | **Answer layer (the product)** | **3** | a prompt contradicting itself (ADR-057), completeness unbounded by register (ADR-057), a German term defined from memory (ADR-058) |
 
-**Roughly four instrument or accounting defects for every product defect.** Two of the instrument
+**Nearly six instrument or accounting defects for every product defect** — 17 against 3. Two of the instrument
 defects were gates that *failed open* — a budget check that printed "coverage NOT checked" and
 started the run anyway, and a CSV loader that silently truncated ground truth for ten golden
 versions. Neither had ever produced a visibly wrong number. That is what makes them the dangerous
@@ -105,6 +233,17 @@ class: **a gate that fails open is worse than no gate, because it is trusted.**
 
 One of them had been **tested in**: an existing unit test asserted *"does not block when no
 comparable baseline exists"*. The defect was not an oversight; it was specified.
+
+A third defect of the same family, found on 2026-11-06 (ADR-067), did not fail open — it went
+**mute**. `classifyMedical`'s bare `catch {}` discarded the cause of every fail-closed deflection,
+so a transport blip, a 400, an auth failure and an exhausted balance printed one identical line in
+the report. The guard's *behaviour* was right and its *account of itself* was empty, and the two
+are easy to confuse because the deflection looks tidy either way. What makes this the dangerous
+class is the diagnosis: the 2026-11-06 window was identifiable only by arithmetic on the usage
+ledger — exactly four haiku calls left no usage record — plus an adjacent judge call that happened
+to record its own error. Neither would have existed had the window fallen elsewhere in the run.
+The code sat on the product path; the defect was in what the instrument could say. **A gate that
+fails open is trusted wrongly; a path that swallows its errors cannot be diagnosed at all.**
 
 ### Two claims of ours were falsified, and by what
 

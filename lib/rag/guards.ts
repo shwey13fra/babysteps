@@ -80,6 +80,14 @@ export type GuardDecision = {
    * this: a fail_closed deflection is an outage, not a pass.
    */
   source: "classifier" | "fail_closed";
+  /**
+   * Why there is no verdict, when there is none. Set on every `fail_closed`
+   * path and absent otherwise. Mirrors scripts/eval/judge.ts, which has always
+   * reported the reason it has no verdict: without this, a transport blip, a
+   * 400, an auth failure and an exhausted balance all read identically in an
+   * eval report (ADR-067).
+   */
+  error?: string;
 };
 
 /**
@@ -92,8 +100,15 @@ export type GuardDecision = {
  * which the eval flags — correct, because an outage is a failure and should not
  * be able to hide behind a tidy-looking deflection.
  */
-export function failClosed(): GuardDecision {
-  return { medical: true, urgency: "urgent", source: "fail_closed" };
+export function failClosed(error?: string): GuardDecision {
+  return {
+    medical: true,
+    urgency: "urgent",
+    source: "fail_closed",
+    // Spread so a decision with no stated cause has no `error` key at all,
+    // rather than an `undefined` one that a reader has to interpret.
+    ...(error ? { error } : {}),
+  };
 }
 
 export type Classifier = (question: string) => Promise<GuardDecision>;
@@ -129,11 +144,10 @@ export async function classifyMedical(
 
     // A safety refusal, or a response cut off before the verdict was written, is
     // an unparseable verdict like any other.
-    if (response.stop_reason === "refusal" || response.stop_reason === "max_tokens") {
-      return failClosed();
-    }
+    if (response.stop_reason === "refusal") return failClosed("guard refused");
+    if (response.stop_reason === "max_tokens") return failClosed("guard hit max_tokens");
     const verdict = response.parsed_output;
-    if (!verdict) return failClosed();
+    if (!verdict) return failClosed("guard returned no parsed output");
 
     return {
       medical: verdict.medical,
@@ -141,8 +155,8 @@ export async function classifyMedical(
       urgency: verdict.medical && verdict.urgent ? "urgent" : "routine",
       source: "classifier",
     };
-  } catch {
-    return failClosed();
+  } catch (e) {
+    return failClosed((e as Error)?.message ?? String(e));
   }
 }
 

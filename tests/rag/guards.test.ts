@@ -123,21 +123,31 @@ describe("deflection templates", () => {
 
 describe("classifyMedical fails closed", () => {
   it("deflects urgently when the call throws", async () => {
-    expect(await classifyMedical("anything", { anthropic: throwingStub() })).toEqual(failClosed());
+    // The thrown message has to survive to the decision: this is the evidence
+    // the old bare `catch {}` destroyed, and it is how a transport outage is
+    // told apart from a 400 in an eval report.
+    expect(await classifyMedical("anything", { anthropic: throwingStub() })).toEqual(
+      failClosed("connection reset"),
+    );
+    expect((await classifyMedical("anything", { anthropic: throwingStub() })).error).toBe(
+      "connection reset",
+    );
   });
 
   it("deflects urgently when the verdict is unparseable", async () => {
     const d = await classifyMedical("anything", {
       anthropic: stub({ stop_reason: "end_turn", parsed_output: null }),
     });
-    expect(d).toEqual(failClosed());
+    expect(d).toEqual(failClosed("guard returned no parsed output"));
+    expect(d.error).toBe("guard returned no parsed output");
   });
 
   it("deflects urgently on a safety refusal", async () => {
     const d = await classifyMedical("anything", {
       anthropic: stub({ stop_reason: "refusal", parsed_output: null }),
     });
-    expect(d).toEqual(failClosed());
+    expect(d).toEqual(failClosed("guard refused"));
+    expect(d.error).toBe("guard refused");
   });
 
   it("deflects urgently when the response was cut off before the verdict", async () => {
@@ -146,7 +156,42 @@ describe("classifyMedical fails closed", () => {
     const d = await classifyMedical("anything", {
       anthropic: stub({ stop_reason: "max_tokens", parsed_output: { medical: false, urgent: false } }),
     });
-    expect(d).toEqual(failClosed());
+    expect(d).toEqual(failClosed("guard hit max_tokens"));
+    expect(d.error).toBe("guard hit max_tokens");
+  });
+
+  it("gives the four failure paths four distinguishable causes", async () => {
+    // The defect this replaces: all four returned an identical decision, so a
+    // transport blip, a 400, an auth failure and an exhausted balance were one
+    // line in the report. Diagnosing the 2026-11-06 window needed ledger
+    // arithmetic and an adjacent judge call (ADR-067).
+    const causes = await Promise.all([
+      classifyMedical("anything", { anthropic: throwingStub() }),
+      classifyMedical("anything", { anthropic: stub({ stop_reason: "refusal", parsed_output: null }) }),
+      classifyMedical("anything", { anthropic: stub({ stop_reason: "max_tokens", parsed_output: null }) }),
+      classifyMedical("anything", { anthropic: stub({ stop_reason: "end_turn", parsed_output: null }) }),
+    ]).then((ds) => ds.map((d) => d.error));
+
+    expect(causes.every((c) => typeof c === "string" && c.length > 0)).toBe(true);
+    expect(new Set(causes).size).toBe(4);
+  });
+
+  it("reports a cause even when what was thrown is not an Error", async () => {
+    const weird = {
+      messages: {
+        parse: async () => {
+          throw "econnreset";
+        },
+      },
+    } as unknown as Anthropic;
+    expect((await classifyMedical("anything", { anthropic: weird })).error).toBe("econnreset");
+  });
+
+  it("omits the key entirely when there is no cause to state", () => {
+    // Absent, never `undefined`: a reader of the JSON should not have to tell
+    // a missing cause from a cause that is the string "undefined".
+    expect("error" in failClosed()).toBe(false);
+    expect(failClosed("boom").error).toBe("boom");
   });
 
   it("marks a fail-closed deflection as an outage, not a verdict", () => {

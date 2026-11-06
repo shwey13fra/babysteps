@@ -23,7 +23,7 @@ import { isLowConfidence, REFUSAL_MIN_TOP_COSINE } from "../../lib/rag/guards";
 import { retrieve } from "../../lib/rag/retrieve";
 import { readCsv } from "./csv";
 
-const GOLDEN = join(process.cwd(), "data/golden/golden_set_v1.12.csv");
+const GOLDEN = join(process.cwd(), "data/golden/golden_set_v1.13.csv");
 
 // The rows the plan predicts are below the floor, from the judgefix run's
 // recorded topCosine. Asserted, not assumed: a re-ingest moves cosine and

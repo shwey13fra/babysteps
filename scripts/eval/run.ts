@@ -54,6 +54,7 @@ import type { ChunkHit } from "../../lib/supabase/server";
 import type { Answer, Bundesland, IntakeProfile } from "../../lib/schemas";
 import { judge, JUDGE_MODEL, JUDGE_PROMPT_VERSION, type Verdict } from "./judge";
 import { clauses, parseElement, prohibitionCoverage } from "./clauses";
+import { literalTokens, normalizeDigits } from "./literals";
 import { normalizeRef, normalizeUrl, refsIn, scoreCitations } from "./citations";
 import {
   assertSingleSource,
@@ -74,7 +75,7 @@ import {
   recordSpend,
 } from "../preflight";
 
-const CSV = "data/golden/golden_set_v1.12.csv";
+const CSV = "data/golden/golden_set_v1.13.csv";
 // DERIVED, not declared, since 2026-11-05 (ADR-064). These were two constants
 // holding one fact. Bumping CSV to v1.11 and leaving GOLDEN_VERSION at "v1.10"
 // mislabelled BOTH iter12 baselines: they loaded v1.11 — proved by R-06's
@@ -352,20 +353,6 @@ function softDeadlineLabels(): string[] {
   return out;
 }
 
-/** The glossary's full German vocabulary: `de` keys plus every expand_with term. */
-function glossaryGerman(): string[] {
-  const raw = parseYaml(readFileSync(join(process.cwd(), "data/glossary.de-en.yaml"), "utf8")) as
-    | Array<{ de?: string; expand_with?: string[] }>
-    | { terms?: Array<{ de?: string; expand_with?: string[] }> };
-  const list = Array.isArray(raw) ? raw : (raw.terms ?? []);
-  const terms = new Set<string>();
-  for (const entry of list) {
-    if (entry.de) terms.add(entry.de);
-    for (const t of entry.expand_with ?? []) terms.add(t);
-  }
-  return [...terms].filter((t) => t.length >= 4);
-}
-
 // ---------------------------------------------------------------------------
 // CSV
 // ---------------------------------------------------------------------------
@@ -392,40 +379,9 @@ function bundeslandFor(override: string): { value: Bundesland; bundeslandOverrid
 
 
 
-/** Strips thousand separators so '250.000 €' and '250 000' both match '250000'. */
-function normalizeDigits(text: string): string {
-  return text.replace(/(\d)[., \s](?=\d{3}\b)/g, "$1");
-}
-
 // ---------------------------------------------------------------------------
 // must_not_contain — literal channel
 // ---------------------------------------------------------------------------
-
-const GLOSSARY_DE = glossaryGerman();
-
-/**
- * The deterministic half. Two kinds of token are literally checkable:
- *
- *   - numbers, compared after separator normalisation, so a superseded figure
- *     cannot hide behind '250.000' (A-02's 92, A-06's 250000 and 200000);
- *   - German terms, taken from data/glossary.de-en.yaml rather than invented
- *     here (rule 14), which is what catches A-03's 'Schriftform'.
- *
- * Everything else in a clause is a description of a claim, not a string, and
- * belongs to the judge. Keeping this channel narrow is deliberate: a false
- * positive here fails a row on a coincidence, and a coincidence is harder to
- * spot in a report than a missing check.
- */
-function literalTokens(clause: string): Array<{ kind: "number" | "term"; token: string }> {
-  const out: Array<{ kind: "number" | "term"; token: string }> = [];
-  for (const n of normalizeDigits(clause).match(/\d+/g) ?? []) {
-    if (n.length >= 2) out.push({ kind: "number", token: n });
-  }
-  for (const term of GLOSSARY_DE) {
-    if (new RegExp(`\\b${term}\\b`).test(clause)) out.push({ kind: "term", token: term });
-  }
-  return out;
-}
 
 type Literal = { clause: string; token: string; kind: string };
 
@@ -468,20 +424,22 @@ type Piped = {
   answer: Answer;
   retrieval: Retrieval | null;
   guardSource: "classifier" | "fail_closed";
+  /** The cause the guard reported, when it had none to report a verdict. */
+  guardError: string | null;
 };
 
 /** The route's order, exactly: guard, retrieve, refusal floor, generate. */
 async function runPipeline(question: string, bundesland: Bundesland): Promise<Piped> {
   const verdict = await classifyMedical(question);
   if (verdict.medical) {
-    return { answer: deflect(verdict), retrieval: null, guardSource: verdict.source };
+    return { answer: deflect(verdict), retrieval: null, guardSource: verdict.source, guardError: verdict.error ?? null };
   }
 
   let retrieval: Retrieval;
   try {
     retrieval = await retrieve(question, { bundesland }, {}, { complete: COMPLETE_SECTIONS });
   } catch {
-    return { answer: refuse("unavailable"), retrieval: null, guardSource: verdict.source };
+    return { answer: refuse("unavailable"), retrieval: null, guardSource: verdict.source, guardError: verdict.error ?? null };
   }
 
   // One call for the floor and the generation step, the same one the route
@@ -492,6 +450,7 @@ async function runPipeline(question: string, bundesland: Bundesland): Promise<Pi
     answer: await answerOrRefuse(question, retrieval, REFUSAL_MIN_TOP_COSINE),
     retrieval,
     guardSource: verdict.source,
+    guardError: verdict.error ?? null,
   };
 }
 
@@ -676,7 +635,9 @@ async function measure(row: Row, softDeadlines: string[]): Promise<Result> {
   // --- not measured, before anything is scored -----------------------------
   if (piped.guardSource === "fail_closed") {
     r.measured = false;
-    r.notMeasured = "medical guard fail-closed: deflection is an outage, not a verdict (guards.ts:78)";
+    r.notMeasured =
+      "medical guard fail-closed, deflection is an outage not a verdict" +
+      (piped.guardError ? `: ${piped.guardError}` : " (no cause reported)");
     return r;
   }
   if (answer.kind === "refused" && answer.reason === "unavailable") {
