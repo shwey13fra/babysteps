@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { TimelineResponse } from "@/lib/schemas";
 import type { TimelineResponse as Wire } from "@/lib/schemas";
 import { readProfile, type StoredProfile } from "@/lib/ui/profile-store";
-import { toView, type TimelineRow, type TimelineView } from "@/lib/ui/timeline-rows";
+import { termToShow, toView, type TimelineRow, type TimelineView } from "@/lib/ui/timeline-rows";
 
 // No "no-profile" phase: that case redirects to intake from inside the effect
 // rather than becoming state. Setting state synchronously in an effect triggers
@@ -61,10 +61,10 @@ function Row({ row }: { row: TimelineRow }) {
         <h3>
           <Link href={`/item/${row.id}`}>
             {row.title_en}
-            {row.term_de ? (
+            {termToShow(row.title_en, row.term_de) ? (
               <>
                 {" "}
-                <span lang="de">({row.term_de})</span>
+                <span lang="de">({termToShow(row.title_en, row.term_de)})</span>
               </>
             ) : null}
           </Link>

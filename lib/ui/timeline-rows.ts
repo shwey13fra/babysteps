@@ -159,6 +159,21 @@ export function stateFor(item: TimelineItem): RowState {
   return item.status === "current" ? "current" : "plain";
 }
 
+/**
+ * The German term to show beside an English title, or null.
+ *
+ * Several rules already name the term inside title_en - "Register the birth at
+ * the Standesamt" - and appending term_de there produced "...at the Standesamt
+ * Standesamt" on both the timeline and the item page. The term is worth showing
+ * only when the English title does not already carry it, which is exactly the
+ * case the design system's gloss pattern is for: the reader meets the German
+ * word they will see on the form, next to the English they understand.
+ */
+export function termToShow(title_en: string, term_de?: string): string | null {
+  if (!term_de) return null;
+  return title_en.includes(term_de) ? null : term_de;
+}
+
 export function toRow(item: TimelineItem, asOf: ISODate): TimelineRow {
   const iso = keyDate(item);
   return {

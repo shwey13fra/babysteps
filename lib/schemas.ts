@@ -155,6 +155,44 @@ export const TimelineResponse = z.object({
 
 export type TimelineResponse = z.infer<typeof TimelineResponse>;
 
+/** One item whose date moved. Mirrors `DateChange` in lib/timeline/diff.ts. */
+export const DateChangeWire = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  from: z.iso.date(),
+  to: z.iso.date(),
+});
+
+export type DateChangeWire = z.infer<typeof DateChangeWire>;
+
+/**
+ * The wire contract of POST /api/birth-preview (ADR-070).
+ *
+ * F2b asks "what moves if the baby was born on this day?" and must answer it
+ * WITHOUT committing anything. `computeDateChanges` runs on the server for the
+ * same reason `buildTimeline` does (ADR-069): the rules are on disk, and a
+ * second copy of the diff in the browser is the duplication this project
+ * refuses.
+ *
+ * `period_before` and `period_after` carry the Mutterschutz period on both sides
+ * so the screen can say whether the protection period after the birth changed —
+ * which is the one consequence of an early birth that is not a moved date.
+ */
+export const BirthPreviewResponse = z.object({
+  changes: z.array(DateChangeWire),
+  period_before: TimelinePeriod,
+  period_after: TimelinePeriod,
+  /**
+   * Whole days the birth precedes the due date; negative when it follows.
+   * Computed by the engine so the screen never does date arithmetic.
+   */
+  days_early: z.number().int(),
+  /** The threshold the engine uses for the twelve-week period. MuSchG §3(2). */
+  premature_threshold_days: z.number().int(),
+});
+
+export type BirthPreviewResponse = z.infer<typeof BirthPreviewResponse>;
+
 // ---------------------------------------------------------------------------
 // Answer contract (consumed from Phase 3; defined here so the type is stable)
 // ---------------------------------------------------------------------------

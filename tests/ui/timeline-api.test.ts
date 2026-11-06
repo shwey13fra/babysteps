@@ -129,6 +129,17 @@ describe("the input is validated before it reaches the engine", () => {
     expect(res.status).toBe(400);
   });
 
+  it("answers a malformed birth date with 400, not a 500", async () => {
+    // IntakeProfile's refine calls diffDays, which THROWS on a date that is not
+    // ISO, and zod runs the refinement even after the field check failed - so
+    // safeParse throws instead of returning success:false. Without the guard in
+    // the route this request crashes the handler. Root cause is in
+    // lib/schemas.ts and is reported, not patched here.
+    const res = await POST(post({ ...PROFILE, birth_date: "09/11/2026" }));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("invalid_profile");
+  });
+
   it("names the offending field, so the screen can say which answer to fix", async () => {
     const res = await POST(post({ ...PROFILE, due_date: "15-11-2026" }));
     const body = await res.json();

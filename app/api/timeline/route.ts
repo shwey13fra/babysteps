@@ -34,6 +34,29 @@ function fail(error: string, status: number, extra: Record<string, unknown> = {}
   return NextResponse.json({ error, ...extra }, { status, headers: NO_STORE });
 }
 
+/**
+ * `IntakeProfile.safeParse` can THROW rather than return success:false.
+ *
+ * Its `.refine` calls diffDays(todayISO(), birth_date), and diffDays ->
+ * assertISODate throws on a malformed date; zod runs the refinement even when
+ * the field-level z.iso.date() has already failed, so the exception escapes
+ * safeParse. A route must never answer malformed input with a 500, so the parse
+ * is wrapped here.
+ *
+ * This is a defence, not the fix. The root cause is in lib/schemas.ts and is
+ * reported rather than changed under scope lock (CLAUDE.md rules 1 and 3).
+ */
+function parseProfile(value: unknown) {
+  try {
+    return IntakeProfile.safeParse(value);
+  } catch (e) {
+    return {
+      success: false as const,
+      error: { issues: [{ path: ["birth_date"], message: (e as Error).message }] },
+    };
+  }
+}
+
 export async function POST(request: Request) {
   let body: unknown;
   try {
@@ -44,7 +67,7 @@ export async function POST(request: Request) {
 
   // The profile is validated before it reaches the engine. buildTimeline
   // assumes a well-formed profile and is not the place to discover otherwise.
-  const profile = IntakeProfile.safeParse(body);
+  const profile = parseProfile(body);
   if (!profile.success) {
     return fail("invalid_profile", 400, {
       issues: profile.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),

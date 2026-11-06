@@ -719,3 +719,246 @@ a {
   cursor: pointer;
   min-height: 44px;
 }
+
+/* ==========================================================================
+   Phase 6 stage C — the birth diff (F2b)
+   ========================================================================== */
+
+.diff {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 6px 16px;
+  margin: 0 0 16px;
+}
+
+.diff .r {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.diff .r:last-child {
+  border-bottom: 0;
+}
+
+.diff .n {
+  font: 400 15px/20px var(--sans);
+}
+
+.diff .v {
+  font: 400 13px/20px var(--sans);
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.diff .v s {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.diff .v b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* --- the one transition in the product (§6) ------------------------------
+   The old value is painted first, then slides up and out while the new value
+   rises into its place over 400ms. At the same time the struck-through old date
+   and the arrow fade in to its left, so the row SETTLES on the mockup's static
+   `22 Nov -> 9 Nov`. Animating the old value away entirely would have left the
+   reader unable to see what moved, which is the one thing this screen is for.
+
+   This markup is only rendered when the viewer has NOT asked for reduced
+   motion; that branch is in the component, because freezing these transitions
+   would leave the new value sitting below the fold of its box rather than
+   showing a static before/after.
+   -------------------------------------------------------------------------- */
+
+.diff .was {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.diff.animate .was {
+  opacity: 1;
+}
+
+.diff .moving {
+  position: relative;
+  display: inline-block;
+  height: 20px;
+  overflow: hidden;
+  min-width: 52px;
+  text-align: right;
+  vertical-align: bottom;
+}
+
+.diff .moving .old,
+.diff .moving .new {
+  display: block;
+  transition:
+    transform 400ms ease,
+    opacity 400ms ease;
+}
+
+.diff .moving .old {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.diff .moving .new {
+  position: absolute;
+  inset: 0;
+  transform: translateY(100%);
+  opacity: 0;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.diff.animate .moving .old {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.diff.animate .moving .new {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Phase 6 stage C — item detail
+   ========================================================================== */
+
+.item-meta {
+  font: 400 13px/19px var(--sans);
+  color: var(--ink-3);
+  margin: 0 0 14px;
+}
+
+.checklist {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.checklist li {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--rule);
+  font: 400 15px/22px var(--sans);
+}
+
+.checklist li:last-child {
+  border-bottom: 0;
+}
+
+/* A printable box, not a control: nothing here is tracked between sessions. */
+.checklist li::before {
+  content: "";
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--ink-3);
+  border-radius: 3px;
+  align-self: center;
+}
+
+.kindline {
+  font: 400 13px/19px var(--sans);
+  color: var(--ink-3);
+  border-top: 1px solid var(--rule);
+  margin-top: 14px;
+  padding-top: 12px;
+}
+
+/* ==========================================================================
+   Print — item 10. Someone will hand this to a clerk.
+   ========================================================================== */
+
+@media print {
+  /* Drop the chrome. */
+  .head,
+  .dots,
+  .legend,
+  .donext,
+  .prompt,
+  .today,
+  .nav,
+  .btn-primary,
+  .btn-ghost,
+  .skeleton {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+    font-size: 11pt;
+  }
+
+  .shell {
+    max-width: none;
+    min-height: 0;
+  }
+
+  .pad {
+    padding: 0;
+  }
+
+  /* Keep the sources and their as-of dates: they are the reason the sheet is
+     worth handing over. */
+  .src {
+    border: 1px solid #999;
+    page-break-inside: avoid;
+  }
+
+  .src code {
+    color: #000;
+  }
+
+  /* Expand link URLs after the link text. */
+  .src[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #333;
+    white-space: normal;
+    word-break: break-all;
+  }
+
+  /* A German term and its gloss must not be split across a line or a page. */
+  .term,
+  .gloss {
+    white-space: nowrap;
+  }
+
+  .checklist li {
+    page-break-inside: avoid;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .checklist li::before {
+    border-color: #000;
+  }
+
+  .kindline,
+  .item-meta {
+    color: #000;
+  }
+
+  /* The disclaimer prints: the sheet leaves the building without us. */
+  .foot {
+    border-top: 1px solid #999;
+    color: #000;
+    margin: 18pt 0 0;
+  }
+
+  .foot a::after {
+    content: " (" attr(href) ")";
+  }
+}

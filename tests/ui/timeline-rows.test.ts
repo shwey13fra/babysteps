@@ -24,6 +24,7 @@ import {
   formatLongDate,
   pregnancyWeek,
   stateFor,
+  termToShow,
   toRow,
   toView,
   DO_NEXT_LIMIT,
@@ -308,5 +309,28 @@ describe("the view as a whole", () => {
     for (const row of [...view.before, ...view.after]) {
       expect(row.metaLine).toMatch(/counted from (your due date|the birth)/);
     }
+  });
+});
+
+describe("the German term is shown only when the title does not already carry it", () => {
+  it("drops a term the English title already contains", () => {
+    // "Register the birth at the Standesamt" + term_de "Standesamt" rendered as
+    // "...at the Standesamt Standesamt" on both the timeline and the item page.
+    expect(termToShow("Register the birth at the Standesamt", "Standesamt")).toBeNull();
+  });
+
+  it("keeps a term the title does not contain", () => {
+    expect(termToShow("Start looking for a midwife", "Hebamme")).toBe("Hebamme");
+  });
+
+  it("returns null when a rule has no German term, as consular rules do not", () => {
+    expect(termToShow("Register the birth with the consulate", undefined)).toBeNull();
+  });
+
+  it.each(
+    buildTimeline(PROFILE, { today: TODAY }).items.map((i) => [i.id, i] as const),
+  )("%s never renders its German term twice", (_id, item) => {
+    const shown = termToShow(item.title_en, item.term_de);
+    if (shown !== null) expect(item.title_en).not.toContain(shown);
   });
 });
