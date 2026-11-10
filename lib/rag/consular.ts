@@ -30,7 +30,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
-import { diffDays, todayISO } from "../timeline/dates";
+import { diffDays, isISODate, todayISO } from "../timeline/dates";
 
 /**
  * How the text got here.
@@ -87,17 +87,27 @@ export const ConsularEntry = EntryShape.superRefine((e, ctx) => {
   // allowed here, because an entry's only purpose is to be cited.
   if (!/^https?:\/\//.test(e.source_url)) bad("source_url", "source_url must be an http(s) URL");
 
-  // Reading a page tomorrow is not a thing that has happened.
-  if (diffDays(todayISO(), e.checked_on) > 0) bad("checked_on", "checked_on is in the future");
+  // The date comparisons below are guarded, not optional. zod runs this
+  // refinement even after a field-level z.iso.date() has already rejected one of
+  // these fields, and diffDays throws on a date that is not ISO — so an
+  // unguarded comparison raises out of safeParse, which skips the loader's
+  // prettified report and hands the curator 'Not an ISO date' with no field name
+  // on it. Same defect class as IntakeProfile's refinement in lib/schemas.ts.
+  const dated = isISODate(e.checked_on) && isISODate(e.review_after);
 
-  if (diffDays(e.checked_on, e.review_after) <= 0)
-    bad("review_after", "review_after must fall after checked_on");
+  if (dated) {
+    // Reading a page tomorrow is not a thing that has happened.
+    if (diffDays(todayISO(), e.checked_on) > 0) bad("checked_on", "checked_on is in the future");
 
-  // The 90-day ceiling, enforced rather than described. A one-year review date on a
-  // consular page is how a transcription from 2026 gets cited in 2027 as current.
-  const span = diffDays(e.checked_on, e.review_after);
-  if (span > MAX_REVIEW_DAYS)
-    bad("review_after", `review_after is ${span} days after checked_on, ceiling is ${MAX_REVIEW_DAYS}`);
+    if (diffDays(e.checked_on, e.review_after) <= 0)
+      bad("review_after", "review_after must fall after checked_on");
+
+    // The 90-day ceiling, enforced rather than described. A one-year review date on a
+    // consular page is how a transcription from 2026 gets cited in 2027 as current.
+    const span = diffDays(e.checked_on, e.review_after);
+    if (span > MAX_REVIEW_DAYS)
+      bad("review_after", `review_after is ${span} days after checked_on, ceiling is ${MAX_REVIEW_DAYS}`);
+  }
 
   // Permission is a fact with a date, or it is not a fact (ADR-016).
   if (e.method === "permitted_fetch" && e.robots_checked_on === undefined)

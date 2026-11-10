@@ -40,6 +40,32 @@ export function assertISODate(value: string): ISODate {
   return value;
 }
 
+/**
+ * True when `value` is a real calendar date in 'YYYY-MM-DD' form.
+ *
+ * The total counterpart of assertISODate, for callers that must not raise.
+ *
+ * It exists for zod refinements. zod runs an object-level refinement even after
+ * a field-level check has already rejected that field, so a refinement that
+ * calls diffDays on a malformed date throws out of `safeParse` — and safeParse
+ * throwing is a 500 on a public endpoint, a blank screen in the browser, and an
+ * unreadable crash in a curation script. A refinement calls this first and skips
+ * its comparison when the answer is no, leaving the field check to report the
+ * malformed value it has already caught.
+ *
+ * Takes `unknown` on purpose: when the field check has failed, the value
+ * reaching the refinement is whatever the caller sent, not necessarily a string.
+ */
+export function isISODate(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  try {
+    assertISODate(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Days since 1970-01-01, UTC. */
 export function toEpochDay(date: ISODate): number {
   const m = ISO_DATE.exec(assertISODate(date))!;

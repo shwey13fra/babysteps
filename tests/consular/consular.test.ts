@@ -63,6 +63,20 @@ describe("the guard rejects what it exists to reject", () => {
     );
   });
 
+  it("reports a malformed date as a validation error, not as a raw date crash", () => {
+    // Same defect class as IntakeProfile's refinement: the superRefine calls
+    // diffDays on checked_on and review_after, diffDays throws on a date that is
+    // not ISO, and zod runs the refinement even after z.iso.date() has already
+    // failed - so the exception escapes safeParse and the loader's prettified
+    // report never runs. The entry is invalid either way; what matters is that
+    // the curator is told WHICH FIELD is wrong instead of reading
+    // 'Not an ISO date (YYYY-MM-DD)' with no field name attached.
+    expect(() => parseOne(valid({ checked_on: "01/10/2026" }))).toThrow(/invalid/);
+    expect(() => parseOne(valid({ checked_on: "01/10/2026" }))).toThrow(/checked_on/);
+    expect(() => parseOne(valid({ review_after: "2026-02-30" }))).toThrow(/invalid/);
+    expect(() => parseOne(valid({ review_after: "2026-02-30" }))).toThrow(/review_after/);
+  });
+
   it("rejects review_after on or before checked_on", () => {
     expect(() => parseOne(valid({ review_after: "2026-10-01" }))).toThrow(/after checked_on/);
     expect(() => parseOne(valid({ review_after: "2026-09-01" }))).toThrow(/after checked_on/);

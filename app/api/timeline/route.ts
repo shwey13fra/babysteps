@@ -35,16 +35,16 @@ function fail(error: string, status: number, extra: Record<string, unknown> = {}
 }
 
 /**
- * `IntakeProfile.safeParse` can THROW rather than return success:false.
+ * `IntakeProfile.safeParse` used to THROW rather than return success:false: its
+ * `.refine` called diffDays on a birth_date the field-level z.iso.date() had
+ * already rejected, and zod runs the refinement anyway. **Fixed at the root** in
+ * lib/schemas.ts, where the refinement now skips the comparison on a malformed
+ * date; tests/timeline/schemas.test.ts holds that line.
  *
- * Its `.refine` calls diffDays(todayISO(), birth_date), and diffDays ->
- * assertISODate throws on a malformed date; zod runs the refinement even when
- * the field-level z.iso.date() has already failed, so the exception escapes
- * safeParse. A route must never answer malformed input with a 500, so the parse
- * is wrapped here.
- *
- * This is a defence, not the fix. The root cause is in lib/schemas.ts and is
- * reported rather than changed under scope lock (CLAUDE.md rules 1 and 3).
+ * This wrapper stays as defence in depth. A route must never answer malformed
+ * input with a 500, and this is the cheapest place to guarantee that regardless
+ * of what a future refinement does. It should now be unreachable, and the
+ * route's 400 tests pass with or without it.
  */
 function parseProfile(value: unknown) {
   try {

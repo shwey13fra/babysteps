@@ -5,7 +5,7 @@
 // which reject 2026-02-30 and 2026-13-01 rather than regex-matching the shape.
 
 import { z } from "zod";
-import { diffDays, todayISO } from "./timeline/dates";
+import { diffDays, isISODate, todayISO } from "./timeline/dates";
 
 // ---------------------------------------------------------------------------
 // Intake
@@ -20,6 +20,15 @@ export type Bundesland = z.infer<typeof Bundesland>;
  * birth_date is rejected when it is in the future: a timeline computed from a
  * birth that has not happened would mark hard deadlines confirmed on the
  * strength of a typo.
+ *
+ * The refinement below must never THROW. zod runs an object-level refinement
+ * even after the field-level z.iso.date() has already rejected birth_date, so
+ * calling diffDays on an unchecked value raised out of `safeParse` — and this
+ * schema is parsed on four paths that cannot survive that: /api/timeline,
+ * /api/birth-preview, /api/ask (where it is a 500 on a public endpoint) and
+ * lib/ui/profile-store.ts (where a stale localStorage key took the timeline
+ * screen down instead of looking like "no profile yet"). Hence the isISODate
+ * guard: not dead code, the fix.
  */
 export const IntakeProfile = z
   .object({
@@ -37,10 +46,17 @@ export const IntakeProfile = z
     birth_date: z.iso.date().optional(),
     birth_recorded_at: z.iso.datetime().optional(),
   })
-  .refine((p) => p.birth_date === undefined || diffDays(todayISO(), p.birth_date) <= 0, {
-    message: "birth_date cannot be in the future",
-    path: ["birth_date"],
-  });
+  .refine(
+    (p) =>
+      p.birth_date === undefined ||
+      // Already reported by the field check; comparing it would throw.
+      !isISODate(p.birth_date) ||
+      diffDays(todayISO(), p.birth_date) <= 0,
+    {
+      message: "birth_date cannot be in the future",
+      path: ["birth_date"],
+    },
+  );
 
 export type IntakeProfile = z.infer<typeof IntakeProfile>;
 

@@ -30,6 +30,67 @@ describe("IntakeProfile", () => {
     expect(IntakeProfile.safeParse({ ...VALID, birth_date: "2020-01-01" }).success).toBe(true);
   });
 
+  // The defect this schema carried for three phases, and the reason the
+  // refinement below is written the way it is.
+  //
+  // safeParse must NEVER throw. Its whole contract is "report, do not raise":
+  // three routes and lib/share/token.ts call it on attacker-influenced input,
+  // and lib/ui/profile-store.ts calls it on whatever this browser's
+  // localStorage holds. A validation layer that throws is a 500 on a public
+  // endpoint and a blank screen in the browser.
+  //
+  // It threw because the object-level refinement calls diffDays, diffDays calls
+  // assertISODate, and assertISODate throws - and zod runs the refinement even
+  // after the field-level z.iso.date() has already rejected the value. These
+  // cases are the ones that reach the refinement with a value the field check
+  // has already failed.
+  describe("a malformed birth date is reported, never thrown", () => {
+    const MALFORMED: unknown[] = [
+      "09/11/2026", // the shape a German date input produces
+      "2026-02-30", // ISO shape, not a real calendar date
+      "2026-11-09T00:00:00Z", // a timestamp where a calendar date belongs
+      "yesterday",
+      "",
+      42,
+      null,
+      { date: "2026-11-09" },
+    ];
+
+    for (const birth_date of MALFORMED) {
+      it(`returns success:false for ${JSON.stringify(birth_date)}`, () => {
+        let result: ReturnType<typeof IntakeProfile.safeParse> | undefined;
+        expect(() => {
+          result = IntakeProfile.safeParse({ ...VALID, birth_date });
+        }).not.toThrow();
+        expect(result?.success).toBe(false);
+      });
+    }
+
+    it("names birth_date as the offending field, so the screen can say which answer to fix", () => {
+      const result = IntakeProfile.safeParse({ ...VALID, birth_date: "09/11/2026" });
+      expect(result.success).toBe(false);
+      if (result.success) return;
+      expect(result.error.issues.some((i) => i.path.includes("birth_date"))).toBe(true);
+    });
+
+    it("does not claim a malformed date is in the future", () => {
+      // The field check already reported the real problem. Adding "cannot be in
+      // the future" on top of it would tell a parent to fix something that is
+      // not what is wrong.
+      const result = IntakeProfile.safeParse({ ...VALID, birth_date: "09/11/2026" });
+      expect(JSON.stringify(result.error)).not.toContain("cannot be in the future");
+    });
+
+    it("still rejects a well-formed future date", () => {
+      // The guard must not become an escape hatch: a real date in the future is
+      // exactly what the refinement exists to catch.
+      const future = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+      const result = IntakeProfile.safeParse({ ...VALID, birth_date: future });
+      expect(result.success).toBe(false);
+      expect(JSON.stringify(result.error)).toContain("cannot be in the future");
+    });
+  });
+
   it("rejects a date that is not a real calendar date", () => {
     expect(IntakeProfile.safeParse({ ...VALID, due_date: "2026-02-30" }).success).toBe(false);
     expect(IntakeProfile.safeParse({ ...VALID, due_date: "2026-13-01" }).success).toBe(false);
