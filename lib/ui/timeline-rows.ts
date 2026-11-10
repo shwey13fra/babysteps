@@ -90,6 +90,8 @@ export type TimelineRow = {
   state: RowState;
   estimated: boolean;
   consular: boolean;
+  /** The reader marked this done. A profile fact, not an engine status. ADR-072. */
+  done: boolean;
 };
 
 /**
@@ -174,22 +176,62 @@ export function termToShow(title_en: string, term_de?: string): string | null {
   return title_en.includes(term_de) ? null : term_de;
 }
 
-export function toRow(item: TimelineItem, asOf: ISODate): TimelineRow {
+/**
+ * The done treatment, applied on top of whatever status the engine returned.
+ *
+ * ADR-072. "Done" is something the reader told us, so it cannot be derived from
+ * dates and `deriveStatus` knows nothing about it. It lands here, at the
+ * presentation layer, where the other rules that are about the screen rather
+ * than the law already live.
+ *
+ * Three things change, and the date is not one of them: the row greys (§5), the
+ * dot goes to the done style, and the countdown chip is dropped. The chip is the
+ * load-bearing part — telling a parent "was due 3 days ago" about something they
+ * have just told us they finished would be the product arguing with them, and it
+ * is also the one piece of this screen that is allowed to alarm.
+ *
+ * The deadline itself still shows. A marked-done item is still a dated
+ * obligation, and we are not in a position to certify that it is discharged.
+ */
+export function toRow(item: TimelineItem, asOf: ISODate, done = false): TimelineRow {
   const iso = keyDate(item);
   return {
     id: item.id,
     iso,
     date: formatGutterDate(iso),
     dateNote: dateNoteFor(item, asOf),
-    dot: dotFor(item),
+    dot: done ? "done" : dotFor(item),
     title_en: item.title_en,
     ...(item.term_de === undefined ? {} : { term_de: item.term_de }),
-    metaLine: metaLineFor(item),
-    chip: chipFor(item),
-    state: stateFor(item),
+    metaLine: done ? doneMetaLine(item) : metaLineFor(item),
+    chip: done ? null : chipFor(item),
+    state: done ? "done" : stateFor(item),
     estimated: item.certainty === "estimated",
     consular: item.track === "consular",
+    done,
   };
+}
+
+/**
+ * `Marked done · German offices · counted from the birth`.
+ *
+ * The mockup's greyed rows read "Marked done · …" (docs/mockup.html:240), and
+ * the phrase is deliberately in the reader's voice: the product is reporting
+ * what they said, not certifying that an office has processed anything.
+ *
+ * The provenance half of the line survives, because design-system rule 1 holds
+ * for a done row too — the date is still on screen, so it still has to say what
+ * it is counted from.
+ */
+function doneMetaLine(item: TimelineItem): string {
+  const parts = ["Marked done"];
+  // An estimated date stays labelled estimated after it is marked done. The
+  // reader's claim is about the step, not about the date, and the date on the
+  // row is still counted from a due date rather than a birth.
+  if (item.certainty === "estimated") parts.push("estimated");
+  parts.push(item.track === "consular" ? "Indian consulate" : "German offices");
+  parts.push(item.anchor === "birth" ? "counted from the birth" : "counted from your due date");
+  return parts.join(" · ");
 }
 
 // ---------------------------------------------------------------------------
@@ -222,12 +264,25 @@ const DO_NEXT_ORDER: Record<string, number> = { overdue: 0, urgent: 1, current: 
  * reading. A screen that re-read the clock could place the today band on a
  * different day from the one the statuses were derived against.
  */
-export function toView(response: TimelineResponse, profile: IntakeProfile): TimelineView {
+export function toView(
+  response: TimelineResponse,
+  profile: IntakeProfile,
+  /**
+   * Item ids the reader marked done, from their own browser (ADR-072). Absent
+   * for the shared partner view: the share token carries the profile and
+   * nothing else, so a partner sees the dates without the checkmarks.
+   */
+  completed: readonly string[] = [],
+): TimelineView {
   const asOf = response.as_of;
-  const rows = response.items.map((i) => toRow(i, asOf));
+  const done = new Set(completed);
+  const rows = response.items.map((i) => toRow(i, asOf, done.has(i.id)));
 
   const doNext = response.items
-    .filter((i) => i.status in DO_NEXT_ORDER)
+    // A step the reader has marked done is not something to do next. It stays
+    // on the timeline, greyed, because the date is still real — but the card
+    // that says "do these three things" must not name it.
+    .filter((i) => i.status in DO_NEXT_ORDER && !done.has(i.id))
     .sort(
       (a, b) =>
         DO_NEXT_ORDER[a.status] - DO_NEXT_ORDER[b.status] ||

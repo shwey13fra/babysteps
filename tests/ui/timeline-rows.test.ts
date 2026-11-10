@@ -242,7 +242,13 @@ describe("dots, borders and the estimated state", () => {
     expect(dotFor({ ...base, certainty: "confirmed", status: "upcoming" })).toBe("filled");
   });
 
-  it("marks a past item done whatever its certainty", () => {
+  it("gives the engine's `past` status the grey treatment whatever its certainty", () => {
+    // ADR-072: `past` is the engine's state for a rule with NO deadline whose
+    // window has opened, and all twelve rules carry one - so no profile can
+    // currently produce it. These two lines assert the mapping, which is all
+    // they ever asserted; what they must not be mistaken for is coverage of the
+    // DONE state, which is a profile fact and is tested below against rows a
+    // real profile produces.
     expect(dotFor({ ...base, status: "past", certainty: "estimated" })).toBe("done");
     expect(stateFor({ ...base, status: "past" })).toBe("done");
   });
@@ -332,5 +338,143 @@ describe("the German term is shown only when the title does not already carry it
   )("%s never renders its German term twice", (_id, item) => {
     const shown = termToShow(item.title_en, item.term_de);
     if (shown !== null) expect(item.title_en).not.toContain(shown);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The done state — ADR-072
+// ---------------------------------------------------------------------------
+//
+// This block exists because of how the state it covers was specified and lost.
+//
+// design-system.md §5 and the PRD both describe a greyed, finished item. It was
+// implemented, it was unit tested, and no profile could ever produce it: the
+// implementation keyed off the engine's `past` status, which `deriveStatus`
+// returns only for a rule with no deadline, and all twelve rules have one. The
+// old tests passed because they asserted the RENDERER HANDLES the state, by
+// handing it a status the engine never emits.
+//
+// So every assertion below starts from a real engine timeline and a real
+// profile, and asks whether the state OCCURS. The human ruling: "done" is
+// user-completed, not time-elapsed; an item whose deadline passed without
+// completion is overdue, which already exists and is correct.
+describe("an item the reader marked done", () => {
+  const timeline = TimelineResponse.parse(buildTimeline(PROFILE, { today: TODAY }));
+  const plain = toView(timeline, PROFILE);
+
+  // Chosen from the engine's own output, not invented: at this TODAY the midwife
+  // search is overdue, carries a chip and sits in the do-next card, so every
+  // part of the treatment has something to act on.
+  const SUBJECT = "hebamme_search_start";
+  const done = toView(timeline, PROFILE, [SUBJECT]);
+
+  const rowIn = (view: typeof plain, id: string) =>
+    [...view.before, ...view.after].find((r) => r.id === id);
+
+  it("is produced by a real profile and a real engine timeline", () => {
+    // The assertion the old test should have made: the state OCCURS.
+    expect(rowIn(plain, SUBJECT)?.state).not.toBe("done");
+    expect(rowIn(done, SUBJECT)?.state).toBe("done");
+    expect(rowIn(done, SUBJECT)?.done).toBe(true);
+  });
+
+  it("greys the row and takes the done dot", () => {
+    expect(rowIn(done, SUBJECT)?.dot).toBe("done");
+  });
+
+  it("drops the countdown chip it had a moment ago", () => {
+    // The load-bearing one. "was due 126 days ago" on a step the parent has
+    // just told us they finished is the product arguing with them.
+    expect(rowIn(plain, SUBJECT)?.chip?.text).toContain("was due");
+    expect(rowIn(done, SUBJECT)?.chip).toBeNull();
+  });
+
+  it("says Marked done, in the reader's voice, as the mockup does", () => {
+    expect(rowIn(done, SUBJECT)?.metaLine.startsWith("Marked done")).toBe(true);
+  });
+
+  it("still says what the date is counted from", () => {
+    // design-system rule 1 holds for a done row too: the date is still on
+    // screen, so it still has to carry its provenance.
+    for (const row of [...done.before, ...done.after]) {
+      expect(row.metaLine).toMatch(/counted from (your due date|the birth)/);
+    }
+  });
+
+  it("keeps an estimated date labelled estimated", () => {
+    const estimated = "standesamt_birth_registration";
+    expect(rowIn(plain, estimated)?.estimated).toBe(true);
+    const v = toView(timeline, PROFILE, [estimated]);
+    expect(rowIn(v, estimated)?.estimated).toBe(true);
+    expect(rowIn(v, estimated)?.metaLine).toContain("estimated");
+    expect(rowIn(v, estimated)?.dateNote).toBe("est.");
+  });
+
+  it("does not move the date, the gutter note or the row's place in the timeline", () => {
+    const before = rowIn(plain, SUBJECT);
+    const after = rowIn(done, SUBJECT);
+    expect(after?.iso).toBe(before?.iso);
+    expect(after?.date).toBe(before?.date);
+    expect(after?.dateNote).toBe(before?.dateNote);
+    expect(done.before.map((r) => r.id)).toEqual(plain.before.map((r) => r.id));
+    expect(done.after.map((r) => r.id)).toEqual(plain.after.map((r) => r.id));
+  });
+
+  it("leaves every other row untouched", () => {
+    const others = (view: typeof plain) =>
+      [...view.before, ...view.after].filter((r) => r.id !== SUBJECT);
+    expect(others(done)).toEqual(others(plain));
+  });
+
+  it("drops out of the do-next card, and the next real action takes its place", () => {
+    expect(plain.doNext.map((r) => r.id)).toContain(SUBJECT);
+    expect(done.doNext.map((r) => r.id)).not.toContain(SUBJECT);
+    // Still three: the card is a queue, not a list of what is left over.
+    expect(done.doNext.length).toBe(DO_NEXT_LIMIT);
+    expect(done.doNext.map((r) => r.id)).toContain("hospital_registration");
+  });
+
+  it("empties the do-next card when everything in it is done", () => {
+    const all = [...plain.doNext.map((r) => r.id), "hospital_registration"];
+    const v = toView(timeline, PROFILE, all);
+    expect(v.doNext.map((r) => r.id)).not.toContain("hospital_registration");
+  });
+
+  it("turns a current item's bordered card into the done treatment", () => {
+    const current = [...plain.before, ...plain.after].find((r) => r.state === "current");
+    expect(current).toBeDefined();
+    const v = toView(timeline, PROFILE, [current!.id]);
+    expect(rowIn(v, current!.id)?.state).toBe("done");
+  });
+
+  it("ignores an id that matches no item", () => {
+    const v = toView(timeline, PROFILE, ["a_rule_that_no_longer_exists"]);
+    expect(v.doNext).toEqual(plain.doNext);
+    expect([...v.before, ...v.after]).toEqual([...plain.before, ...plain.after]);
+  });
+
+  it("changes nothing when the list is empty, which is every reader on day one", () => {
+    expect(toView(timeline, PROFILE, [])).toEqual(plain);
+  });
+
+  it("marks every item done without the screen losing a row", () => {
+    const every = timeline.items.map((i) => i.id);
+    const v = toView(timeline, PROFILE, every);
+    expect(v.before.length + v.after.length).toBe(timeline.items.length);
+    expect(v.doNext).toEqual([]);
+    for (const row of [...v.before, ...v.after]) {
+      expect(row.state).toBe("done");
+      expect(row.chip).toBeNull();
+    }
+  });
+
+  it("is what the row model reports, not something the engine was asked to produce", () => {
+    // The ruling: deriveStatus stays untouched and knows nothing about done.
+    // Same engine response, two different views - so the status the engine
+    // returned is unchanged under the grey treatment.
+    for (const item of timeline.items) {
+      expect(toRow(item, timeline.as_of, true).state).toBe("done");
+      expect(toRow(item, timeline.as_of, false).state).toBe(stateFor(item));
+    }
   });
 });

@@ -14,6 +14,7 @@ import { readProfile } from "@/lib/ui/profile-store";
 import { chipFor, formatGutterDate } from "@/lib/ui/timeline-rows";
 import { keyDate } from "@/lib/timeline/key-date";
 import { anchorLine } from "@/lib/ui/item-view";
+import { useDoneState } from "./done-store";
 
 type State =
   | { phase: "loading" }
@@ -29,6 +30,9 @@ type State =
 
 export function ItemDates({ id }: { id: string }) {
   const [state, setState] = useState<State>({ phase: "loading" });
+  // Shared with ./done-toggle.tsx so the two islands on this page cannot
+  // disagree about whether the reader marked this step done.
+  const done = useDoneState(id) === "done";
 
   useEffect(() => {
     let cancelled = false;
@@ -105,10 +109,17 @@ export function ItemDates({ id }: { id: string }) {
     return <p className="item-meta">Your date could not be worked out just now.</p>;
   }
 
+  // The same rule the timeline row follows (ADR-072): a countdown chip is
+  // dropped once the reader has marked the step done. "was due 163 days ago" in
+  // red, six lines above their own "Marked done", is the page arguing with them.
+  // The DATE stays, because the obligation is still dated and we are not in a
+  // position to certify it discharged.
+  const chip = done ? null : state.chip;
+
   return (
     <p className="item-meta">
       <strong>{state.date}</strong> · {state.anchor}
-      {state.chip ? <span className={`chip ${state.chip.kind}`}> {state.chip.text}</span> : null}
+      {chip ? <span className={`chip ${chip.kind}`}> {chip.text}</span> : null}
     </p>
   );
 }

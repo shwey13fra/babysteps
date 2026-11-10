@@ -20,6 +20,7 @@ import { loadRules } from "@/lib/timeline/rules";
 import { asOfLabel, deadlineKindLine } from "@/lib/ui/item-view";
 import { termToShow } from "@/lib/ui/timeline-rows";
 import { ItemDates } from "./dates";
+import { DoneToggle } from "./done-toggle";
 
 export const dynamic = "force-static";
 
@@ -69,6 +70,10 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
 
         {/* The one profile-dependent fact on the page. */}
         <ItemDates id={rule.id} />
+
+        {/* The reader's own claim about this step, beside the date it is about.
+            ADR-072. The engine's status is unaffected by it. */}
+        <DoneToggle id={rule.id} />
 
         <h2 className="sub-title">If you leave it too late</h2>
         <p className="lede">{rule.consequence_en}</p>

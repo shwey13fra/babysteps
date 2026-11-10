@@ -60,6 +60,10 @@ export default async function SharedTimelinePage({
 
   const { profile, issued_at } = result.payload;
   const timeline = TimelineResponse.parse(buildTimeline(profile));
+  // No third argument: the signed token carries the profile and nothing else, so
+  // a partner sees the dates without the owner's done marks (ADR-072). Putting
+  // them in the payload would change the signed shape and invalidate every link
+  // already sent, to show a partner something they cannot act on.
   const view = toView(timeline, profile);
   const made = issued_at ? issued_at.slice(0, 10) : null;
 

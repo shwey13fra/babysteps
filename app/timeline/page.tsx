@@ -67,7 +67,10 @@ export default function TimelinePage() {
         if (!cancelled) {
           setState({
             phase: "ready",
-            view: toView(wire, stored.profile),
+            // The done flags come from the same stored record as the profile,
+            // read once at the top of this effect, so the rows and the dates
+            // they grey can never be a tap out of step (ADR-072).
+            view: toView(wire, stored.profile, stored.completed),
             hasBirth: stored.profile.birth_date !== undefined,
           });
         }

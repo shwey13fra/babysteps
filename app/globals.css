@@ -869,6 +869,18 @@ a {
   align-self: center;
 }
 
+/* The done control on an item page — ADR-072. One button, full width, so the
+   touch target is the whole column; .btn-ghost already carries the 44px floor. */
+.donebox {
+  margin-top: 16px;
+}
+
+.donenote {
+  font: 400 13px/19px var(--sans);
+  color: var(--done);
+  margin: 0 0 8px;
+}
+
 .kindline {
   font: 400 13px/19px var(--sans);
   color: var(--ink-3);
