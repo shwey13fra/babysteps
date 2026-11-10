@@ -959,7 +959,11 @@ a {
   }
 
   .kindline,
-  .item-meta {
+  .item-meta,
+  /* "Marked done" prints: the button that sets it does not (.btn-ghost is
+     hidden above), so on paper this line is the only trace of what the parent
+     said about this step. --done is a 2.35:1 grey, which is a screen colour. */
+  .donenote {
     color: #000;
   }
 
