@@ -19,7 +19,7 @@
   --surface: #ffffff;
   --ink: #15242b;
   --ink-2: #4c5f68;
-  --ink-3: #7b8f96;
+  --ink-3: #62747b;
   --rule: #dce4e4;
   --de: #0b6b60;
   --de-soft: #e4efed;
@@ -29,7 +29,7 @@
   --warn-soft: #fbf1dc;
   --stop: #96282a;
   --stop-soft: #faeae9;
-  --done: #93a6ab;
+  --done: #5c7077;
 
   /* §4: the 56px date gutter is the one structural decision that makes the
      timeline read as a deadline instrument rather than a task list. */
@@ -962,8 +962,23 @@ a {
   .item-meta,
   /* "Marked done" prints: the button that sets it does not (.btn-ghost is
      hidden above), so on paper this line is the only trace of what the parent
-     said about this step. --done is a 2.35:1 grey, which is a screen colour. */
-  .donenote {
+     said about this step. --done is a screen grey even after the AA correction
+     (ADR-073), and paper has no hover, no focus and no second chance. */
+  .donenote,
+  /* Measured on the forced-print render, 2026-11-12. These two were the only
+     text left below black on the printed sheet, and each carries an honesty
+     claim: .src em is "not yet checked by us", the admission that a source has
+     no verified_on, and .foot a is the disclaimer link - .foot is blacked
+     above, but the anchor inside overrode it.
+
+     .sub, the deadline-kind label, is deliberately NOT here. It lives inside
+     .head, which is hidden above, so it never reaches paper at all. What
+     carries the kind on the sheet is .kindline, the full sentence - "This date
+     is set by statute...", "This is common practice rather than a rule in
+     law..." - which prints black and says more than the label did. Rule 12 is
+     satisfied by the sentence, not by the chip. */
+  .src em,
+  .foot a {
     color: #000;
   }
 

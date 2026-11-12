@@ -28,7 +28,7 @@ Cool paper rather than cream — cream plus a teal accent is the current house s
 | `--surface` | `#FFFFFF` | Cards, item rows |
 | `--ink` | `#15242B` | Primary text |
 | `--ink-2` | `#4C5F68` | Secondary text, explanations |
-| `--ink-3` | `#7B8F96` | Metadata, as-of dates, gutter labels |
+| `--ink-3` | `#62747B` | Metadata, as-of dates, gutter labels |
 | `--rule` | `#DCE4E4` | Hairlines, the timeline rail, dividers |
 | `--de` | `#0B6B60` | German track |
 | `--de-soft` | `#E4EFED` | German track fills |
@@ -38,9 +38,9 @@ Cool paper rather than cream — cream plus a teal accent is the current house s
 | `--warn-soft` | `#FBF1DC` | Deadline chip ground |
 | `--stop` | `#96282A` | Overdue — text |
 | `--stop-soft` | `#FAEAE9` | Overdue chip ground |
-| `--done` | `#93A6AB` | Completed items |
+| `--done` | `#5C7077` | Completed items |
 
-Every text-on-fill pairing above clears WCAG AA at body size; `--ink-3` on `--paper` is the only one near the line, so it is restricted to 13px metadata and never used for anything a user must read to act. The amber and red are dark enough to read as text rather than as warning-light decoration, which is deliberate: this product should never look like it is flashing at a pregnant person.
+Every text-on-fill pairing above clears WCAG AA at body size. This was a claim until 2026-11-12, when axe-core measured the rendered pages and found it false: `--ink-3` was `#7B8F96` at **3.13:1** and `--done` was `#93A6AB` at **2.35:1** against `--paper`, the only accessibility defect in the product across seven routes. Both were darkened to the values above, which hold the hue and clear 4.5:1 on `--paper` (4.53 and 4.83) and on `--surface` (4.88 and 5.20). See ADR-073. `--ink-3` is still restricted to 13px metadata and never used for anything a user must read to act; `--done` is now within one step of it, so **colour is no longer what distinguishes a done row** - the hollow dot and the dropped chip are (ADR-072). The amber and red are dark enough to read as text rather than as warning-light decoration, which is deliberate: this product should never look like it is flashing at a pregnant person.
 
 Colour never carries meaning alone. The two tracks also differ by label and by a 3px left border; urgency also differs by a written phrase ("in 9 days").
 

@@ -1,16 +1,64 @@
-# Phase 6 VERIFY — the three items that need a device
+# Phase 6 VERIFY — the item that still needs a device
 
-Nine of the thirteen Phase 6 VERIFY items are machine-checkable and pass. Three need a human with a
-real device, because the thing being measured is a stopwatch, a sheet of paper, and a score a
-browser computes about a rendered page. This is the runbook for those three.
+**Updated 2026-11-12.** Items 12 and 13 were closed by measurement on this machine and are recorded
+below rather than asked of you. **Item 11, the stopwatch, is the only one left**, because it is the
+one that measures a parent rather than a page.
 
-**It is written so you do not have to read any code.** Each item says what to do, what it should
-show, and — the part that matters — what *wrong* looks like, so you can tell a defect from
-something merely unfamiliar.
-
-Record the three results and hand them back. `phase-6-green` is not tagged until they are in.
+`phase-6-green` is not tagged until the stopwatch figure is in.
 
 ---
+
+## Closed on 2026-11-12 — item 13, accessibility
+
+axe-core 4.13.0 — the engine Lighthouse's accessibility category is built from — run against eight
+routes at a true 412px viewport, with a profile in storage so `/timeline` rendered rather than
+redirecting to `/intake`.
+
+**Before:** `color-contrast` was the only violation on any route — 4 to 28 nodes per route, and
+nothing else: no label, ARIA, `lang`, focus, heading or name-role-value failure anywhere, and no
+incomplete audits. Two tokens accounted for every node. `--ink-3` measured **3.13:1** and `--done`
+**2.35:1**, confirming the 2026-11-10 prediction on rendered pages rather than on arithmetic.
+
+**After** the ADR-073 correction (`--ink-3` `#62747B`, `--done` `#5C7077`): **zero violations on all
+eight routes.** The runbook's proposed `--done: #60757B` was not used — it computes to exactly
+4.50:1, with no rounding headroom.
+
+The consequence worth knowing: `--done` is now within one step of `--ink-3`, so **colour no longer
+distinguishes a done row.** The hollow dot and the dropped chip do, which is what ADR-072 had
+already made load-bearing.
+
+## Closed on 2026-11-12 — item 12, print
+
+Both item pages were rendered with every `@media print` rule forced on, at 794px (A4 at 96dpi), and
+every computed colour and geometry on the sheet was measured.
+
+| Checked | Result |
+|---|---|
+| "Mark this done" / "Add to calendar" buttons | absent from the sheet |
+| Page header strip, nav, dots, legend, do-next | absent |
+| Source chip | boxed, with its full URL printed after it in brackets |
+| "not yet checked by us" | **was pale grey — fixed, now black** |
+| Disclaimer footer link | **was pale grey — fixed, now black**, URL expanded |
+| "Marked done" | black |
+| Checklist | 4 items, every one `break-inside: avoid` |
+| German compound beside its gloss | `.term` is `white-space: nowrap`; cannot split |
+| Sheet height | **737px and 706px at 794px wide — under one A4 page** |
+
+Because each sheet is under one page, nothing can straddle a page break, which is what the
+pagination question was really asking.
+
+**One expectation in the original runbook was wrong.** It said the print preview should show the
+**"Statutory deadline"** label. It does not, and should not: that label lives inside `.head`, which
+print hides. What carries the deadline kind on paper is the full `.kindline` sentence — "This date
+is set by statute. PStG §18 requires…", "This is common practice rather than a rule in law…" — in
+black. Rule 12 is satisfied by the sentence, which says more than the label did.
+
+Three things print in colour rather than black, and all three are deliberate: the consequence
+paragraph in `--ink-2` (7.0:1 on white), the amber countdown chip, and the teal "Back to the
+timeline" link.
+
+---
+
 
 ## Before you start — one server, two ways to reach it
 
@@ -90,119 +138,8 @@ Then a review screen that states the statutory-insurance assumption. Tap **"Show
 
 ---
 
-## Item 12 — print preview of an item page
-
-**Primary page:** `http://localhost:3000/item/standesamt_birth_registration` on this machine, then
-Ctrl-P. This is the sheet a parent would actually hand to someone: the hard, statutory one.
-
-**Second page, 30 seconds more:** `http://localhost:3000/item/vaterschaftsanerkennung`. It carries
-the long German compound beside its English gloss, which is the one thing the print rules can break.
-On screen it reads `15 Nov · counted from your due date` with an amber **"in 5 days"** chip and the
-header label **"Practice, not law"** — that label is rule 12 doing its job: this one is not a legal
-deadline and may never be described as one, on screen or on paper.
-
-The item page needs a profile in *this browser's* storage to show a date. If you have not done
-intake on this machine, run through `/intake` here once with the same seven answers.
-
-**Also mark the Standesamt page done before printing** — tap **"Mark this done"** — so the preview
-shows the new state. Tap **"Mark this not done"** afterwards if you want it back.
-
-### What SHOULD appear in the preview
-
-- The **title**, the **date line** — with these seven answers and no birth recorded it reads
-  **`22 Nov · Estimated · counted from the birth`** — the **consequence** paragraph, and the
-  **"Take with you" checklist** (four documents, each with a box, none split across a page break).
-- The **source chip** `PStG §18`, boxed, followed by **`not yet checked by us`** and **its full URL
-  printed after it in brackets**. The "not yet checked" is **correct, not a defect**: that rule's
-  `verified_on` is null and the product says so rather than filling in a date it does not have.
-  The URL is the reason the sheet is worth handing over — the clerk can check it.
-- The **"Statutory deadline"** label and the sentence naming who decides.
-- **"Marked done"**, in black — not the on-screen grey.
-- The **disclaimer footer**, with its link URLs expanded the same way.
-
-### What should NOT appear
-
-- The **"Mark this done" / "Mark this not done" button**. A control on paper is noise.
-- The **"Add to calendar — coming with reminders"** button, for the same reason.
-- The dark page header strip, the timeline chrome, the back link's surrounding furniture.
-- **Any greyed-out, unreadable text.** Everything on paper should be black or near-black.
-
-### What wrong looks like
-
-- A German term and its English gloss **split across two lines** — `Vaterschafts-` / `anerkennung
-  (acknowledgement of paternity)`. The rule that forbids this is present in the CSS; whether it
-  holds in your browser's preview is exactly what has never been seen.
-- A checklist item broken across the page boundary.
-- The source URL missing — then the sheet is a claim with no provenance, which is the one thing
-  this page may not be.
-- "Marked done" printing in pale grey. I corrected that rule today and have not seen it on paper.
-
----
-
-## Item 13 — Lighthouse mobile accessibility ≥ 90
-
-**Use the Chrome DevTools Lighthouse panel, not the CLI, for `/timeline`.** The CLI launches a clean
-Chrome profile with empty storage, and `/timeline` sends a visitor with no saved answers to
-`/intake` — you would score the intake page and not know it.
-
-### The routes, and how to run each
-
-| Route | How |
-|---|---|
-| `/` | CLI or panel |
-| `/how-it-works` | CLI or panel |
-| `/intake` | CLI or panel |
-| `/item/standesamt_birth_registration` | CLI or panel (its date needs a profile; the audit does not) |
-| `/timeline` | **Panel only**, with the profile in storage |
-| `/ask` | Panel (it is the Q&A screen and wants a profile) |
-
-**Panel:** open the page in Chrome → F12 → **Lighthouse** → Mode **Navigation**, Device **Mobile**,
-Categories **Accessibility** only → **UNTICK "Clear storage"** → Analyze page load.
-
-> Ticking "Clear storage" is the same trap as the CLI: it wipes the profile and audits the intake
-> redirect instead of the timeline.
-
-**CLI, for the four routes that need no profile:**
-
-```
-npx lighthouse http://localhost:3000/intake --only-categories=accessibility --form-factor=mobile --screenEmulation.mobile --chrome-flags="--headless=new" --output=html --output-path=./lighthouse-intake.html
-```
-
-`npx` downloads Lighthouse on first use (~50 MB, one-off, not a project dependency). The DevTools
-panel needs no install at all and is the better tool here.
-
-### What I expect it to show, including the bit I expect to fail
-
-**Most audits should pass.** Every form control has a label, touch targets are at the 44px floor,
-the focus ring is explicit, the progress indicator carries its ARIA attributes, and `lang` is set —
-all verified in the markup.
-
-**I expect the contrast audit to flag two greys, and that is the most likely reason a route lands
-below 90.** Measured against the page background `#f4f7f7`:
-
-| Token | Used for | Ratio | WCAG AA needs |
-|---|---|---|---|
-| `--ink-3` `#7b8f96` | metadata lines, gutter notes, lede text | **3.14 : 1** | 4.5 : 1 |
-| `--done` `#93a6ab` | a row marked done | **2.35 : 1** | 4.5 : 1 |
-
-So: **if Lighthouse reports "Background and foreground colors do not have a sufficient contrast
-ratio", that is this, it is real, and it is a design-system decision rather than a bug in a
-screen.** The calm-clinical palette chose those greys on purpose and they are below AA for text
-under 18.7px.
-
-If you want them fixed, the minimal change that keeps the hue and reaches 4.5:1 is
-`--ink-3: #62747b` and `--done: #60757b`. That is a docs/design-system.md §2 change and I will not
-make it without your ruling — it touches every quiet line in the product.
-
-**Report per route: the score, and the names of any audits that failed.** A score alone cannot tell
-us whether 88 means the greys or something I have not thought of.
-
----
-
 ## What to hand back
 
-1. **Intake:** the stopwatch figure, the phone, and which question cost the most time.
-2. **Print:** pass/fail, and a photo or PDF if anything printed wrong.
-3. **Lighthouse:** score per route plus failing audit names.
+The stopwatch figure, the phone, and which question cost the most time.
 
-With those three, `phase-6-green` goes on, and Phase 7 starts.
+With that, `phase-6-green` goes on, and Phase 7 starts.
