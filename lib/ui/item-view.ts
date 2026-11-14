@@ -10,6 +10,8 @@
 // the forbidden vocabulary never appears for the two soft kinds.
 
 import type { DeadlineKind } from "../schemas";
+import { isISODate } from "../timeline/dates";
+import { formatLongDate } from "./timeline-rows";
 
 export type KindLine = {
   /** The sentence under the sources. */
@@ -95,4 +97,27 @@ export function formatCheckedDate(iso: string): string {
 export function anchorLine(anchor: "due_date" | "birth", certainty: "estimated" | "confirmed"): string {
   const from = anchor === "birth" ? "counted from the birth" : "counted from your due date";
   return certainty === "estimated" ? `Estimated · ${from}` : from;
+}
+
+/**
+ * Provenance for the one date in this product the PARENT supplied.
+ *
+ * Every other date is derived by lib/timeline from a rule, and every claim
+ * carries the as-of of the source it came from. The birth date is the single
+ * input the engine cannot check, so it gets the same treatment: the product
+ * says where the date came from, including when the date came from the reader
+ * (ruling 2026-11-14).
+ *
+ * Returns the day the birth was RECORDED, not the day of the birth - those are
+ * different facts and the birth date is already on screen beside this line.
+ *
+ * Null whenever the pair is incomplete or malformed, so a stored record written
+ * by an older build degrades to silence rather than to a wrong sentence.
+ */
+export function recordedLine(birthDate?: string, recordedAt?: string): string | null {
+  if (!birthDate || !recordedAt) return null;
+  if (!isISODate(birthDate)) return null;
+  const day = recordedAt.slice(0, 10);
+  if (!isISODate(day)) return null;
+  return `You recorded the birth date on ${formatLongDate(day)}.`;
 }

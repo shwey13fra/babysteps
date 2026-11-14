@@ -103,6 +103,52 @@ describe("the profile round-trips", () => {
   });
 });
 
+describe("birth_recorded_at is provenance for the date the parent gave us", () => {
+  const BIRTH = "2026-11-09";
+
+  it("is absent while there is no birth date", () => {
+    writeProfile(PROFILE);
+    expect(readProfile()?.profile.birth_recorded_at).toBeUndefined();
+  });
+
+  it("is stamped when the birth date first appears", () => {
+    writeProfile(PROFILE);
+    writeProfile({ ...PROFILE, birth_date: BIRTH });
+    const at = readProfile()?.profile.birth_recorded_at;
+    expect(at).toBeDefined();
+    expect(() => new Date(at as string).toISOString()).not.toThrow();
+  });
+
+  it("does not move when the profile is rewritten with the same birth date", () => {
+    writeProfile({ ...PROFILE, birth_date: BIRTH });
+    const first = readProfile()?.profile.birth_recorded_at;
+    writeProfile({ ...PROFILE, birth_date: BIRTH, city: "Offenbach" });
+    expect(readProfile()?.profile.birth_recorded_at).toBe(first);
+  });
+
+  it("re-stamps when the birth date is corrected", () => {
+    // A corrected date was recorded at the moment of the correction, not of
+    // the original mistake.
+    vi.setSystemTime(new Date("2026-11-10T09:00:00.000Z"));
+    writeProfile({ ...PROFILE, birth_date: BIRTH });
+    const first = readProfile()?.profile.birth_recorded_at;
+    vi.setSystemTime(new Date("2026-11-12T09:00:00.000Z"));
+    writeProfile({ ...PROFILE, birth_date: "2026-11-10" });
+    const second = readProfile()?.profile.birth_recorded_at;
+    expect(second).not.toBe(first);
+    expect(second).toBe("2026-11-12T09:00:00.000Z");
+    vi.useRealTimers();
+  });
+
+  it("is cleared with the birth date, so the pair is never half-present", () => {
+    writeProfile({ ...PROFILE, birth_date: BIRTH });
+    expect(readProfile()?.profile.birth_recorded_at).toBeDefined();
+    writeProfile(PROFILE);
+    expect(readProfile()?.profile.birth_date).toBeUndefined();
+    expect(readProfile()?.profile.birth_recorded_at).toBeUndefined();
+  });
+});
+
 describe("a stale or hostile key looks exactly like no profile", () => {
   it("returns null for unparseable JSON", () => {
     store.map.set(KEY, "{not json");

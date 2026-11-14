@@ -13,7 +13,7 @@ import { TimelineResponse } from "@/lib/schemas";
 import { readProfile } from "@/lib/ui/profile-store";
 import { chipFor, formatGutterDate } from "@/lib/ui/timeline-rows";
 import { keyDate } from "@/lib/timeline/key-date";
-import { anchorLine } from "@/lib/ui/item-view";
+import { anchorLine, recordedLine } from "@/lib/ui/item-view";
 import { useDoneState } from "./done-store";
 
 type State =
@@ -25,6 +25,8 @@ type State =
       date: string;
       anchor: string;
       chip: { kind: "warn" | "stop"; text: string } | null;
+      /** Provenance, only on a date derived from a birth the parent recorded. */
+      recorded: string | null;
     }
   | { phase: "failed" };
 
@@ -73,6 +75,13 @@ export function ItemDates({ id }: { id: string }) {
             date: formatGutterDate(keyDate(item)),
             anchor: anchorLine(item.anchor, item.certainty),
             chip: chipFor(item),
+            // Only where the date actually rests on what the parent told us:
+            // a birth-anchored item whose date is confirmed rather than
+            // estimated from the due date.
+            recorded:
+              item.anchor === "birth" && item.certainty === "confirmed"
+                ? recordedLine(stored.profile.birth_date, stored.profile.birth_recorded_at)
+                : null,
           });
         }
       } catch {
@@ -117,9 +126,12 @@ export function ItemDates({ id }: { id: string }) {
   const chip = done ? null : state.chip;
 
   return (
-    <p className="item-meta">
-      <strong>{state.date}</strong> · {state.anchor}
-      {chip ? <span className={`chip ${chip.kind}`}> {chip.text}</span> : null}
-    </p>
+    <>
+      <p className="item-meta">
+        <strong>{state.date}</strong> · {state.anchor}
+        {chip ? <span className={`chip ${chip.kind}`}> {chip.text}</span> : null}
+      </p>
+      {state.recorded ? <p className="sub">{state.recorded}</p> : null}
+    </>
   );
 }

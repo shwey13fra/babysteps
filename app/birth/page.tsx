@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { BirthPreviewResponse } from "@/lib/schemas";
 import type { IntakeProfile } from "@/lib/schemas";
 import { readProfile, writeProfile } from "@/lib/ui/profile-store";
+import { recordedLine } from "@/lib/ui/item-view";
 import { formatLongDate } from "@/lib/ui/timeline-rows";
 import { toDiffView, type DiffView } from "@/lib/ui/birth-diff";
 
@@ -175,6 +176,17 @@ export default function BirthPage() {
             ? `Until now these dates were estimated from your due date of ${dueLine}. Once you set the real date they become exact, and anything counted from the birth moves with them.`
             : "Until now these dates were estimated from your due date."}
         </p>
+
+        {/* Provenance: a parent returning to correct the date should see what we
+            already hold and when they told us, not an empty field that looks
+            like nothing was saved (ruling 2026-11-14). */}
+        {profile?.birth_date ? (
+          <p className="sub">
+            {recordedLine(profile.birth_date, profile.birth_recorded_at) ??
+              "A birth date is already saved on this phone."}{" "}
+            Entering a new date replaces it.
+          </p>
+        ) : null}
 
         <label className="field">
           <span>Date of birth</span>

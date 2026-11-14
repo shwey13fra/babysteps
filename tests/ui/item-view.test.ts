@@ -9,7 +9,7 @@
 
 import { describe, expect, it } from "vitest";
 import { loadRules } from "@/lib/timeline/rules";
-import { asOfLabel, anchorLine, deadlineKindLine, formatCheckedDate } from "@/lib/ui/item-view";
+import { asOfLabel, anchorLine, deadlineKindLine, formatCheckedDate, recordedLine } from "@/lib/ui/item-view";
 
 /**
  * Phrases that ASSERT a deadline is law. A soft or advisory item may say it is
@@ -134,5 +134,26 @@ describe("anchorLine states the provenance of every date", () => {
 
   it("marks an estimated date as estimated", () => {
     expect(anchorLine("birth", "estimated")).toBe("Estimated · counted from the birth");
+  });
+});
+
+describe("recordedLine — provenance for the date the parent supplied", () => {
+  it("names the day the birth was RECORDED, not the day of the birth", () => {
+    // Different facts. The birth date is already on screen beside this line.
+    expect(recordedLine("2026-11-09", "2026-11-14T19:05:00.000Z")).toBe(
+      "You recorded the birth date on 14 November.",
+    );
+  });
+
+  it("is silent when either half of the pair is missing", () => {
+    expect(recordedLine(undefined, "2026-11-14T19:05:00.000Z")).toBeNull();
+    expect(recordedLine("2026-11-09", undefined)).toBeNull();
+    expect(recordedLine(undefined, undefined)).toBeNull();
+  });
+
+  it("is silent rather than wrong when a record from an older build is malformed", () => {
+    expect(recordedLine("not-a-date", "2026-11-14T19:05:00.000Z")).toBeNull();
+    expect(recordedLine("2026-11-09", "whenever")).toBeNull();
+    expect(recordedLine("2026-11-09", "")).toBeNull();
   });
 });

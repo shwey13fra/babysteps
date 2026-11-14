@@ -131,13 +131,34 @@ function readCompleted(value: unknown): string[] {
  * be read back as "no profile" and silently send the user through intake again.
  */
 export function writeProfile(profile: Profile): StoredProfile | null {
-  const valid = IntakeProfile.safeParse(profile);
-  if (!valid.success) return null;
-
   const s = storage();
   if (!s) return null;
 
   const existing = readProfile();
+
+  // When the parent told us the birth date. Provenance, not a timeline date:
+  // the product says where every date came from, including the ones the user
+  // gave it, the same way a citation carries its as-of (ruling 2026-11-14).
+  //
+  // Stamped when birth_date first appears AND when it changes, because a
+  // corrected date was recorded at the moment of the correction, not of the
+  // original mistake. Cleared with the birth date, so the pair is never
+  // half-present. The engine never reads it - it is not an anchor.
+  const previousBirth = existing?.profile.birth_date;
+  const nextBirth = profile.birth_date;
+  const recordedAt =
+    nextBirth === undefined
+      ? undefined
+      : nextBirth === previousBirth
+        ? (existing?.profile.birth_recorded_at ?? new Date().toISOString())
+        : new Date().toISOString();
+
+  // Validated AFTER the stamp is attached, so an invalid timestamp can never
+  // reach storage: a bad record reads back as "no profile" and would silently
+  // send the parent through intake again.
+  const valid = IntakeProfile.safeParse({ ...profile, birth_recorded_at: recordedAt });
+  if (!valid.success) return null;
+
   const record: StoredProfile = {
     id: existing?.id ?? newId(),
     profile: valid.data,
