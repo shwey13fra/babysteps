@@ -276,7 +276,23 @@ export function toView(
 ): TimelineView {
   const asOf = response.as_of;
   const done = new Set(completed);
-  const rows = response.items.map((i) => toRow(i, asOf, done.has(i.id)));
+  const rows = response.items
+    .map((i) => toRow(i, asOf, done.has(i.id)))
+    // The engine orders by window_open (lib/timeline/index.ts:100) because that
+    // is when a step becomes possible. The gutter renders keyDate - the
+    // deadline when there is one (lib/timeline/key-date.ts). Those are two
+    // different dates, and when they disagree the one column a parent reads
+    // runs backwards: 14 Jan, 13 May, 20 May, 13 May. Seen on a phone,
+    // 2026-11-14.
+    //
+    // The sort belongs here and not in the engine: window_open order is the
+    // API's contract and the eval harness's input, and what changed is only
+    // what the screen shows. ADR-075.
+    //
+    // This also settles an existing disagreement - the before/after split
+    // below already keys off row.iso, so until now the split and the order
+    // were derived from different dates.
+    .sort((a, b) => a.iso.localeCompare(b.iso) || a.id.localeCompare(b.id));
 
   const doNext = response.items
     // A step the reader has marked done is not something to do next. It stays

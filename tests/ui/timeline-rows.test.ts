@@ -278,6 +278,34 @@ describe("the view as a whole", () => {
     expect(view.before.length + view.after.length).toBe(timeline.items.length);
   });
 
+  // Found on a real phone, 2026-11-14: the gutter read 14 Jan -> 13 May ->
+  // 20 May -> 13 May. The engine sorts by window_open; the gutter renders
+  // keyDate (deadline ?? window_open). When those disagree, the one column a
+  // parent actually reads runs backwards. A deadline timeline may not do that.
+  it("renders the gutter dates in chronological order", () => {
+    const seen = [...view.before, ...view.after].map((r) => r.iso);
+    const sorted = [...seen].sort();
+    expect(seen).toEqual(sorted);
+  });
+
+  it("orders rows the same way for a profile whose windows and deadlines disagree", () => {
+    // due 2027-07-01 from today: four backward jumps before the fix.
+    const far: IntakeProfile = { ...PROFILE, due_date: "2027-07-01", birth_date: undefined };
+    const v = toView(TimelineResponse.parse(buildTimeline(far, { today: TODAY })), far);
+    const seen = [...v.before, ...v.after].map((r) => r.iso);
+    expect(seen).toEqual([...seen].sort());
+    expect(seen.length).toBe(12);
+  });
+
+  it("breaks ties on id so equal dates never reorder between runs", () => {
+    const seen = [...view.before, ...view.after];
+    for (let i = 1; i < seen.length; i++) {
+      if (seen[i].iso === seen[i - 1].iso) {
+        expect(seen[i - 1].id.localeCompare(seen[i].id)).toBeLessThan(0);
+      }
+    }
+  });
+
   it("shows at most three actions in the do-next card", () => {
     expect(view.doNext.length).toBeLessThanOrEqual(DO_NEXT_LIMIT);
   });
