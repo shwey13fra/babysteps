@@ -73,9 +73,12 @@ asked for, which adds seconds to a page load that have nothing to do with the pr
 stopwatch target; measuring the compiler would be measuring the wrong thing.
 
 - **On this machine:** `http://localhost:3000`
-- **From your phone, same Wi-Fi:** `http://192.168.0.26:3000` — the address `next dev` printed as
-  "Network" today. If the phone cannot reach it, it is almost always Windows Firewall prompting on
-  first run, or the phone sitting on a guest network.
+- **From your phone, same Wi-Fi:** `http://<your-lan-ip>:3000`. Both `next dev` and `next start`
+  print the address as **"Network"** when they boot — take it from there. Failing that,
+  `ipconfig | findstr IPv4` on Windows, or `ipconfig getifaddr en0` on macOS. It is a private
+  `192.168.x.x` or `10.x.x.x` address; this file does not record it, because the repo is public and
+  a home network address does not belong in one. If the phone cannot reach it, it is almost always
+  Windows Firewall prompting on first run, or the phone sitting on a guest network.
 
 > A dev server from this session may still be listening on :3000. Ctrl-C it in its terminal before
 > `npm start`, or the build you measure will not be the one you just made.
@@ -84,7 +87,7 @@ stopwatch target; measuring the compiler would be measuring the wrong thing.
 
 ## Item 11 — stopwatched intake, under 2 minutes, on a real phone
 
-**URL:** `http://192.168.0.26:3000/intake` on the phone.
+**URL:** `http://<your-lan-ip>:3000/intake` on the phone — the "Network" address from above.
 
 **Before the first run:** this phone may already hold answers from earlier testing. The flow always
 starts at question 1 either way, so you can just run it — the only effect is that finishing
