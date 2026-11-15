@@ -9,9 +9,10 @@
 // place that rule can be broken on screen, and tests/ui/item-view.test.ts asserts
 // the forbidden vocabulary never appears for the two soft kinds.
 
-import type { DeadlineKind } from "../schemas";
+import type { Bundesland, DeadlineKind } from "../schemas";
 import { isISODate } from "../timeline/dates";
-import { formatLongDate } from "./timeline-rows";
+import { isNonWorkingDay, weekdayName } from "../timeline/working-days";
+import { formatLongDate, formatLongDateWithYear } from "./format-date";
 
 export type KindLine = {
   /** The sentence under the sources. */
@@ -120,4 +121,45 @@ export function recordedLine(birthDate?: string, recordedAt?: string): string | 
   const day = recordedAt.slice(0, 10);
   if (!isISODate(day)) return null;
   return `You recorded the birth date on ${formatLongDate(day)}.`;
+}
+
+/**
+ * The date falls on a day offices are normally shut — said plainly, and nothing
+ * more than that.
+ *
+ * ADR-079: the date is NOT moved. This sentence is the whole of the response, in
+ * three places that must agree — the item page, the timeline row (in its short
+ * form below) and the calendar DESCRIPTION.
+ *
+ * ON THE WORDING, which was ruled on and then narrowed (2026-11-15). The ruling
+ * asked for "the office will be closed". That is a prediction about a specific
+ * office's opening hours, and this product has no source for any office's hours:
+ * nothing in the corpus carries them, and some Standesämter do open on a
+ * Saturday for weddings. Asserting it would be the one thing we never do —
+ * stating as fact something we cannot cite. So the claim is narrowed to what is
+ * demonstrably true and generally sourced: the date IS a Saturday, offices are
+ * NORMALLY closed at weekends, and the reader is sent to the authority to check.
+ * Same shape as rule 13 everywhere else: state the rule, name who decides.
+ */
+export function closedDayLine(iso: string, bundesland: Bundesland): string | null {
+  if (!isISODate(iso)) return null;
+  if (!isNonWorkingDay(iso, bundesland)) return null;
+  return (
+    `${formatLongDateWithYear(iso)} is a ${weekdayName(iso)}. ` +
+    "German public offices are normally closed at weekends — check the opening hours before you go."
+  );
+}
+
+/**
+ * `falls on a Saturday`, for the timeline row's single metadata line.
+ *
+ * The full sentence belongs on the item page and in the calendar entry, where
+ * there is room for it. A timeline of twelve rows cannot carry twelve sentences:
+ * design-system.md §5 gives each row ONE metadata line, and the compressed
+ * clause joins the line that is already there rather than adding a second one.
+ */
+export function closedDayShort(iso: string, bundesland: Bundesland): string | null {
+  if (!isISODate(iso)) return null;
+  if (!isNonWorkingDay(iso, bundesland)) return null;
+  return `falls on a ${weekdayName(iso)}`;
 }

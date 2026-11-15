@@ -10,7 +10,7 @@
 import Link from "next/link";
 import { chipFor, formatGutterDate } from "@/lib/ui/timeline-rows";
 import { keyDate } from "@/lib/timeline/key-date";
-import { anchorLine, recordedLine } from "@/lib/ui/item-view";
+import { anchorLine, closedDayLine, recordedLine } from "@/lib/ui/item-view";
 import { useDoneState } from "./done-store";
 import { useItemState } from "./item-state";
 
@@ -61,6 +61,11 @@ export function ItemDates({ id }: { id: string }) {
     state.item.anchor === "birth" && state.item.certainty === "confirmed"
       ? recordedLine(state.profile.birth_date, state.profile.birth_recorded_at)
       : null;
+  // ADR-079. The date is NOT moved — this says the true thing beside it. Shown
+  // on a done row too, unlike the timeline's short clause: the item page is
+  // where someone goes to check a detail, and a fact about the date is still a
+  // fact about the date.
+  const closed = closedDayLine(keyDate(state.item), state.profile.bundesland);
 
   return (
     <>
@@ -68,6 +73,7 @@ export function ItemDates({ id }: { id: string }) {
         <strong>{date}</strong> · {anchor}
         {chip ? <span className={`chip ${chip.kind}`}> {chip.text}</span> : null}
       </p>
+      {closed ? <p className="sub">{closed}</p> : null}
       {recorded ? <p className="sub">{recorded}</p> : null}
     </>
   );

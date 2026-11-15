@@ -60,7 +60,9 @@ export async function POST(request: Request) {
   // it is a request for an event that does not exist for this family.
   if (items.length === 0) return fail("not_on_your_timeline", 404);
 
-  const calendar = buildCalendar(toEvents(items, siteUrl()), new Date());
+  // `bundesland` is passed for the closed-day sentence (ADR-079), not for any
+  // date: the engine has already decided every date above.
+  const calendar = buildCalendar(toEvents(items, siteUrl(), profile.bundesland), new Date());
   const filename = item ? `babysteps-${item}.ics` : "babysteps-timeline.ics";
 
   return new NextResponse(calendar, {

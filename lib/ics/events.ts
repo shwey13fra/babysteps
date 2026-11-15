@@ -18,10 +18,11 @@
 //   Provenance. Every event carries its source and its as-of, or the admission
 //   that nobody has checked it - the same promise the item page makes.
 
-import type { TimelineItem } from "../schemas";
+import type { Bundesland, TimelineItem } from "../schemas";
+import { diffDays } from "../timeline/dates";
 import { keyDate } from "../timeline/key-date";
-import { anchorLine, asOfLabel, deadlineKindLine } from "../ui/item-view";
-import type { IcsEvent } from "./calendar";
+import { anchorLine, asOfLabel, closedDayLine, deadlineKindLine } from "../ui/item-view";
+import type { IcsAlarm, IcsEvent } from "./calendar";
 
 /**
  * Stable per item and per calendar, so re-importing after a birth is recorded
@@ -39,10 +40,22 @@ export function eventUid(itemId: string): string {
  * What the entry says, in the order a parent needs it months from now with no
  * app around it.
  */
-export function eventDescription(item: TimelineItem, siteUrl: string): string {
+export function eventDescription(
+  item: TimelineItem,
+  siteUrl: string,
+  bundesland?: Bundesland,
+): string {
   const parts: string[] = [];
 
   parts.push(item.consequence_en);
+
+  // ADR-079. The date is not moved; the entry says what day it is. This matters
+  // more here than anywhere else on screen: the calendar entry is read months
+  // later with none of our UI around it, and "2 January 2027" in a calendar does
+  // not announce that it is a Saturday until the parent has already planned the
+  // trip.
+  const closed = bundesland ? closedDayLine(keyDate(item), bundesland) : null;
+  if (closed) parts.push(closed);
 
   // Rule 12, from the single shared implementation.
   const kind = item.deadline
@@ -86,6 +99,40 @@ export function eventSummary(item: TimelineItem): string {
     : item.title_en;
 }
 
+/** 09:00, in the parent's own local time. Not 08:00: offices are not open yet. */
+const ALARM_HOUR = 9;
+
+/**
+ * One alert, at 09:00 on the day the window opens.
+ *
+ * NOT on the deadline day. `keyDate` is the deadline where there is one, and an
+ * alert on the morning of the deadline is a notification that it is already too
+ * late to plan. The window-open day is the first day the step can actually be
+ * done, which is the day the information is worth having. For an item with no
+ * deadline the two dates are the same and the offset is simply +9h.
+ *
+ * The offset is expressed in hours from DTSTART — midnight local on the event's
+ * own date — so the alert lands at 09:00 in the reader's timezone without the
+ * file ever naming one. An all-day DTSTART has no timezone to get wrong.
+ *
+ * WHAT IT SAYS. "Name the thing, no urgency language" (ruling 2026-11-15). The
+ * summary, and for an estimated date the fact that it is estimated — an alert
+ * that fires confidently on a guessed date is worse than no alert, because it
+ * spends the parent's trust on arithmetic we have already told them is
+ * provisional. No countdown, no consequence, no exclamation.
+ */
+export function eventAlarm(item: TimelineItem): IcsAlarm {
+  const daysBefore = diffDays(item.window_open, keyDate(item));
+  const summary = eventSummary(item);
+  return {
+    offsetHours: ALARM_HOUR - daysBefore * 24,
+    description:
+      item.certainty === "estimated"
+        ? `${summary} — this date is estimated and will move when the birth is recorded.`
+        : summary,
+  };
+}
+
 /**
  * Every item as a calendar entry, in the engine's own order.
  *
@@ -93,12 +140,17 @@ export function eventSummary(item: TimelineItem): string {
  * and the screen can never disagree about which date an item falls on —
  * ADR-075 was exactly that disagreement in a different place.
  */
-export function toEvents(items: readonly TimelineItem[], siteUrl: string): IcsEvent[] {
+export function toEvents(
+  items: readonly TimelineItem[],
+  siteUrl: string,
+  bundesland?: Bundesland,
+): IcsEvent[] {
   return items.map((item) => ({
     uid: eventUid(item.id),
     date: keyDate(item),
     summary: eventSummary(item),
-    description: eventDescription(item, siteUrl),
+    description: eventDescription(item, siteUrl, bundesland),
     url: `${siteUrl}/item/${item.id}`,
+    alarm: eventAlarm(item),
   }));
 }

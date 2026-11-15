@@ -19,6 +19,32 @@
 //
 // Everything below is testable without a network, a clock or a browser.
 
+/**
+ * One reminder on one event. Never a cascade.
+ *
+ * WHY WE WRITE AN ALARM AT ALL, when the button deliberately promises no
+ * reminders (ruling 2026-11-15). The device check measured what happens with no
+ * VALARM in the file, and the two engines disagreed: **Apple showed `Alert:
+ * None`, Google applied its account default and scheduled an e-mail at 11:30pm
+ * the night before.** So the reminder a parent gets today is accidental — absent
+ * on one platform, and on the other it arrives at half past eleven at night for
+ * an office that opens at eight. With no reminder loop in the beta, the calendar
+ * IS the reminder, so leaving it to chance is not a neutral choice.
+ *
+ * One per event, because twelve events each firing twice is how a parent mutes
+ * the whole calendar — and a muted calendar is worse than no alarm.
+ */
+export type IcsAlarm = {
+  /**
+   * Hours relative to DTSTART, which for an all-day event is midnight local at
+   * the start of that date. Negative is before. `+9` is 09:00 on the day
+   * itself; `-159` is 09:00 six days and fifteen hours earlier.
+   */
+  offsetHours: number;
+  /** What the alert says. Named, not alarmed — see lib/ics/events.ts. */
+  description: string;
+};
+
 /** An all-day calendar entry. Times never appear: these are deadlines, not meetings. */
 export type IcsEvent = {
   /** Stable per item, so a re-import updates rather than duplicates. */
@@ -28,6 +54,8 @@ export type IcsEvent = {
   summary: string;
   description: string;
   url?: string;
+  /** At most one. Absent means the client's own default applies. */
+  alarm?: IcsAlarm;
 };
 
 /**
@@ -97,6 +125,26 @@ export function toIcsTimestamp(date: Date): string {
 }
 
 /**
+ * Hours → an RFC 5545 §3.3.6 duration, as a TRIGGER value.
+ *
+ * `-159` → `-P6DT15H`. Days and hours rather than `-PT159H`: both are legal
+ * grammar, but the day/hour form is what every real calendar emits, and this
+ * file's whole premise is that we are read by other people's parsers.
+ *
+ * Zero is `PT0S` — `P` alone is not a valid duration, and an empty TRIGGER is
+ * the kind of thing a strict parser rejects the entire VEVENT over.
+ */
+export function icsDuration(hours: number): string {
+  if (hours === 0) return "PT0S";
+  const sign = hours < 0 ? "-" : "";
+  const abs = Math.abs(hours);
+  const days = Math.floor(abs / 24);
+  const rest = abs % 24;
+  if (days === 0) return `${sign}PT${rest}H`;
+  return rest === 0 ? `${sign}P${days}D` : `${sign}P${days}DT${rest}H`;
+}
+
+/**
  * The calendar file.
  *
  * All-day events use `DTSTART;VALUE=DATE` with no DTEND. A deadline is a day,
@@ -126,7 +174,22 @@ export function buildCalendar(events: readonly IcsEvent[], now: Date): string {
       `DESCRIPTION:${escapeText(event.description)}`,
     );
     if (event.url) lines.push(`URL:${escapeText(event.url)}`);
-    lines.push("TRANSP:TRANSPARENT", "END:VEVENT");
+    // TRANSPARENT: a deadline does not occupy the day. Marked busy, twelve
+    // all-day events would block a parent's availability outright, and anyone
+    // who shares a calendar with them would see twelve phantom commitments.
+    lines.push("TRANSP:TRANSPARENT");
+    if (event.alarm) {
+      lines.push(
+        "BEGIN:VALARM",
+        "ACTION:DISPLAY",
+        `TRIGGER;RELATED=START:${icsDuration(event.alarm.offsetHours)}`,
+        // RFC 5545 §3.6.6 requires DESCRIPTION on a DISPLAY alarm. A client that
+        // gets an alarm with none shows an empty notification.
+        `DESCRIPTION:${escapeText(event.alarm.description)}`,
+        "END:VALARM",
+      );
+    }
+    lines.push("END:VEVENT");
   }
 
   lines.push("END:VCALENDAR");

@@ -16,49 +16,19 @@ import type { ISODate } from "../timeline/dates";
 import { diffDays } from "../timeline/dates";
 import { keyDate } from "../timeline/key-date";
 import { hasIndianParent } from "../timeline/applies";
-import type { IntakeProfile, TimelineItem, TimelineResponse } from "../schemas";
+import type { Bundesland, IntakeProfile, TimelineItem, TimelineResponse } from "../schemas";
+import { closedDayShort } from "./item-view";
+import { formatGutterDate, formatLongDate } from "./format-date";
 
 // ---------------------------------------------------------------------------
 // Dates, as the gutter shows them
 // ---------------------------------------------------------------------------
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+// Moved to ./format-date on 2026-11-15 so item-view.ts can use them without the
+// two modules importing each other (ADR-079). Re-exported because several
+// callers and tests import them from here.
+export { formatGutterDate, formatLongDate, formatLongDateWithYear } from "./format-date";
 
-/**
- * `12 Oct`. Day is unpadded, as in the mockup, and the month is the English
- * three-letter abbreviation.
- *
- * Formatted from the ISO string's own parts rather than through `Date`, which
- * would apply the viewer's timezone and can move a date across midnight. The
- * engine works in whole days; a timeline date has no time of day to shift.
- */
-export function formatGutterDate(iso: ISODate): string {
-  const [, m, d] = iso.split("-");
-  return `${Number(d)} ${MONTHS[Number(m) - 1]}`;
-}
-
-/** `15 November`, for the header's due date. */
-const MONTHS_LONG = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
-export function formatLongDate(iso: ISODate): string {
-  const [, m, d] = iso.split("-");
-  return `${Number(d)} ${MONTHS_LONG[Number(m) - 1]}`;
-}
-
-/**
- * The pregnancy week on a given day, counted the way maternity care counts it:
- * the due date is the end of week 40.
- *
- * This is a DISPLAY label, not a timeline date — no deadline is derived from it,
- * and the design system asks for it in the header ("Week 32 · due 15 Nov") as
- * the answer to "where am I". It uses the engine's own `diffDays` rather than a
- * second date arithmetic, so there is one implementation of day counting in the
- * codebase. Returns null before week 1 and after week 45, where a number would
- * be noise rather than state.
- */
 export function pregnancyWeek(dueDate: ISODate, on: ISODate): number | null {
   const daysToDue = diffDays(on, dueDate);
   const week = 40 - Math.floor(daysToDue / 7);
@@ -137,7 +107,7 @@ export function dateNoteFor(item: TimelineItem, asOf: ISODate): string {
  * Every date says what it is counted from, which is rule 1 of the design system
  * — nothing on screen without provenance.
  */
-export function metaLineFor(item: TimelineItem): string {
+export function metaLineFor(item: TimelineItem, bundesland?: Bundesland): string {
   const parts: string[] = [];
 
   if (item.status === "past") parts.push("Window has opened — check if this is done");
@@ -145,6 +115,14 @@ export function metaLineFor(item: TimelineItem): string {
 
   parts.push(item.track === "consular" ? "Indian consulate" : "German offices");
   parts.push(item.anchor === "birth" ? "counted from the birth" : "counted from your due date");
+
+  // ADR-079. Joins the line that already exists rather than adding a second one:
+  // §5 gives a row one metadata line, and twelve rows cannot carry twelve
+  // sentences. The full sentence is on the item page and in the calendar entry.
+  // Absent `bundesland` means we were not told where the reader is, so we say
+  // nothing — never a guess, and never a silent "it's fine".
+  const closed = bundesland ? closedDayShort(keyDate(item), bundesland) : null;
+  if (closed) parts.push(closed);
 
   return parts.join(" · ");
 }
@@ -193,7 +171,17 @@ export function termToShow(title_en: string, term_de?: string): string | null {
  * The deadline itself still shows. A marked-done item is still a dated
  * obligation, and we are not in a position to certify that it is discharged.
  */
-export function toRow(item: TimelineItem, asOf: ISODate, done = false): TimelineRow {
+export function toRow(
+  item: TimelineItem,
+  asOf: ISODate,
+  done = false,
+  /**
+   * Where the reader is, for the closed-day clause (ADR-079). Optional because
+   * `toRow` is called from tests and from the share view without a full profile
+   * in hand; when it is absent the clause is simply not said.
+   */
+  bundesland?: Bundesland,
+): TimelineRow {
   const iso = keyDate(item);
   return {
     id: item.id,
@@ -203,7 +191,11 @@ export function toRow(item: TimelineItem, asOf: ISODate, done = false): Timeline
     dot: done ? "done" : dotFor(item),
     title_en: item.title_en,
     ...(item.term_de === undefined ? {} : { term_de: item.term_de }),
-    metaLine: done ? doneMetaLine(item) : metaLineFor(item),
+    // A done row drops the closed-day clause for the same reason it drops the
+    // countdown chip (ADR-072): the reader has told us this step is finished,
+    // and "falls on a Saturday" is the product arguing with them about a trip
+    // they have already made.
+    metaLine: done ? doneMetaLine(item) : metaLineFor(item, bundesland),
     chip: done ? null : chipFor(item),
     state: done ? "done" : stateFor(item),
     estimated: item.certainty === "estimated",
@@ -277,7 +269,7 @@ export function toView(
   const asOf = response.as_of;
   const done = new Set(completed);
   const rows = response.items
-    .map((i) => toRow(i, asOf, done.has(i.id)))
+    .map((i) => toRow(i, asOf, done.has(i.id), profile.bundesland))
     // The engine orders by window_open (lib/timeline/index.ts:100) because that
     // is when a step becomes possible. The gutter renders keyDate - the
     // deadline when there is one (lib/timeline/key-date.ts). Those are two
@@ -306,7 +298,11 @@ export function toView(
         a.id.localeCompare(b.id),
     )
     .slice(0, DO_NEXT_LIMIT)
-    .map((i) => toRow(i, asOf));
+    // `bundesland` matters most here. This is the card that says "do these
+    // three things"; omitting the closed-day clause from it while the row
+    // further down the page carries it is ADR-075 again — two code paths
+    // building the same row, one of them updated.
+    .map((i) => toRow(i, asOf, false, profile.bundesland));
 
   const before: TimelineRow[] = [];
   const after: TimelineRow[] = [];
