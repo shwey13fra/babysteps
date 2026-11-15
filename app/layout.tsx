@@ -26,18 +26,23 @@ export const viewport = {
  * footer of every route, not in a modal", so it lives in the root layout rather
  * than in any page.
  *
- * `Impressum` and `Datenschutz` are NOT linked yet. The pack requires the
- * Impressum to be reachable in two clicks from every page and to render from
- * IMPRESSUM_* env vars rather than a hard-coded address; both are Phase 7
- * deliverables, and nothing is deployed before Phase 7, so the obligation is not
- * live. A dead link in a legal footer is worse than its absence.
+ * `Impressum` and `Datenschutz` are now linked, Phase 7 stage B. The pack
+ * requires the Impressum to be reachable in AT MOST TWO CLICKS from every page
+ * and to be labelled unambiguously — "Impressum", never "About" — so the link
+ * lives in the root layout's footer and carries that exact word. It renders
+ * from IMPRESSUM_* env vars, never a hard-coded address.
+ *
+ * The German labels stay German in an otherwise English product. They are the
+ * words a German reader looks for when checking compliance, and translating
+ * them would defeat the only purpose the links have.
  */
 function DisclaimerFooter() {
   return (
     <footer className="foot">
       BabySteps is a navigator to official sources — not legal, tax or medical advice. We explain
       the rules and show you where they come from; the decision in your case always lies with the
-      responsible authority. <a href="/how-it-works">How this works</a>
+      responsible authority. <a href="/how-it-works">How this works</a> ·{" "}
+      <a href="/impressum">Impressum</a> · <a href="/datenschutz">Datenschutz</a>
     </footer>
   );
 }
