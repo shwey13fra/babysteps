@@ -57,9 +57,13 @@ for the families it touches.
 - The honest version is strictly more useful anyway. A shifted date tells a parent a thing we are
   not sure of; the sentence tells them a thing that is certainly true and lets them decide.
 
-## The wording, ruled and then narrowed
+## The wording, narrowed — and the narrowing confirmed
 
-The ruling asked for *"the office will be closed."* **That claim is not shipped.** It is a
+**Settled 2026-11-15: the narrowed wording stands.** It was shipped as a flagged deviation from the
+ruling, put back to the human with the reasoning below, and kept. This section is the record of a
+closed decision, not an open one.
+
+The original ruling asked for *"the office will be closed."* **That claim is not shipped.** It is a
 prediction about one office's opening hours, and nothing in the corpus carries any office's hours —
 some Standesämter do open on a Saturday for weddings. Asserting it would be the one thing this
 product never does: stating as fact something it cannot cite.
