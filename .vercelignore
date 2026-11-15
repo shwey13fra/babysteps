@@ -1,8 +1,26 @@
 # What does not go to the edge. Playbook line 119, ruled 2026-11-12.
 #
-# Syntax is .gitignore's. This file only affects what `vercel deploy` uploads
-# from a working directory; a git-linked deploy already excludes whatever
-# .gitignore excludes. Both paths matter, so the two lists overlap on purpose.
+# ---------------------------------------------------------------------------
+# EVERY PATTERN HERE STARTS WITH "/". THAT IS NOT DECORATION.
+#
+# This file uses .gitignore syntax, where a pattern containing no internal
+# slash matches a name AT ANY DEPTH. So the line `supabase/` excluded both the
+# root `supabase/` migrations — intended — and `lib/supabase/`, which holds the
+# only database client the application has.
+#
+# The result, on 2026-11-15: the first Vercel deployment failed with
+# "module not found: ./lib/supabase/server", traced through app/api/ask and
+# app/api/ics. It built green locally every time, because .vercelignore is not
+# applied to a local build. A leading slash anchors a pattern to the repo root,
+# which is what every line below actually means.
+#
+# tests/deploy/vercelignore.test.ts asserts the anchoring, so this cannot
+# recur by inspection failure.
+# ---------------------------------------------------------------------------
+#
+# This file affects what `vercel deploy` uploads from a working directory AND
+# what a git-linked deployment keeps — the build log reports "Removed N ignored
+# files defined in .vercelignore" either way.
 #
 # ---------------------------------------------------------------------------
 # READ THIS BEFORE ADDING A LINE
@@ -17,45 +35,48 @@
 # They are not imported, so no bundler traces them and nothing fails at build
 # time. Excluding any of them produces a deployment that builds green and then
 # throws on the first request. Never add them here.
+#
+# And nothing under /app or /lib may EVER be excluded: that is the application.
 # ---------------------------------------------------------------------------
 
 # The fetched corpus. Large, gitignored, and already embedded into Supabase —
 # the edge queries pgvector, it never reads these.
-data/raw/
-data/cache/
+/data/raw/
+/data/cache/
 
 # Evaluation: the golden set, the harness reports, the budget ledger. Developer
 # instruments. Nothing in app/ or lib/ touches them.
-data/golden/
-data/eval-budget.yaml
-eval/
+/data/golden/
+/data/eval-budget.yaml
+/eval/
 
 # Local tsx scripts — ingestion and eval. "Never run in production" (CLAUDE.md
 # repo map), so they have no business being there to run.
-scripts/
+/scripts/
 
 # Schema is code, but it is applied against Supabase from a developer machine,
-# not from a function.
-supabase/
+# not from a function. ANCHORED: `supabase/` would also take lib/supabase/,
+# which is the database client the application cannot start without.
+/supabase/
 
 # Tests and their fixtures.
-tests/
-vitest.config.mts
+/tests/
+/vitest.config.mts
 
 # Documentation. The design system, the legal pack and the ADRs are how we
 # build the product, not part of it. Legal TEXT that users must see is rendered
 # from app/ and from IMPRESSUM_* env vars, never from these files.
-docs/
-knowledge/
-README.md
+/docs/
+/knowledge/
+/README.md
 
 # Strategy documents. Gitignored as well; this line is for a CLI deploy from a
 # working directory that still has them on disk.
-PRD-*.docx
-PRD-*.pdf
-babysteps-execution-playbook*
-babysteps-build-brief*
+/PRD-*.docx
+/PRD-*.pdf
+/babysteps-execution-playbook*
+/babysteps-build-brief*
 
 # Agent instructions.
-CLAUDE.md
-.claude/
+/CLAUDE.md
+/.claude/
