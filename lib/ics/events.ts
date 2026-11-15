@@ -73,7 +73,10 @@ export function eventDescription(item: TimelineItem, siteUrl: string): string {
       "The decision in your case always lies with the responsible authority.",
   );
 
-  return parts.join("\n\n");
+  // Trimmed: rule text comes from YAML block scalars, which leave a trailing
+  // newline. Joined untrimmed it produces three newlines between paragraphs,
+  // which some clients render as a visible gap in the entry.
+  return parts.map((part) => part.trim()).join("\n\n");
 }
 
 /** The summary line. The German term rides along where there is one. */

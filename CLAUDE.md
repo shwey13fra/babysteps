@@ -58,6 +58,11 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 14. German terms and their English glosses come from data/glossary.de-en.yaml. Never invent a
     gloss inline; if a term is missing, add it to the glossary and say so.
 15. Never commit a secret, a fetched corpus file, or any real person's contact details.
+16. NEGATIVE CONTROLS: when a test is loosened or a matcher narrowed, add a control proving the
+    check can still fail, in the same commit. Three gates have now been caught on their way to
+    failing open — the budget preflight, the golden loader, and the ICS rule-12/13 matchers —
+    so this is a standing rule, not a habit. A check that cannot fail is worse than no check,
+    because it reports safety.
 
 ## Commands
 

@@ -145,6 +145,20 @@ describe("the rule 12 and rule 13 checks can actually fail", () => {
   });
 });
 
+describe("paragraph spacing", () => {
+  it("never emits a blank paragraph, whatever the YAML block scalars leave behind", () => {
+    // consequence_en and note_en come from YAML block scalars, which leave a
+    // trailing newline. Joined untrimmed they produce a visible gap in the
+    // calendar entry.
+    for (const item of items) {
+      const text = eventDescription(item, SITE);
+      expect(text, item.id).not.toMatch(/\n{3,}/);
+      expect(text, item.id).not.toMatch(/\n[ \t]+\n/);
+      expect(text.startsWith(" ") || text.endsWith(" ") || text.endsWith("\n")).toBe(false);
+    }
+  });
+});
+
 describe("provenance, including the absence of it", () => {
   it("every entry carries its source reference and URL", () => {
     for (const item of items) {

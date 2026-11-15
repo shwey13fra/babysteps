@@ -21,6 +21,7 @@ import { asOfLabel, deadlineKindLine } from "@/lib/ui/item-view";
 import { termToShow } from "@/lib/ui/timeline-rows";
 import { ItemDates } from "./dates";
 import { DoneToggle } from "./done-toggle";
+import { AddToCalendar } from "./add-to-calendar";
 
 export const dynamic = "force-static";
 
@@ -102,11 +103,11 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
 
         <p className="kindline">{kind.text}</p>
 
-        {/* Placeholder: /api/ics is Phase 7. Named for what it will do, and
-            disabled rather than pretending to work. */}
-        <button type="button" className="btn-ghost" style={{ width: "100%", marginTop: "14px" }} disabled>
-          Add to calendar — coming with reminders
-        </button>
+        {/* F5. The old label promised reminders, which the 2026-11-15 ruling
+            decided the beta will not have - so the promise is gone, not
+            reworded. With no reminder loop, the parent's own calendar IS the
+            reminder. */}
+        <AddToCalendar id={id} />
 
         <p className="meta" style={{ marginTop: "14px" }}>
           <Link href="/timeline">Back to the timeline</Link>
