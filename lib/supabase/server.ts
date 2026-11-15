@@ -83,15 +83,100 @@ export function serviceRoleClient(): SupabaseClient {
  * fused, so adding guidance cannot crowd statute out of the results
  * (ADR-017 / migration 0005).
  */
-export async function matchChunks(args: MatchChunksArgs): Promise<ChunkHit[]> {
-  const { data, error } = await serviceRoleClient().rpc("match_chunks", {
-    query_embedding: JSON.stringify(args.queryEmbedding),
-    query_text: args.queryText,
-    filter_jurisdictions: args.filterJurisdictions,
-    match_count: args.matchCount,
-  });
+/**
+ * The database could not be REACHED - distinct from a query that reached it and
+ * failed.
+ *
+ * Confirmed signature (2026-11-14, observed end to end): a paused Supabase
+ * project has its subdomain removed from DNS, so the client fails at the
+ * transport layer and never returns an HTTP status. ADR-076.
+ *
+ * `observed` carries the raw text, because NXDOMAIN cannot distinguish a paused
+ * project from a deleted one. The log says what was seen; it does not claim to
+ * know which (ADR-067: four causes must not print one line).
+ */
+export class DatabaseUnreachableError extends Error {
+  readonly observed: string;
+  constructor(observed: string) {
+    super(`database unreachable: ${observed}`);
+    this.name = "DatabaseUnreachableError";
+    this.observed = observed;
+  }
+}
 
-  if (error) throw new Error(`match_chunks failed: ${error.message}`);
+/** Transport-level failure text, kept wide: any unreachability, not only DNS. */
+const UNREACHABLE_SIGNATURES = [
+  "fetch failed",
+  "failed to fetch",
+  "enotfound",
+  "getaddrinfo",
+  "eai_again",
+  "econnrefused",
+  "econnreset",
+  "etimedout",
+  "network error",
+  "socket hang up",
+];
+
+/**
+ * Whether an error from THE SUPABASE CLIENT means the database was unreachable.
+ *
+ * SCOPE, and it is the whole safety argument: this may only ever be applied to
+ * an error produced by the Supabase client, which is why it lives in this file
+ * and is called from nowhere else.
+ *
+ * At string level these signatures are INDISTINGUISHABLE from an OpenAI or
+ * Anthropic transport failure - `embedQuestion` (lib/rag/retrieve.ts) calls
+ * OpenAI with a raw fetch and throws the identical `TypeError: fetch failed`,
+ * inside the same retrieve() call that /api/ask wraps. Matching these strings
+ * anywhere else would therefore report "database unreachable" for a model
+ * outage: ADR-067's swallowed-error defect in a new costume.
+ *
+ * What keeps the two apart is structural, not textual. This predicate is only
+ * reached via the Supabase wrappers below, and the route branches on
+ * `instanceof DatabaseUnreachableError` rather than on any string. A model or
+ * embedding failure throws a plain Error and falls through to the ordinary
+ * `unavailable` refusal. ADR-076.
+ *
+ * Deliberately does NOT match a query that arrived: permission denied, a
+ * missing relation, a bad column. Those reached the database.
+ */
+export function isUnreachableError(err: unknown): boolean {
+  const text = (
+    err instanceof Error
+      ? `${err.message} ${(err as { code?: string }).code ?? ""}`
+      : typeof err === "object" && err !== null
+        ? `${(err as { message?: string }).message ?? ""} ${(err as { code?: string }).code ?? ""}`
+        : String(err ?? "")
+  ).toLowerCase();
+  if (!text.trim()) return false;
+  return UNREACHABLE_SIGNATURES.some((sig) => text.includes(sig));
+}
+
+export async function matchChunks(args: MatchChunksArgs): Promise<ChunkHit[]> {
+  // The client returns transport failures as `error` in some versions and
+  // throws them in others, so both shapes are handled. Nothing here changes the
+  // success path: every added line runs only once something has already failed.
+  let data: unknown;
+  let error: { message: string } | null;
+  try {
+    ({ data, error } = await serviceRoleClient().rpc("match_chunks", {
+      query_embedding: JSON.stringify(args.queryEmbedding),
+      query_text: args.queryText,
+      filter_jurisdictions: args.filterJurisdictions,
+      match_count: args.matchCount,
+    }));
+  } catch (thrown) {
+    if (isUnreachableError(thrown)) {
+      throw new DatabaseUnreachableError(thrown instanceof Error ? thrown.message : String(thrown));
+    }
+    throw thrown;
+  }
+
+  if (error) {
+    if (isUnreachableError(error)) throw new DatabaseUnreachableError(error.message);
+    throw new Error(`match_chunks failed: ${error.message}`);
+  }
   return (data ?? []) as ChunkHit[];
 }
 
@@ -120,7 +205,10 @@ export async function siblingsFor(args: SiblingsArgs): Promise<ChunkHit[]> {
     .in("jurisdiction", args.filterJurisdictions)
     .order("id", { ascending: true });
 
-  if (error) throw new Error(`siblingsFor failed: ${error.message}`);
+  if (error) {
+    if (isUnreachableError(error)) throw new DatabaseUnreachableError(error.message);
+    throw new Error(`siblingsFor failed: ${error.message}`);
+  }
 
   return (data ?? []).map((row) => ({
     ...(row as Omit<ChunkHit, "cosine" | "fts_rank" | "vec_pos" | "fts_pos" | "rrf">),

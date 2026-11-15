@@ -21,6 +21,7 @@ import {
   REFUSAL_MIN_TOP_COSINE,
 } from "@/lib/rag/guards";
 import { retrieve } from "@/lib/rag/retrieve";
+import { DatabaseUnreachableError } from "@/lib/supabase/server";
 import { Answer, IntakeProfile } from "@/lib/schemas";
 
 /** Brief §4: reject oversized payloads. 8 000 characters is the cap. */
@@ -33,6 +34,19 @@ const AskRequest = z.object({
 
 const MAINTENANCE_MESSAGE =
   "Questions are switched off for a moment while we check a source. Your timeline is unaffected and still works.";
+
+/**
+ * Said when the database could not be reached at all. ADR-076.
+ *
+ * Deliberately promises NOTHING about when it returns. Recovery from a paused
+ * project is manual - nothing wakes on its own - so "it is waking up" would be
+ * a recovery time we cannot keep, and a tester who waits on it trusts us less
+ * than one who was told the truth. Same discipline as the deadline copy: never
+ * soften, never dramatise. It also says the thing that is true and reassuring
+ * without being a promise: the timeline is on their phone and unaffected.
+ */
+const DATABASE_UNAVAILABLE_MESSAGE =
+  "Answering questions is temporarily unavailable. Your timeline, your dates and everything saved on this phone still work. Please try again later.";
 
 // ---------------------------------------------------------------------------
 // Rate limiting
@@ -154,9 +168,26 @@ export async function POST(request: NextRequest) {
   let retrieval;
   try {
     retrieval = await retrieve(question, profile);
-  } catch {
-    // Retrieval threw: Supabase or the embedding call is down. That is an
-    // outage, not a weak corpus, and it gets its own reason. ADR-022.
+  } catch (thrown) {
+    // Two different outages, told apart structurally rather than by text.
+    //
+    // The database being unreachable is a known operating condition on the free
+    // tier, not an incident (ADR-076), and it gets its own response so the
+    // reader is not told our infrastructure broke. It can only arrive as
+    // DatabaseUnreachableError, which only the Supabase wrappers raise - an
+    // embedding or model transport failure throws the IDENTICAL
+    // `TypeError: fetch failed` and must not be reported as a database outage.
+    if (thrown instanceof DatabaseUnreachableError) {
+      // The alert. What was OBSERVED, never what it means: a removed DNS record
+      // cannot distinguish a paused project from a deleted one (ADR-067).
+      console.error("[ask] database unreachable", { observed: thrown.observed });
+      return NextResponse.json(
+        { error: "database_unavailable", message: DATABASE_UNAVAILABLE_MESSAGE },
+        { status: 503 },
+      );
+    }
+    // Anything else that threw: the embedding call, or a query that arrived and
+    // failed. An outage, not a weak corpus, so it keeps its own reason. ADR-022.
     return answered(refuse("unavailable"));
   }
 
