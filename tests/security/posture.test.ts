@@ -105,6 +105,52 @@ describe("NEXT_PUBLIC_ is limited to what CLAUDE.md allows", () => {
   });
 });
 
+describe(".env.example documents every variable the code reads", () => {
+  // Written after a real mistake on 2026-11-15: the production variable list
+  // was quoted from this template rather than from the code, and came out as 13
+  // when the answer is 12 — the template listed an anon key that nothing reads.
+  // A template that drifts from the code misstates which secrets a deployment
+  // needs, which is a worse failure than having no template.
+  const example = readFileSync(join(ROOT, ".env.example"), "utf8");
+
+  // Supplied by the platform, not by us.
+  const PLATFORM = new Set(["NODE_ENV", "VERCEL_URL"]);
+  // Read by a library from the environment, so it appears in no source file.
+  const IMPLICIT = ["ANTHROPIC_API_KEY"];
+
+  const referenced = new Set<string>();
+  for (const file of SHIPPED) {
+    for (const m of read(file).matchAll(/process\.env\.([A-Z_][A-Z0-9_]*)/g)) referenced.add(m[1]);
+    // lib/legal.ts and lib/share/token.ts name their keys as string literals.
+    for (const m of read(file).matchAll(/"(IMPRESSUM_[A-Z_]+|SHARE_LINK_HMAC_SECRET)"/g)) {
+      referenced.add(m[1]);
+    }
+  }
+
+  it("found variables to check", () => {
+    expect(referenced.size).toBeGreaterThan(8);
+    expect(referenced.has("SUPABASE_SERVICE_ROLE_KEY")).toBe(true);
+  });
+
+  it("every variable the code reads is documented", () => {
+    const undocumented = [...referenced, ...IMPLICIT]
+      .filter((name) => !PLATFORM.has(name))
+      .filter((name) => !new RegExp(`^${name}=`, "m").test(example));
+    expect(undocumented).toEqual([]);
+  });
+
+  it("the check can fail", () => {
+    expect(/^NOT_A_REAL_VARIABLE=/m.test(example)).toBe(false);
+  });
+
+  it("the anon key is documented as NOT read by the application", () => {
+    // If a browser-side Supabase client is ever added, this flips and the
+    // template's "do not add to Vercel" section becomes wrong.
+    expect(referenced.has("NEXT_PUBLIC_SUPABASE_ANON_KEY")).toBe(false);
+    expect(example).toMatch(/NOT READ BY THE APPLICATION/);
+  });
+});
+
 describe("development routes default to denied", () => {
   it("renders in development and test", () => {
     expect(devRoutesEnabled("development")).toBe(true);
