@@ -83,6 +83,9 @@ They join the repo when it goes private, or at Phase 7. Ask me for them if they 
 | Which rows fall below the refusal floor | `npx tsx scripts/eval/probe-refusal.ts` | works — retrieval only, no model calls |
 | Whether section completion supplies the missing Absätze | `npx tsx scripts/eval/probe-completion.ts` | works — retrieval only, no model calls |
 | Displacement pre-check: what completion adds, and whether anything is dropped | `npx tsx scripts/eval/probe-displacement.ts [--category ANSWER]` | works — retrieval only, no model calls |
+| Security posture gate (rule 7, no innerHTML, NEXT_PUBLIC_ allow-list, /dev guard) | `npx vitest run tests/security/posture.test.ts` | works — replaces the grep below |
+| Kill switch check (free) | `npx tsx scripts/security/rate-limit-check.ts --kill-switch` | works — expects 503 when `ASK_DISABLED=1` |
+| Rate-limit loop (**spends ~20 classifier calls**) | `npx tsx scripts/security/rate-limit-check.ts --limit --yes --url <origin>` | works — run against production in Stage E |
 | Rule-7 check: nothing client-reachable imports the service-role client | `f=$(grep -rl '"use client"' app lib); echo "client components: $(printf '%s' "$f" \| grep -c .)"; [ -z "$f" ] \|\| grep -n "supabase/server" $f` | works — prints its denominator; `0 client components` is "nothing to check yet", not a pass |
 | Run eval (full baseline, 48 rows, ~$3.07) | `npx tsx scripts/eval/run.ts --label <name>` | works |
 | Run eval (one row, a smoke test) | `npx tsx scripts/eval/run.ts --limit 1` | works — partial, writes no `eval_runs` row |
