@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BabySteps Germany — user flow</title>
+<style>
+  :root {
+    --paper:#F4F7F7; --surface:#FFFFFF;
+    --ink:#15242B; --ink-2:#4C5F68; --ink-3:#62747B;
+    --rule:#DCE4E4;
+    --de:#0B6B60; --de-soft:#E4EFED;
+    --in:#4A3D8F; --in-soft:#EAE8F5;
+    --warn:#8A5300; --warn-soft:#FBF1DC;
+    --stop:#96282A; --stop-soft:#FAEAE9;
+    --done:#5C7077;
+    /* Plex is self-hosted in the app via next/font/local and is not available
+       to a standalone file. CLAUDE.md forbids fetching it from a Google domain,
+       so this document uses the system stack deliberately. */
+    --sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#101A1E; --surface:#16242A;
+      --ink:#E8EFEF; --ink-2:#A9BCC2; --ink-3:#8698A0;
+      --rule:#263840;
+      --de:#5FBDAF; --de-soft:#14332F;
+      --in:#A79BE4; --in-soft:#231E3D;
+      --warn:#E0A94A; --warn-soft:#332713;
+      --stop:#E88D8B; --stop-soft:#361D1D;
+      --done:#7E929A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#101A1E; --surface:#16242A;
+    --ink:#E8EFEF; --ink-2:#A9BCC2; --ink-3:#8698A0;
+    --rule:#263840;
+    --de:#5FBDAF; --de-soft:#14332F;
+    --in:#A79BE4; --in-soft:#231E3D;
+    --warn:#E0A94A; --warn-soft:#332713;
+    --stop:#E88D8B; --stop-soft:#361D1D;
+    --done:#7E929A;
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:24px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width: 920px; margin:0 auto; padding: 0 16px 96px; }
+
+  header.top { border-bottom:1px solid var(--rule); margin-bottom:28px; padding:36px 0 22px; }
+  .eyebrow { font-size:13px; line-height:18px; color:var(--ink-3); letter-spacing:.02em; }
+  h1 { font-size:27px; line-height:32px; font-weight:600; margin:10px 0 8px; letter-spacing:-.01em; }
+  .lede { color:var(--ink-2); max-width:62ch; margin:0; }
+  .built { font-size:13px; line-height:18px; color:var(--ink-3); margin-top:14px; }
+  .built code { font-family:var(--mono); font-size:12px; }
+
+  h2 { font-size:21px; line-height:28px; font-weight:600; margin:44px 0 6px; letter-spacing:-.01em; }
+  h2 .n { color:var(--ink-3); font-weight:400; margin-right:10px; font-variant-numeric:tabular-nums; }
+  h3 { font-size:17px; line-height:24px; font-weight:500; margin:28px 0 8px; }
+  p { margin:0 0 14px; max-width:68ch; }
+  .sub { color:var(--ink-2); }
+  .meta { font-size:13px; line-height:18px; color:var(--ink-3); }
+  code { font-family:var(--mono); font-size:13px; background:var(--de-soft); color:var(--de);
+         padding:1px 5px; border-radius:4px; }
+  a { color:var(--de); }
+
+  /* ---- flow diagram ---- */
+  .flow { margin:22px 0 10px; }
+  .node {
+    position:relative; background:var(--surface); border:1px solid var(--rule);
+    border-left:3px solid var(--de); border-radius:8px; padding:13px 16px 14px; margin:0;
+  }
+  .node.consular { border-left-color:var(--in); }
+  .node.neutral  { border-left-color:var(--rule); }
+  .node.terminal { border-left-color:var(--done); }
+  .node .route { font-family:var(--mono); font-size:13px; color:var(--ink); font-weight:600; }
+  .node .what  { font-size:13px; line-height:19px; color:var(--ink-2); margin-top:3px; }
+  .node .state { font-size:12px; line-height:18px; color:var(--ink-3); margin-top:6px; }
+  .node .state b { font-weight:500; color:var(--ink-2); }
+
+  .arrow { display:flex; align-items:center; gap:10px; padding:7px 0 7px 18px; }
+  .arrow .stem { width:2px; height:26px; background:var(--rule); flex:none; }
+  .arrow .cap { font-size:13px; line-height:18px; color:var(--ink-3); }
+
+  .branchset { margin:10px 0 10px 18px; padding-left:20px; border-left:2px dashed var(--rule); }
+  .branchset > .branchlabel {
+    font-size:12px; line-height:18px; color:var(--ink-3); text-transform:uppercase;
+    letter-spacing:.07em; margin:10px 0 8px;
+  }
+  .branchset .node { margin-bottom:10px; }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x:auto; margin:14px 0 8px; -webkit-overflow-scrolling:touch; }
+  table { border-collapse:collapse; width:100%; min-width:560px; font-size:14px; line-height:21px; }
+  th, td { text-align:left; vertical-align:top; padding:9px 12px 9px 0; border-bottom:1px solid var(--rule); }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:500; }
+  td code { white-space:nowrap; }
+
+  .chip { display:inline-block; font-size:12px; line-height:18px; padding:1px 8px; border-radius:999px;
+          border:1px solid transparent; white-space:nowrap; }
+  .chip.de  { background:var(--de-soft); color:var(--de); }
+  .chip.inn { background:var(--in-soft); color:var(--in); }
+  .chip.warn{ background:var(--warn-soft); color:var(--warn); }
+  .chip.stop{ background:var(--stop-soft); color:var(--stop); }
+  .chip.calm{ background:transparent; color:var(--ink-3); border-color:var(--rule); }
+
+  .callout { background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+             padding:14px 16px; margin:18px 0; }
+  .callout.warn { border-left:3px solid var(--warn); }
+  .callout.stop { border-left:3px solid var(--stop); }
+  .callout h4 { margin:0 0 6px; font-size:15px; line-height:22px; font-weight:600; }
+  .callout p:last-child { margin-bottom:0; }
+
+  ol.steps { padding-left:0; list-style:none; counter-reset:s; margin:14px 0; }
+  ol.steps li { counter-increment:s; position:relative; padding-left:34px; margin-bottom:12px; max-width:68ch; }
+  ol.steps li::before {
+    content:counter(s); position:absolute; left:0; top:1px; width:23px; height:23px; border-radius:50%;
+    background:var(--de-soft); color:var(--de); font-size:12px; font-weight:600;
+    display:flex; align-items:center; justify-content:center; font-variant-numeric:tabular-nums;
+  }
+  hr.sep { border:0; border-top:1px solid var(--rule); margin:40px 0 0; }
+  footer { margin-top:40px; padding-top:18px; border-top:1px solid var(--rule); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">BabySteps Germany · internal documentation</div>
+  <h1>User flow — what comes after what</h1>
+  <p class="lede">
+    Every screen, in the order a parent meets them, with the state each one reads and writes and
+    the dead ends each one can reach.
+  </p>
+  <p class="built">
+    Built from the code, not from the PRD: routes under <code>app/</code>, questions from
+    <code>app/intake/questions.ts</code>, storage from <code>lib/ui/profile-store.ts</code>,
+    the answer pipeline from <code>app/api/ask/route.ts</code>. Colours are the
+    <code>design-system.md</code> §2 tokens.
+  </p>
+</header>
+
+<h2><span class="n">1</span>The spine</h2>
+<p class="sub">
+  The path almost every parent takes, once. Four screens, no account, nothing stored on a server.
+</p>
+
+<div class="flow">
+
+  <div class="node neutral">
+    <div class="route">/</div>
+    <div class="what">The promise: “Every deadline. Both countries. In English. Sourced.”</div>
+    <div class="state"><b>Reads</b> nothing · <b>Writes</b> nothing · static</div>
+  </div>
+
+  <div class="arrow"><div class="stem"></div><div class="cap">parent starts the intake</div></div>
+
+  <div class="node">
+    <div class="route">/intake</div>
+    <div class="what">Seven questions, one per screen, then a review of all seven before anything is saved.</div>
+    <div class="state">
+      <b>Order:</b> due date → state → city → passports → employment → marriage → first child → <b>review</b><br>
+      <b>Writes</b> <code>babysteps.profile.v1</code> to localStorage, under an anonymous id<br>
+      Reads nothing — arriving here with a profile already stored does not prefill it<br>
+      One clock read for the whole flow, so validation cannot shift under a parent who leaves the tab open across midnight
+    </div>
+  </div>
+
+  <div class="arrow"><div class="stem"></div><div class="cap">on the review step, saves and routes</div></div>
+
+  <div class="node">
+    <div class="route">/timeline</div>
+    <div class="what">The hero screen. Date gutter, hairline rail, the today band, “Do next”.</div>
+    <div class="state">
+      <b>Reads</b> the profile from localStorage · <b>POST</b> <code>/api/timeline</code><br>
+      Dots are filled for confirmed dates, hollow for estimated. Consular items carry a 3px violet border.
+    </div>
+  </div>
+
+  <div class="arrow"><div class="stem"></div><div class="cap">taps any deadline</div></div>
+
+  <div class="node">
+    <div class="route">/item/[id]</div>
+    <div class="what">One deadline in full: what it is, when, what to take, who decides, the source.</div>
+    <div class="state">
+      <b>Three controls:</b> mark done · add to calendar · back to the timeline<br>
+      Statically prerendered; the dates are filled in by a client island from the reader’s own profile
+    </div>
+  </div>
+
+</div>
+
+<div class="callout warn">
+  <h4>The one thing that surprises people</h4>
+  <p class="sub">
+    The profile lives in <b>localStorage on one browser</b>. There is no account, so nothing follows
+    the parent to another device. Opening <code>/item/…</code> on a fresh phone shows the page but
+    <b>no “Add to calendar” button at all</b> — the control returns nothing when there is no profile,
+    rather than rendering disabled. The intake has to be done on the device you are testing.
+  </p>
+</div>
+
+<h2><span class="n">2</span>The four branches</h2>
+<p class="sub">Everything else hangs off the timeline or an item page. None of it is on the spine.</p>
+
+<div class="branchset">
+
+  <div class="branchlabel">From /timeline</div>
+
+  <div class="node">
+    <div class="route">/birth <span class="chip de">the proof</span></div>
+    <div class="what">The parent types the real birth date and the estimated deadlines move, in front of them.</div>
+    <div class="state">
+      <b>POST</b> <code>/api/birth-preview</code> computes the diff — the client never calculates a date<br>
+      Nothing commits until the button is pressed; the commit is a localStorage write<br>
+      Six dates move at once, which is why the diff is shown before it is committed. 400ms, and nothing else on the screen moves.
+    </div>
+  </div>
+
+  <div class="node consular">
+    <div class="route">/share/[token] <span class="chip inn">read-only</span></div>
+    <div class="what">A link for the partner. Minted on request, never on page load.</div>
+    <div class="state">
+      <b>POST</b> <code>/api/share</code> returns a signed token; the URL is assembled in the browser
+      from the current origin<br>
+      Rendered entirely on the server, so the partner needs no profile and nothing about them is stored<br>
+      Read-only means read-only: no share control, no birth prompt, no links into item pages
+    </div>
+  </div>
+
+  <div class="branchlabel">From /item/[id]</div>
+
+  <div class="node">
+    <div class="route">POST /api/ics <span class="chip calm">file download</span></div>
+    <div class="what">This one deadline as a calendar file — one event, one alarm, ~1.7 KB.</div>
+    <div class="state">
+      Never touches the database; every date comes from the rules on disk<br>
+      Marked <code>TRANSP:TRANSPARENT</code>, so a deadline does not block the parent’s availability<br>
+      Carries <b>no</b> <code>METHOD</code>, <code>ORGANIZER</code> or <code>ATTENDEE</code> — it is an
+      entry to import, not an invitation (ADR-085)
+    </div>
+  </div>
+
+  <div class="branchlabel">From anywhere</div>
+
+  <div class="node">
+    <div class="route">/ask <span class="chip de">guarded</span></div>
+    <div class="what">A question, answered only from cited official sources.</div>
+    <div class="state">
+      <b>POST</b> <code>/api/ask</code> → validate → rate limit → medical guard → expand → retrieve → generate<br>
+      The wait is an honest skeleton, not streaming: nothing renders without a validated citation<br>
+      An “answered” reply carrying no citation draws <b>nothing</b> — an uncited answer is a failure, not a degraded success
+    </div>
+  </div>
+
+</div>
+
+<h2><span class="n">3</span>Screen by screen</h2>
+
+<div class="tablewrap">
+<table>
+  <thead>
+    <tr><th>Screen</th><th>Reads</th><th>Writes</th><th>Leads to</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/</code><br><span class="meta">static</span></td>
+      <td>—</td><td>—</td>
+      <td><code>/intake</code></td>
+    </tr>
+    <tr>
+      <td><code>/how-it-works</code><br><span class="meta">static</span></td>
+      <td>—</td><td>—</td>
+      <td><code>/intake</code></td>
+    </tr>
+    <tr>
+      <td><code>/intake</code><br><span class="meta">client</span></td>
+      <td>nothing &mdash; it never prefills</td>
+      <td>the profile + anonymous id, after a review step</td>
+      <td><code>/timeline</code></td>
+    </tr>
+    <tr>
+      <td><code>/timeline</code><br><span class="meta">client</span></td>
+      <td>profile → <code>/api/timeline</code></td>
+      <td>—</td>
+      <td><code>/item/[id]</code>, <code>/birth</code>, <code>/ask</code>, share link</td>
+    </tr>
+    <tr>
+      <td><code>/item/[id]</code><br><span class="meta">prerendered + island</span></td>
+      <td>profile → <code>/api/timeline</code></td>
+      <td>the done flag for this item</td>
+      <td><code>/timeline</code>, <code>/birth</code>, the <code>.ics</code></td>
+    </tr>
+    <tr>
+      <td><code>/birth</code><br><span class="meta">client</span></td>
+      <td>profile → <code>/api/birth-preview</code></td>
+      <td>the real birth date</td>
+      <td><code>/timeline</code></td>
+    </tr>
+    <tr>
+      <td><code>/ask</code><br><span class="meta">client</span></td>
+      <td>profile → <code>/api/ask</code></td>
+      <td>—</td>
+      <td>cited sources</td>
+    </tr>
+    <tr>
+      <td><code>/share/[token]</code><br><span class="meta">server</span></td>
+      <td>the signed token only</td>
+      <td>—</td>
+      <td><code>/how-it-works</code> and nothing else</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="n">4</span>Where the flow stops</h2>
+<p class="sub">
+  Every one of these is a designed state, not an error page. They are the most useful things to
+  test, because they are the ones nobody sees by accident.
+</p>
+
+<div class="tablewrap">
+<table>
+  <thead>
+    <tr><th>Condition</th><th>What the parent sees</th><th>Severity</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>No profile in this browser</td>
+      <td><code>/timeline</code> routes to the intake. On an item page the calendar button is absent entirely.</td>
+      <td><span class="chip calm">by design</span></td>
+    </tr>
+    <tr>
+      <td>localStorage unavailable or blocked</td>
+      <td>The intake checks before it starts and reports a save failure rather than losing seven answers silently.</td>
+      <td><span class="chip warn">guard</span></td>
+    </tr>
+    <tr>
+      <td>A stale or hand-edited storage key</td>
+      <td>Treated as “no profile yet” and discarded, never migrated in place. It must look identical to a first visit.</td>
+      <td><span class="chip calm">by design</span></td>
+    </tr>
+    <tr>
+      <td>The item is not on this profile’s timeline</td>
+      <td><code>/api/ics</code> answers 404 <code>not_on_your_timeline</code> — a request for an event that does not exist for this family, not a server error.</td>
+      <td><span class="chip calm">by design</span></td>
+    </tr>
+    <tr>
+      <td>A clinical question</td>
+      <td>Deflected by the medical guard <b>before</b> expansion, embedding, retrieval or any provider sees it.</td>
+      <td><span class="chip warn">guard</span></td>
+    </tr>
+    <tr>
+      <td>Retrieval below the confidence floor</td>
+      <td>A refusal naming the authority who does answer — never a guess.</td>
+      <td><span class="chip warn">guard</span></td>
+    </tr>
+    <tr>
+      <td>21st question in a day</td>
+      <td>429: “That is as many questions as we can answer for you today. The limit resets after a day.”</td>
+      <td><span class="chip warn">guard</span></td>
+    </tr>
+    <tr>
+      <td>An invalid or tampered share token</td>
+      <td>404. The signature is checked before a timeline is built.</td>
+      <td><span class="chip stop">security</span></td>
+    </tr>
+    <tr>
+      <td>The database is paused or unreachable</td>
+      <td>The timeline, the item pages and the calendar export keep working — none of them touch the database. Only <code>/ask</code> degrades.</td>
+      <td><span class="chip calm">by design</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<h2><span class="n">5</span>What crosses the network</h2>
+
+<div class="tablewrap">
+<table>
+  <thead><tr><th>Stays in the browser</th><th>Goes to our server</th><th>Leaves our infrastructure</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>
+        The profile and the anonymous id<br>
+        Which items are marked done<br>
+        The city, used only to name the local office
+      </td>
+      <td>
+        The profile, as the body of a POST — processed in memory, never stored, never logged against the id<br>
+        The question text on <code>/ask</code>
+      </td>
+      <td>
+        The question text reaches <b>OpenAI</b> for embedding, then <b>Anthropic</b> for the answer<br>
+        Nothing else. No analytics, no third-party scripts, no fonts fetched from anywhere
+      </td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="callout">
+  <h4>Why so much of this is client-side</h4>
+  <p class="sub">
+    No account was a product decision, so the profile has nowhere to live but the browser. That one
+    choice explains the shape of everything above: why the timeline is a client screen, why item
+    pages are prerendered shells filled in by an island, why the partner’s view had to be rendered
+    on the server from a signed token instead of a shared login, and why there is a device boundary
+    that a parent can walk across without warning.
+  </p>
+</div>
+
+<h2><span class="n">6</span>Walking it on a device</h2>
+<p class="sub">The order to test in, so that each step leaves the state the next one needs.</p>
+
+<ol class="steps">
+  <li><b>Open <code>/</code> on the device itself.</b> Not a link from elsewhere — the point is a cold start on a cold network.</li>
+  <li><b>Complete the intake.</b> All seven questions, thumb only. This is what creates the profile; nothing below works without it.</li>
+  <li><b>Read the timeline.</b> Check the gutter alignment, that the today band is the only full-bleed element, and that consular items are visibly a second track.</li>
+  <li><b>Open a deadline</b> — <code>standesamt_birth_registration</code> is a hard statutory one, so nothing about it is estimated.</li>
+  <li><b>Export the calendar file and import it.</b> Import on a computer, or open it from Mail on iPhone. Check: one alarm not two, the entry shows as <b>Free</b>, and the link opens the item page.</li>
+  <li><b>Open an estimated deadline</b> — <code>elterngeld_application</code> or <code>kindergeld_application</code> — and confirm it says so, both on screen and inside the calendar entry.</li>
+  <li><b>Record a birth date</b> at <code>/birth</code> and watch six dates move at once. Then check the item pages agree with the timeline.</li>
+  <li><b>Ask one question</b> and time it to the first text.</li>
+  <li><b>Make a share link</b> and open it in a private window, where there is no profile — it must still render in full.</li>
+  <li><b>Switch the device to dark mode</b> and walk back through. No real device has confirmed it.</li>
+</ol>
+
+<hr class="sep">
+<footer>
+  <p class="meta">
+    Generated 2026-11-16 against commit <code>8796956</code>. Flow changes are not tracked
+    automatically — if a route is added or the storage shape changes, this file needs editing by hand.
+    Behaviour here is described from the code; the authority for scope remains the PRD, for
+    architecture the build brief.
+  </p>
+</footer>
+
+</div>
+</body>
+</html>
