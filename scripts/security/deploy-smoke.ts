@@ -204,3 +204,13 @@ main().catch((e) => {
   console.error(e?.message ?? e);
   process.exit(1);
 });
+
+// Makes this file a MODULE, which gives it its own top-level scope.
+//
+// Not cosmetic. Neither security script imports anything, so TypeScript treated
+// both as global scripts sharing one scope — and both declare `args`, `ORIGIN`,
+// `PROFILE` and a `main`. `npm run build` failed with eight TS2451/TS2393
+// errors from 2026-11-16 (shipped in eff7260) and nobody saw it on Vercel,
+// because .vercelignore drops /scripts/ and the collision cannot exist there.
+// Broken here, fine in production — the mirror image of ADR-083.
+export {};
