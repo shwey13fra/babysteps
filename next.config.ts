@@ -123,8 +123,57 @@ const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "off" },
 ];
 
+// ---------------------------------------------------------------------------
+// Output file tracing — the four paths read from disk at RUNTIME
+// ---------------------------------------------------------------------------
+//
+// Nothing imports these. They are read with readFileSync/readdirSync from
+// process.cwd(), so the only thing that can put them in a deployed function is
+// the bundler's file trace — and until this block existed, NOTHING instructed
+// it to. Measured 2026-11-16 from .next/server/**/*.nft.json:
+//
+//   /api/timeline  657 files traced   /api/ask  171 files traced
+//
+// 657 is the whole repository: tests (39), docs (88), eval (129), scripts (32),
+// knowledge (46), data/raw (50). That is Turbopack's "Dynamic filesystem access
+// causes tracing of the whole project" warning, and `data/rules/*.yaml` was
+// riding along inside it. The data shipped as a SIDE EFFECT of a diagnostic we
+// would like to silence — so silencing it first, with an ignore comment or a
+// narrower trace, would have produced a deployment that builds green and throws
+// on its first request. .vercelignore's header warns about exactly that.
+//
+// This block makes the requirement explicit, so the trace can be narrowed later
+// without the data disappearing with it. It is purely ADDITIVE: it can only put
+// files into a bundle, never take them out, so it cannot break a deployment.
+//
+// Keys are route globs (picomatch, one segment per `*`), values are globs from
+// the project root. `/item/*` matches the literal route path `/item/[id]`,
+// which avoids escaping the brackets.
+const RULES = ["./data/rules/**/*.yaml"];
+const RAG = [
+  "./data/glossary.de-en.yaml",
+  "./lib/prompts/**/*.md",
+  "./data/consular/**/*",
+];
+
 const nextConfig: NextConfig = {
   ...(devLanOrigin ? { allowedDevOrigins: [devLanOrigin] } : {}),
+
+  outputFileTracingIncludes: {
+    // Every route that reaches lib/timeline, which reads data/rules at runtime.
+    "/api/timeline": RULES,
+    "/api/ics": RULES,
+    "/api/birth-preview": RULES,
+    "/item/*": RULES,
+    "/share/*": RULES,
+    "/intake": RULES,
+    "/dev/timeline": RULES,
+    // The only route that reaches lib/rag. The glossary and the prompt files
+    // are already traced here because those reads use LITERAL paths, which the
+    // bundler can follow — the pattern lib/timeline should move toward. They
+    // are named anyway so the requirement does not rest on that inference.
+    "/api/ask": RAG,
+  },
 
   async headers() {
     return [
