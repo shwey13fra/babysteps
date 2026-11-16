@@ -69,6 +69,22 @@ export function AddToCalendar({ id }: { id: string }) {
         {phase === "working" ? "Preparing…" : "Add to calendar"}
       </button>
 
+      {/*
+        Stage F, 2026-11-16: a parent downloaded this, mailed it to themselves,
+        opened it on their phone and nothing happened. The file is valid — the
+        gap is that tapping a calendar file in a mail app does not reliably
+        import it, and Google Calendar's import lives on a computer.
+
+        With no reminder loop in the beta the calendar IS the reminder, so a
+        file that never reaches a calendar is a feature that silently does not
+        exist. Until Phase 7 decides whether to add a direct calendar link, the
+        honest fix is to say where the file goes. Direction, not mood (§7).
+      */}
+      <p className="sub" style={{ marginTop: "8px" }}>
+        This saves a calendar file. On iPhone, open it from Mail to add it. In Google Calendar,
+        add it on a computer under Settings → Import &amp; export.
+      </p>
+
       {estimated ? (
         <p className="sub" style={{ marginTop: "8px" }}>
           This date is estimated from your due date. The calendar entry says so, and it will not

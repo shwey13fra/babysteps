@@ -151,3 +151,52 @@ describe("the calendar as a whole", () => {
     expect(two.match(/END:VEVENT/g)).toHaveLength(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// ADR-085 — no METHOD property. Ruled 2026-11-16 after Stage F.
+// ---------------------------------------------------------------------------
+//
+// There was no test here at all. `METHOD:PUBLISH` was written by one line in
+// lib/ics/calendar.ts and asserted by nothing, so neither its removal nor its
+// return would have been noticed. That is the gap this block closes.
+describe("the calendar declares no iTIP method", () => {
+  const event = {
+    uid: "x@babysteps-germany",
+    date: "2027-06-08",
+    summary: "Register the birth",
+    description: "A deadline, not a meeting.",
+    url: "https://example.invalid/item/x",
+  };
+  const ics = buildCalendar([event], new Date("2026-11-16T09:00:00Z"));
+  const lines = ics.split("\r\n");
+
+  it("writes no METHOD line", () => {
+    // METHOD belongs to iTIP (RFC 5546) and marks a file as scheduling traffic
+    // between an organiser and attendees. This file names no organiser and
+    // invites nobody, so claiming to be one was wrong on its own terms.
+    expect(lines.filter((l) => l.startsWith("METHOD"))).toEqual([]);
+  });
+
+  it("names no ORGANIZER and no ATTENDEE either, which is why METHOD was wrong", () => {
+    expect(lines.filter((l) => l.startsWith("ORGANIZER"))).toEqual([]);
+    expect(lines.filter((l) => l.startsWith("ATTENDEE"))).toEqual([]);
+  });
+
+  it("still carries everything RFC 5545 requires of a VCALENDAR", () => {
+    // METHOD is optional (§3.7.2). PRODID and VERSION are not.
+    expect(lines).toContain("BEGIN:VCALENDAR");
+    expect(lines).toContain("VERSION:2.0");
+    expect(lines.some((l) => l.startsWith("PRODID:"))).toBe(true);
+    expect(lines).toContain("CALSCALE:GREGORIAN");
+    expect(lines).toContain("END:VCALENDAR");
+    expect(lines.some((l) => l.startsWith("UID:"))).toBe(true);
+    expect(lines.some((l) => l.startsWith("DTSTAMP:"))).toBe(true);
+  });
+
+  // Negative control (CLAUDE.md rule 16). Four gates have now been caught on
+  // their way to failing open, so a matcher that cannot go red is not accepted.
+  it("the METHOD matcher can still fail", () => {
+    const withMethod = ["BEGIN:VCALENDAR", "METHOD:PUBLISH", "END:VCALENDAR"];
+    expect(withMethod.filter((l) => l.startsWith("METHOD"))).not.toEqual([]);
+  });
+});

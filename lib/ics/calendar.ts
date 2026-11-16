@@ -161,7 +161,26 @@ export function buildCalendar(events: readonly IcsEvent[], now: Date): string {
     "VERSION:2.0",
     "PRODID:-//BabySteps Germany//Timeline//EN",
     "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
+    // NO `METHOD`. Deliberate, ruled 2026-11-16 — ADR-085.
+    //
+    // METHOD belongs to iTIP (RFC 5546), the scheduling protocol: it marks a
+    // file as a MESSAGE between an organiser and attendees. RFC 5545 §3.7.2
+    // makes it optional, and a file that is simply a calendar entry — which is
+    // all this is — should not claim to be an iTIP message at all.
+    //
+    // It was `METHOD:PUBLISH`, and Stage F found the cost on a real phone: a
+    // parent mailed the file to themselves, opened it, and nothing happened.
+    // A client reading METHOD treats the file as scheduling traffic and looks
+    // for the ORGANIZER and ATTENDEE that an iTIP message must have. This file
+    // has neither — it names no organiser and invites nobody, because a
+    // statutory deadline is not a meeting.
+    //
+    // Without METHOD it is an ordinary calendar file to be imported, which is
+    // exactly what it is. Whether that alone fixes the Gmail path is NOT
+    // established — the evidence is vendor documentation, not a measurement,
+    // and only a device can settle it. It is removed because claiming to be an
+    // iTIP message was wrong on its own terms, and the import problem is what
+    // made anyone look.
   ];
 
   for (const event of events) {
