@@ -16,7 +16,7 @@ import { buildTimeline } from "@/lib/timeline";
 import { IntakeProfile, TimelineResponse } from "@/lib/schemas";
 import { buildCalendar } from "@/lib/ics/calendar";
 import { toEvents } from "@/lib/ics/events";
-import { siteUrl } from "@/lib/site-url";
+import { siteUrlForPersistedFile } from "@/lib/site-url";
 
 const NO_STORE = { "Cache-Control": "no-store, no-cache, must-revalidate, private" };
 
@@ -62,7 +62,15 @@ export async function POST(request: Request) {
 
   // `bundesland` is passed for the closed-day sentence (ADR-079), not for any
   // date: the engine has already decided every date above.
-  const calendar = buildCalendar(toEvents(items, siteUrl(), profile.bundesland), new Date());
+  // ADR-084. Not siteUrl(): this file outlives the deployment that wrote it.
+  // In production with no alias configured the helper returns null and every
+  // link is omitted, because a deployment-scoped URL answers 302 to a Vercel
+  // login wall months later. The file is still served — the deadline, the date
+  // and the alarm are the point of the export, and they do not need a link.
+  const calendar = buildCalendar(
+    toEvents(items, siteUrlForPersistedFile(), profile.bundesland),
+    new Date(),
+  );
   const filename = item ? `babysteps-${item}.ics` : "babysteps-timeline.ics";
 
   return new NextResponse(calendar, {

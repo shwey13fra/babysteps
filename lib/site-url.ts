@@ -39,3 +39,31 @@ export function siteUrl(): string {
 
   return "http://localhost:3000";
 }
+
+/**
+ * The origin to write into a file that OUTLIVES this deployment — today the
+ * `.ics`, in Phase 7 the e-mail. `null` means "we have no address worth
+ * writing down", and the caller must then omit the link rather than guess.
+ *
+ * ADR-084, ruled 2026-11-16. `siteUrl()` above is correct for everything that
+ * is read immediately: a preview build linking to itself is exactly right. It
+ * is wrong for a link a parent taps months from now, because a deployment URL
+ * is frozen to one build AND sits behind Vercel's Standard Protection — it
+ * answers 302 to a login wall, measured, while the alias answers 200.
+ *
+ * So this refuses the VERCEL_URL fallback in production ONLY. A preview still
+ * gets its own origin, because the file is read in the same minute it is made.
+ *
+ * Production is identified by VERCEL_ENV, which Vercel sets to "production"
+ * only for production deployments; a preview build reports "preview". Not
+ * NODE_ENV, which is "production" for every built deployment including previews
+ * and would strip the link where it is perfectly good.
+ */
+export function siteUrlForPersistedFile(): string | null {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit?.trim()) return normalise(explicit);
+
+  if (process.env.VERCEL_ENV === "production") return null;
+
+  return siteUrl();
+}

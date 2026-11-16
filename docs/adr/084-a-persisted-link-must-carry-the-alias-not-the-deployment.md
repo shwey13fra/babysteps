@@ -1,6 +1,6 @@
 # ADR-084 — A persisted link must carry the alias, never the deployment
 
-**Date:** 2026-11-16 · **Status:** accepted; one hardening left open · **Stage E**
+**Date:** 2026-11-16 · **Status:** accepted; the open question ruled the same day · **Stage E**
 
 ## Context
 
@@ -53,15 +53,39 @@ Not every link is the same kind of link:
 
 `siteUrl()` serves both and cannot tell them apart. That is the gap this ADR records.
 
-## Open, deliberately
+## Ruled, 2026-11-16: drop the link, keep the file
 
-**Should `/api/ics` refuse to use the `VERCEL_URL` fallback in production?** It could fail closed —
-no calendar file rather than one with a link to a frozen, protected deployment. Arguments both
-ways: a 503 on the export is a visible failure a tester reports, whereas a bad link is invisible
-until someone taps it months later; against that, the smoke already catches it before any family
-sees it, and a new failure mode on a working feature has its own cost.
+Neither fail-closed nor leave-it. `siteUrlForPersistedFile()` returns `null` when a **production**
+deployment has no alias configured, and every link is then omitted from the calendar file.
 
-**Not implemented, and not implemented silently.** Raised for a ruling.
+The reasoning: a 503 adds a new way for a working feature to break, on a path the smoke already
+guards; leaving it relies entirely on someone running that smoke. Omitting the link costs the
+parent nothing that matters — the deadline, the date and the alarm are what the export is *for*,
+and none of them need a URL. What it removes is the one thing that can do harm months later.
+
+**The link appears twice in the file, not once**, and the ruling covers both:
+
+| Site | What it is |
+| --- | --- |
+| `lib/ics/events.ts` `url:` | The URL property. The one this ADR originally named. |
+| `lib/ics/events.ts` description | `"It will move when the birth is recorded: …/birth"`, on every estimated-date event. |
+
+Dropping only the property would have left a login-wall link in the prose of exactly the six events
+that move when a birth is recorded — the tap this ADR was written about. The *sentence* stays; only
+the address goes, so the F5 honesty survives: "This date is estimated · counted from the birth. It
+will move when the birth is recorded."
+
+**Production is identified by `VERCEL_ENV`, not `NODE_ENV`.** `NODE_ENV` is `"production"` for every
+built deployment including previews, so keying on it would strip the link from preview files where
+it is perfectly good. A preview still links to itself — that file is read in the same minute it is
+made. `siteUrl()` is untouched, so the browser-rendered share link is unaffected.
+
+The source URL is **not** dropped. `gesetze-im-internet.de` is the provenance the entry promises and
+is as good in ten years as today. Only our own origin is ours to doubt.
+
+`tests/ics/persisted-url.test.ts`, 16 cases, including the rule-16 negative controls: that the
+no-URL assertion still fails when a URL is present, and that it fails on the exact deployment host
+that shipped the defect.
 
 ## Consequence
 

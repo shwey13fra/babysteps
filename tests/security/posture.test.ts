@@ -114,7 +114,10 @@ describe(".env.example documents every variable the code reads", () => {
   const example = readFileSync(join(ROOT, ".env.example"), "utf8");
 
   // Supplied by the platform, not by us.
-  const PLATFORM = new Set(["NODE_ENV", "VERCEL_URL"]);
+  // VERCEL_ENV joined on 2026-11-16 with ADR-084's fix: lib/site-url.ts reads it
+  // to tell a production deployment from a preview. Like VERCEL_URL it is set by
+  // the platform on every deployment, so it is not ours to document or to set.
+  const PLATFORM = new Set(["NODE_ENV", "VERCEL_URL", "VERCEL_ENV"]);
   // Read by a library from the environment, so it appears in no source file.
   const IMPLICIT = ["ANTHROPIC_API_KEY"];
 

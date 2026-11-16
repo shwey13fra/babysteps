@@ -42,7 +42,7 @@ export function eventUid(itemId: string): string {
  */
 export function eventDescription(
   item: TimelineItem,
-  siteUrl: string,
+  siteUrl: string | null,
   bundesland?: Bundesland,
 ): string {
   const parts: string[] = [];
@@ -65,10 +65,17 @@ export function eventDescription(
 
   // The honesty the playbook names explicitly for F5: an estimated date must
   // say it is estimated, and offer the one action that makes it exact.
+  // ADR-084. The link is dropped, the sentence is not. A parent reading this
+  // months from now still has to know the date is estimated and that recording
+  // the birth moves it — that is the honesty F5 requires. What they must not be
+  // handed is an address that leads to a login wall, so when there is no origin
+  // worth writing down (`siteUrl === null`) the sentence simply ends.
   if (item.certainty === "estimated") {
+    const estimated = `This date is ${anchorLine(item.anchor, item.certainty).toLowerCase()}. `;
     parts.push(
-      `This date is ${anchorLine(item.anchor, item.certainty).toLowerCase()}. ` +
-        `It will move when the birth is recorded: ${siteUrl}/birth`,
+      siteUrl
+        ? `${estimated}It will move when the birth is recorded: ${siteUrl}/birth`
+        : `${estimated}It will move when the birth is recorded.`,
     );
   }
 
@@ -142,7 +149,7 @@ export function eventAlarm(item: TimelineItem): IcsAlarm {
  */
 export function toEvents(
   items: readonly TimelineItem[],
-  siteUrl: string,
+  siteUrl: string | null,
   bundesland?: Bundesland,
 ): IcsEvent[] {
   return items.map((item) => ({
@@ -150,7 +157,9 @@ export function toEvents(
     date: keyDate(item),
     summary: eventSummary(item),
     description: eventDescription(item, siteUrl, bundesland),
-    url: `${siteUrl}/item/${item.id}`,
+    // ADR-084: omitted rather than guessed. `url` is optional on IcsEvent and
+    // buildCalendar writes no URL line without one, so the entry stays valid.
+    ...(siteUrl ? { url: `${siteUrl}/item/${item.id}` } : {}),
     alarm: eventAlarm(item),
   }));
 }
