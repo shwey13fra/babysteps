@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BabySteps — screen 1, the whole beat</title>
+<style>
+  :root{
+    --paper:#F4F7F7; --surface:#FFFFFF; --ink:#15242B; --ink-2:#4C5F68; --ink-3:#62747B;
+    --rule:#DCE4E4; --de:#0B6B60; --de-soft:#E4EFED; --in:#4A3D8F; --in-soft:#EAE8F5;
+    --warn:#8A5300; --warn-soft:#FBF1DC; --amber:#C98A14; --far:#241C3D;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#E9EEEE;color:var(--ink);
+    font:400 15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:26px 20px 80px}
+  .wrap{max-width:1140px;margin:0 auto}
+  h1{font-size:25px;line-height:31px;font-weight:600;margin:0 0 6px}
+  .sub{color:var(--ink-2);margin:0 0 20px}
+  h2{font-size:17px;font-weight:600;margin:34px 0 6px}
+  h2 .n{font-family:ui-monospace,monospace;font-size:13px;color:var(--ink-3);margin-right:8px}
+  p.k{color:var(--ink-3);font-size:13px;margin:0 0 12px}
+  code{font-family:ui-monospace,monospace;font-size:12.5px;background:var(--paper);padding:1px 5px;border-radius:4px}
+
+  .card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;overflow:hidden;margin-bottom:12px}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:12px 16px;border-bottom:1px solid var(--rule);background:#FBFCFC}
+  .card-head strong{font-size:14px;font-weight:600}
+  .card-head span{color:var(--ink-3);font-size:13px}
+  .btns{display:flex;gap:8px}
+  button.replay{font:inherit;font-size:13px;padding:7px 14px;border:1px solid var(--rule);
+    background:var(--surface);border-radius:999px;color:var(--ink);cursor:pointer;min-height:36px}
+  button.replay:hover{border-color:var(--de);color:var(--de)}
+
+  /* ---------------- the hero ---------------- */
+  .hero{position:relative;overflow:hidden;background:var(--in-soft)}
+  .hero.wide{height:420px}
+  .cloud{position:absolute;background:#fff;border-radius:999px}
+  .cloud::before{content:"";position:absolute;background:#fff;border-radius:999px}
+  .c-a{width:150px;height:30px;top:44px;left:100%;animation:drift 19s linear infinite}
+  .c-a::before{width:70px;height:48px;top:-20px;left:26px}
+  .c-b{width:96px;height:22px;top:150px;left:100%;animation:drift 27s linear infinite;animation-delay:-11s;opacity:.85}
+  .c-b::before{width:46px;height:34px;top:-14px;left:18px}
+  @keyframes drift{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 320px))}}
+
+  .soft path,.soft circle{stroke-linejoin:round;stroke-linecap:round}
+
+  .bird{position:absolute;width:320px;height:200px;left:0;top:40px;
+    animation:cross 4650ms both}
+  .wing-near,.wing-far{transform-box:fill-box;transform-origin:74% 70%}
+  .wing-near{animation:flapNear 1250ms ease-in-out infinite alternate}
+  .wing-far{animation:flapFar 1250ms ease-in-out infinite alternate}
+  @keyframes flapNear{from{transform:rotate(-26deg)}to{transform:rotate(22deg)}}
+  @keyframes flapFar{from{transform:rotate(15deg)}to{transform:rotate(-21deg)}}
+  .sling{transform-box:fill-box;transform-origin:50% 2%;animation:swing 2500ms ease-in-out infinite alternate}
+  @keyframes swing{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+
+  @keyframes cross{
+    0%  {transform:translate(-380px,6px);  animation-timing-function:cubic-bezier(.22,.62,.3,1)}
+    30% {transform:translate(252px,0);     animation-timing-function:ease-in-out}
+    38% {transform:translate(296px,2px);   animation-timing-function:ease-out}
+    46% {transform:translate(372px,-16px); animation-timing-function:cubic-bezier(.4,0,.75,.5)}
+    100%{transform:translate(1620px,-74px)}
+  }
+  .carry{animation:release 4650ms linear both}
+  @keyframes release{0%,37.9%{opacity:1}38%,100%{opacity:0}}
+
+  /* forwards, NOT both: with `both` the browser paints frame 0 during the delay,
+     which is what left a second baby hanging in the sky before the stork arrived. */
+  .falling{position:absolute;left:546px;top:145px;width:52px;opacity:0;
+    animation:fallAway 1160ms 1775ms forwards}
+  @keyframes fallAway{
+    0%  {opacity:1; transform:translate(0,0) rotate(-4deg); animation-timing-function:cubic-bezier(.35,0,.8,.45)}
+    55% {opacity:1; transform:translate(30px,104px) rotate(7deg)}
+    100%{opacity:0; transform:translate(52px,260px) rotate(14deg)}
+  }
+
+  .swarm{position:absolute;left:0;right:0;top:112px;height:150px;pointer-events:none}
+  .bit{position:absolute;font-size:28px;opacity:0;transform-origin:50% 100%;
+    animation:spring 700ms cubic-bezier(.18,1.25,.3,1) both}
+  @keyframes spring{
+    0%  {opacity:0; transform:translateY(48px) scaleY(.5)  scaleX(1.22)}
+    20% {opacity:1; transform:translateY(-24px) scaleY(1.2) scaleX(.86)}
+    40% {transform:translateY(7px)   scaleY(.92) scaleX(1.06)}
+    58% {transform:translateY(-11px) scaleY(1.07) scaleX(.97)}
+    76% {transform:translateY(3px)   scaleY(.98) scaleX(1.01)}
+    90% {transform:translateY(-3px)  scaleY(1.01) scaleX(1)}
+    100%{opacity:1; transform:translateY(0) scaleY(1) scaleX(1)}
+  }
+  /* the paperwork slowly disappears, and only then does the wordmark arrive */
+  .swarm{animation:vanish 700ms 4180ms ease-in forwards}
+  @keyframes vanish{from{opacity:1;transform:translateY(0) scale(1)}
+                    to{opacity:0;transform:translateY(-14px) scale(.9)}}
+
+  /* ---------------- the sheet: wordmark, line, Next ---------------- */
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+    border-radius:20px 20px 0 0;padding:22px 20px 20px;text-align:center;
+    box-shadow:0 -2px 18px rgba(21,36,43,.10);
+    animation:rise 600ms 4820ms cubic-bezier(.2,.9,.25,1) both}
+  @keyframes rise{from{transform:translateY(104%)}to{transform:translateY(0)}}
+
+  .wordmark{font-size:30px;line-height:36px;letter-spacing:.012em;margin:0 0 8px;
+    animation:bolden 560ms 5060ms cubic-bezier(.2,.8,.3,1) both}
+  @keyframes bolden{
+    0%  {opacity:0; font-weight:300; letter-spacing:.09em; transform:translateY(16px)}
+    55% {opacity:1}
+    100%{opacity:1; font-weight:700; letter-spacing:.012em; transform:translateY(0)}
+  }
+  .tag{font-size:14.5px;line-height:21px;color:var(--ink-2);margin:0 0 16px;
+    animation:fadeUp 480ms 5260ms ease-out both}
+  .next{display:block;background:var(--de);color:#fff;border-radius:11px;padding:14px;
+    font-size:15px;font-weight:500;min-height:48px;border:0;width:100%;cursor:pointer;
+    animation:fadeUp 600ms 5400ms ease-out both}
+  .fine{font-size:12px;color:var(--ink-3);margin:10px 0 0;
+    animation:fadeUp 480ms 5560ms ease-out both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .dots{display:flex;gap:6px;justify-content:center;padding:12px 0 0;
+    animation:fadeUp 480ms 5640ms ease-out both}
+  .dots i{width:6px;height:6px;border-radius:50%;background:var(--rule)}
+  .dots i.on{background:var(--de);width:18px;border-radius:3px}
+
+  /* a tap anywhere lands you at the end state immediately */
+  .hero.skip *{animation-delay:0ms !important;animation-duration:1ms !important}
+
+  @media (prefers-reduced-motion: reduce){
+    .hero *{animation:none !important}
+    .bird{transform:translate(296px,2px)}
+    .carry,.falling{opacity:0 !important}
+    .bit,.sheet,.wordmark,.tag,.next,.fine,.dots{opacity:1 !important;transform:none !important}
+    .wordmark{font-weight:700}
+  }
+
+  /* ---------------- phone ---------------- */
+  .row{display:grid;grid-template-columns:330px 1fr;gap:26px;align-items:start}
+  @media (max-width:900px){.row{grid-template-columns:1fr}}
+  .phone{width:330px;border:1px solid var(--rule);border-radius:20px;overflow:hidden;background:var(--surface);
+    box-shadow:0 1px 2px rgba(21,36,43,.04),0 12px 30px rgba(21,36,43,.08)}
+  .phone .hero{height:600px}
+  .phone .bird{width:250px;height:156px;top:70px}
+  .phone .falling{left:420px;top:150px;width:40px}
+  .phone .swarm{top:210px}
+  .phone .bit{font-size:24px}
+  @keyframes crossPhone{
+    0%  {transform:translate(-300px,6px);  animation-timing-function:cubic-bezier(.22,.62,.3,1)}
+    30% {transform:translate(150px,0);     animation-timing-function:ease-in-out}
+    38% {transform:translate(188px,2px);   animation-timing-function:ease-out}
+    46% {transform:translate(250px,-14px); animation-timing-function:cubic-bezier(.4,0,.75,.5)}
+    100%{transform:translate(900px,-60px)}
+  }
+  .phone .bird{animation-name:crossPhone}
+
+  .notes{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:16px 18px}
+  .notes h4{margin:0 0 9px;font-size:14px;font-weight:600}
+  .notes li{font-size:14px;line-height:21px;color:var(--ink-2);margin-bottom:10px}
+  .notes li b{color:var(--ink)}
+  .flag{margin-top:14px;padding:13px 15px;border-left:3px solid var(--warn);background:var(--warn-soft);
+    border-radius:0 8px 8px 0;font-size:14px;line-height:20px}
+  .tl{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+  @media (max-width:900px){.tl{grid-template-columns:repeat(3,1fr)}}
+  .t{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:10px 11px}
+  .t b{display:block;font-size:12.5px;margin-bottom:2px}
+  .t em{font-style:normal;font-family:ui-monospace,monospace;font-size:11px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <template id="storkTpl">
+    <svg class="bird soft" viewBox="0 0 320 200" aria-hidden="true">
+      <path d="M126 96 Q96 108 62 120" stroke="var(--amber)" stroke-width="5" fill="none"/>
+      <path d="M128 103 Q98 117 66 130" stroke="var(--amber)" stroke-width="5" fill="none"/>
+      <path class="wing-far" d="M160 70 Q142 26 96 22 Q128 50 138 88 Q150 92 160 70 Z"
+            fill="var(--far)" stroke="var(--far)" stroke-width="9"/>
+      <path d="M120 76 Q94 62 84 70 Q92 84 118 92 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10"/>
+      <path d="M116 82 Q126 56 168 52 Q206 50 222 64 Q224 80 206 90 Q174 106 142 102 Q120 98 116 82 Z"
+            fill="#FFFFFF" stroke="#FFFFFF" stroke-width="10"/>
+      <path d="M206 62 Q226 34 246 32 Q254 40 250 52 Q230 56 220 78 Q210 76 206 62 Z"
+            fill="#FFFFFF" stroke="#FFFFFF" stroke-width="9"/>
+      <circle cx="250" cy="40" r="13" fill="#FFFFFF"/>
+      <circle cx="256" cy="36" r="2.2" fill="var(--ink)"/>
+      <path d="M261 36 Q292 40 310 44 Q292 48 261 49 Z" fill="var(--amber)" stroke="var(--amber)" stroke-width="4"/>
+      <path class="wing-near" d="M164 66 Q132 116 78 138 Q134 140 168 104 Q172 84 164 66 Z"
+            fill="var(--in)" stroke="var(--in)" stroke-width="10"/>
+      <g class="carry" transform="translate(6,18)">
+        <g class="sling">
+          <path d="M276 44 Q262 86 244 118 Q272 126 300 118 Q288 84 276 44 Z"
+                fill="var(--paper)" stroke="var(--paper)" stroke-width="8"/>
+          <path d="M276 44 Q266 86 252 118 Q258 120 262 119 Q272 84 276 44 Z" fill="#FFFFFF"/>
+          <path d="M246 112 Q246 104 254 104 L272 104 Q280 104 280 112 L280 142 Q280 152 270 152
+                   L256 152 Q246 152 246 142 Z" fill="var(--de)" stroke="var(--de)" stroke-width="6"/>
+          <path d="M268 104 L286 104 Q294 104 294 112 L294 142 Q294 152 284 152 L268 152 Z"
+                fill="var(--in)" stroke="var(--in)" stroke-width="6"/>
+          <path d="M250 112 L290 112 Q294 112 294 116 Q294 120 290 120 L250 120
+                   Q246 120 246 116 Q246 112 250 112 Z" fill="var(--de-soft)"/>
+          <circle cx="270" cy="102" r="15" fill="var(--warn-soft)" stroke="var(--warn-soft)" stroke-width="3"/>
+          <circle cx="264" cy="101" r="1.9" fill="var(--ink)"/>
+          <circle cx="276" cy="101" r="1.9" fill="var(--ink)"/>
+          <path d="M265 108 Q270 112 275 108" stroke="var(--ink)" stroke-width="1.8" fill="none"/>
+          <path d="M258 92 Q270 84 282 92 Q270 89 258 92 Z" fill="var(--ink)" opacity=".5"/>
+        </g>
+      </g>
+    </svg>
+  </template>
+
+  <template id="bundleTpl">
+    <svg class="falling soft" viewBox="0 0 52 70" aria-hidden="true">
+      <g transform="translate(-244,-85)">
+        <path d="M246 112 Q246 104 254 104 L272 104 Q280 104 280 112 L280 142 Q280 152 270 152
+                 L256 152 Q246 152 246 142 Z" fill="var(--de)" stroke="var(--de)" stroke-width="6"/>
+        <path d="M268 104 L286 104 Q294 104 294 112 L294 142 Q294 152 284 152 L268 152 Z"
+              fill="var(--in)" stroke="var(--in)" stroke-width="6"/>
+        <path d="M250 112 L290 112 Q294 112 294 116 Q294 120 290 120 L250 120
+                 Q246 120 246 116 Q246 112 250 112 Z" fill="var(--de-soft)"/>
+        <circle cx="270" cy="102" r="15" fill="var(--warn-soft)" stroke="var(--warn-soft)" stroke-width="3"/>
+        <circle cx="264" cy="101" r="1.9" fill="var(--ink)"/>
+        <circle cx="276" cy="101" r="1.9" fill="var(--ink)"/>
+        <path d="M265 108 Q270 112 275 108" stroke="var(--ink)" stroke-width="1.8" fill="none"/>
+      </g>
+    </svg>
+  </template>
+
+  <template id="swarmTpl">
+    <div class="swarm">
+      <span class="bit" style="left:8%;top:84px;animation-delay:2950ms">📅</span>
+      <span class="bit" style="left:19%;top:48px;animation-delay:3020ms">📄</span>
+      <span class="bit" style="left:30%;top:24px;animation-delay:3090ms">🏛️</span>
+      <span class="bit" style="left:43%;top:14px;animation-delay:3160ms">✍️</span>
+      <span class="bit" style="left:56%;top:24px;animation-delay:3230ms">🗂️</span>
+      <span class="bit" style="left:68%;top:48px;animation-delay:3300ms">📋</span>
+      <span class="bit" style="left:79%;top:80px;animation-delay:3370ms">⏰</span>
+      <span class="bit" style="left:88%;top:104px;animation-delay:3440ms">🖊️</span>
+    </div>
+  </template>
+
+  <template id="sheetTpl">
+    <div class="sheet">
+      <p class="wordmark">BabySteps</p>
+      <p class="tag">Every deadline. Both countries.<br>In English. Sourced.</p>
+      <button class="next">Next</button>
+      <p class="fine">No account, no e-mail. About two minutes.</p>
+      <div class="dots"><i class="on"></i><i></i><i></i></div>
+    </div>
+  </template>
+
+  <h1>Screen 1, the whole beat</h1>
+  <p class="sub">One shot. The stork carries one baby in and drops it, the paperwork springs up and then slowly disappears, and only then does <b>BabySteps</b> rise and thicken into place — and stay, with Next under it.</p>
+
+  <h2><span class="n">1</span>Wide, to judge the motion</h2>
+  <div class="card">
+    <div class="card-head">
+      <strong>One baby in → dropped → paperwork springs → fades → BabySteps → Next</strong>
+      <span>6.0s to the button · plays once · holds</span>
+      <div class="btns">
+        <button class="replay" data-play="wideHero">Play again</button>
+        <button class="replay" data-skip="wideHero">Skip to end</button>
+      </div>
+    </div>
+    <div class="hero wide" id="wideHero"></div>
+  </div>
+
+  <div class="tl">
+    <div class="t"><b>Carrying · one baby</b><em>0 – 1.8s</em></div>
+    <div class="t"><b>Drops it</b><em>1.8s</em></div>
+    <div class="t"><b>Out of frame</b><em>1.8 – 2.9s</em></div>
+    <div class="t"><b>Paperwork springs</b><em>2.9 – 4.1s</em></div>
+    <div class="t"><b>…disappears</b><em>4.2 – 4.9s</em></div>
+    <div class="t"><b>BabySteps · Next</b><em>4.8 – 6.0s</em></div>
+  </div>
+
+  <h2><span class="n">2</span>On the phone, which is where it lives</h2>
+  <div class="row">
+    <div class="phone"><div class="hero" id="phoneHero"></div></div>
+
+    <div>
+      <div class="notes">
+        <h4>Three things I decided while building it — say if any is wrong</h4>
+        <ul>
+          <li><b>Fixed: the second baby.</b> The falling bundle used <code>animation-fill-mode: both</code> with a 2.6s delay, and <code>both</code> tells the browser to paint frame 0 <i>during</i> the delay — so a motionless baby hung in the sky from page load until the stork reached it. It is <code>forwards</code> now, which leaves the element hidden until its moment. One baby, carried in and dropped.</li>
+          <li><b>The paperwork now disappears completely</b> before the wordmark arrives, over a full second, drifting up slightly as it fades. The sky is empty for an instant — that pause is what makes the wordmark land.</li>
+          <li><b>The wordmark thickens rather than just appearing.</b> It comes up from 16px below at weight 300 with open letter-spacing, and lands at 700 with normal spacing. That is what "bolden and come up" reads as in motion.</li>
+          <li><b>Next arrives last and stays put forever.</b> It never moves after it lands, so a thumb already heading for it is never chasing a moving target.</li>
+        </ul>
+        <div class="flag">
+          <b>The one real problem, and it is not cosmetic.</b> The button appears at <b>8.5 seconds</b>. Your own load bar is 2s and M1 is a personalised view in under five minutes — eight and a half seconds of animation before a parent can act is a long time, and on the second visit it is simply an obstacle. So I built in two escapes: <b>a tap anywhere skips straight to the end state</b> (try "Skip to end"), and in the real build the whole sequence should be <b>remembered — seen once, never again</b>; returning visitors land on the held final frame. If you would rather not rely on that, the other lever is to compress: the same six beats fit in about 4.5s without feeling rushed.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const T = id => document.getElementById(id).content.cloneNode(true);
+  function build(hostId){
+    const host = document.getElementById(hostId);
+    host.className = host.className.replace(' skip','');
+    host.innerHTML = '';
+    const ca = document.createElement('div'); ca.className = 'cloud c-a';
+    const cb = document.createElement('div'); cb.className = 'cloud c-b';
+    host.append(ca, cb, T('storkTpl'), T('bundleTpl'), T('swarmTpl'), T('sheetTpl'));
+    host.addEventListener('click', () => host.classList.add('skip'), { once:true });
+  }
+  build('wideHero'); build('phoneHero');
+  document.querySelectorAll('[data-play]').forEach(b =>
+    b.addEventListener('click', () => build(b.dataset.play)));
+  document.querySelectorAll('[data-skip]').forEach(b =>
+    b.addEventListener('click', () => document.getElementById(b.dataset.skip).classList.add('skip')));
+</script>
+</body>
+</html>
