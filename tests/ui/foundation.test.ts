@@ -42,30 +42,65 @@ function code(src: string): string {
 const FONTS_CODE = code(FONTS_TS);
 
 /**
- * The §2 colour table, parsed from the design system. Rows look like:
+ * A colour table from one section of the design system. Rows look like:
  *   | `--paper` | `#F4F7F7` | Page ground |
+ *
+ * Scoped to a section because there are two tables since 2026-11-18 — §2 light
+ * and §2b dark — and a parser that swept the whole document would check the
+ * dark hexes against the light `:root` and report every one of them wrong.
  */
-function tokensFromDesignSystem(): Array<{ token: string; hex: string }> {
+function tokensFromSection(heading: string, until: string): Array<{ token: string; hex: string }> {
+  const from = DESIGN.indexOf(heading);
+  if (from === -1) throw new Error(`design-system.md has no section "${heading}"`);
+  const to = DESIGN.indexOf(until, from + heading.length);
+  if (to === -1) throw new Error(`design-system.md has no section "${until}" after "${heading}"`);
   const out: Array<{ token: string; hex: string }> = [];
-  for (const line of DESIGN.split("\n")) {
+  for (const line of DESIGN.slice(from, to).split("\n")) {
     const m = line.match(/^\|\s*`(--[a-z0-9-]+)`\s*\|\s*`(#[0-9A-Fa-f]{6})`\s*\|/);
     if (m) out.push({ token: m[1], hex: m[2] });
   }
   return out;
 }
 
-describe("design tokens come from design-system.md §2", () => {
-  const tokens = tokensFromDesignSystem();
+/** The `:root` that carries the light scheme, and the one inside the dark query. */
+function cssBlock(scheme: "light" | "dark"): string {
+  if (scheme === "light") {
+    const at = CSS.indexOf(":root {");
+    return CSS.slice(at, CSS.indexOf("\n}", at));
+  }
+  const at = CSS.indexOf("@media (prefers-color-scheme: dark)");
+  if (at === -1) throw new Error("app/globals.css declares no dark colour scheme");
+  return CSS.slice(at, CSS.indexOf("\n  }", at));
+}
 
-  it("finds the colour table at all", () => {
-    // Guards the parser: if the table moves or its formatting changes, every
+const LIGHT_TOKENS = tokensFromSection("## 2. Colour", "## 2b.");
+const DARK_TOKENS = tokensFromSection("## 2b. Colour", "## 3. Type");
+
+describe("design tokens come from design-system.md §2", () => {
+  it("finds both colour tables at all", () => {
+    // Guards the parser: if a table moves or its formatting changes, every
     // assertion below would vacuously pass on an empty list.
-    expect(tokens.length).toBe(15);
+    expect(LIGHT_TOKENS.length).toBe(20);
+    expect(DARK_TOKENS.length).toBe(20);
+    // And guards against both names resolving to the same block.
+    expect(LIGHT_TOKENS).not.toEqual(DARK_TOKENS);
   });
 
-  it.each(tokensFromDesignSystem())("declares $token as $hex", ({ token, hex }) => {
-    const decl = CSS.match(new RegExp(`${token}\\s*:\\s*(#[0-9A-Fa-f]{6})`));
-    expect(decl, `${token} is not declared in app/globals.css`).not.toBeNull();
+  it("documents the same tokens in both schemes", () => {
+    // A token that exists in one scheme and not the other is a screen that is
+    // half-themed, which is the defect ADR-087 was written about.
+    expect(DARK_TOKENS.map((t) => t.token).sort()).toEqual(LIGHT_TOKENS.map((t) => t.token).sort());
+  });
+
+  it.each(LIGHT_TOKENS)("declares $token as $hex in the light scheme", ({ token, hex }) => {
+    const decl = cssBlock("light").match(new RegExp(`${token}\\s*:\\s*(#[0-9A-Fa-f]{6})`));
+    expect(decl, `${token} is not declared in :root`).not.toBeNull();
+    expect(decl?.[1]?.toLowerCase()).toBe(hex.toLowerCase());
+  });
+
+  it.each(DARK_TOKENS)("declares $token as $hex in the dark scheme", ({ token, hex }) => {
+    const decl = cssBlock("dark").match(new RegExp(`${token}\\s*:\\s*(#[0-9A-Fa-f]{6})`));
+    expect(decl, `${token} is not declared in the dark scheme`).not.toBeNull();
     expect(decl?.[1]?.toLowerCase()).toBe(hex.toLowerCase());
   });
 

@@ -26,6 +26,15 @@ Add a row below in the same commit that adds the ADR.
 | 020 | Glossary triggers match real phrasing; one phrasing excluded to protect ADR-009 | accepted |
 | 021 | BEEG §1(8) is reached through the lexical half, not by re-chunking §1 | accepted |
 
+<!-- 022–085 are NOT indexed. The "add a row in the same commit" rule above stopped being
+     followed after 021; the files exist in this directory and are the source of truth. Noticed
+     2026-11-18 while adding 086. Backfilling is a separate job and has not been done — this note
+     is here so the gap is visible rather than being mistaken for "there are no ADRs after 021". -->
+
+| 086 | The brochure may move, the instrument may not — motion is permitted on `/` only | accepted, amends design-system §6 |
+| 087 | A dark scheme, measured rather than asserted | accepted, adds design-system §2b |
+| 088 | A rule may say how to start, not only when it is due | accepted, adds `how_to` to the rule schema |
+
 ## Reserved numbers
 
 Assigned by the source documents before the work started. Keep these free.

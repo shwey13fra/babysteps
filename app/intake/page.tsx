@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { todayISO } from "@/lib/timeline/dates";
 import { writeProfile, storageAvailable } from "@/lib/ui/profile-store";
 import { QUESTIONS, TOTAL, dotLit, toProfile, validate, type Draft } from "./questions";
+import BackButton from "../back-button";
 
 export default function IntakePage() {
   const router = useRouter();
@@ -70,6 +71,15 @@ export default function IntakePage() {
 
   return (
     <>
+      <div className="topbar">
+        {step > 0 ? (
+          <BackButton
+            onClick={onBack}
+            label={atReview ? "Back to the last question" : `Back to question ${step} of ${TOTAL}`}
+          />
+        ) : null}
+      </div>
+
       <div className="dots" role="progressbar" aria-valuemin={1} aria-valuemax={TOTAL} aria-valuenow={Math.min(step + 1, TOTAL)} aria-label={`Question ${Math.min(step + 1, TOTAL)} of ${TOTAL}`}>
         {QUESTIONS.map((q, i) => (
           <i key={q.key} className={dotLit(i, step) ? "on" : ""} />
@@ -99,7 +109,9 @@ export default function IntakePage() {
                     {choice.note ? <em>{choice.note}</em> : null}
                   </button>
                 ))}
-                {error ? <span className="field err">{error}</span> : null}
+                <span className="field err" role="alert">
+                  {error ?? ""}
+                </span>
               </>
             ) : (
               <>
@@ -117,25 +129,15 @@ export default function IntakePage() {
                     aria-invalid={error !== null}
                     aria-describedby={error ? "intake-error" : undefined}
                   />
-                  {error ? (
-                    <span className="err" id="intake-error">
-                      {error}
-                    </span>
-                  ) : null}
+                  <span className="err" id="intake-error" role="alert">
+                    {error ?? ""}
+                  </span>
                 </label>
                 <button type="button" className="btn-primary" onClick={onContinue}>
                   Continue
                 </button>
               </>
             )}
-
-            <div className="nav">
-              {step > 0 ? (
-                <button type="button" className="back" onClick={onBack}>
-                  Back
-                </button>
-              ) : null}
-            </div>
 
             <p className="meta" style={{ marginTop: "18px" }}>
               No account, no e-mail. Your answers stay on this phone.
@@ -183,17 +185,14 @@ export default function IntakePage() {
               </div>
             )}
 
-            {error ? <span className="field err">{error}</span> : null}
+            <span className="field err" role="alert">
+              {error ?? ""}
+            </span>
 
             <button type="button" className="btn-primary" onClick={onFinish}>
               Show my timeline
             </button>
 
-            <div className="nav">
-              <button type="button" className="back" onClick={onBack}>
-                Back
-              </button>
-            </div>
           </>
         )}
       </div>

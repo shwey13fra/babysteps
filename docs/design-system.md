@@ -39,10 +39,53 @@ Cool paper rather than cream — cream plus a teal accent is the current house s
 | `--stop` | `#96282A` | Overdue — text |
 | `--stop-soft` | `#FAEAE9` | Overdue chip ground |
 | `--done` | `#5C7077` | Completed items |
+| `--on-de` | `#FFFFFF` | The label on a `--de` fill — the primary button. Was hard-coded until 2026-11-18 (ADR-087) |
+| `--accent` | `#2D4EA8` | **The action colour, product-wide**: buttons, links, focus rings, selected states. Deliberately neither `--de` nor `--in` — those two are the tracks, and painting actions in either would make "belongs to the German office" and "is a button" the same colour. Measured 26° off the consular violet (hue 224 against 250) |
+| `--on-accent` | `#FFFFFF` | The label on an `--accent` fill |
+| `--skeleton` | `#EDF1F1` | The wait-state bars. Likewise |
+| `--art-far` | `#15242B` | The stork's far wing. The one illustration colour that cannot be a text token — see §2b |
 
 Every text-on-fill pairing above clears WCAG AA at body size. This was a claim until 2026-11-12, when axe-core measured the rendered pages and found it false: `--ink-3` was `#7B8F96` at **3.13:1** and `--done` was `#93A6AB` at **2.35:1** against `--paper`, the only accessibility defect in the product across seven routes. Both were darkened to the values above, which hold the hue and clear 4.5:1 on `--paper` (4.53 and 4.83) and on `--surface` (4.88 and 5.20). See ADR-073. `--ink-3` is still restricted to 13px metadata and never used for anything a user must read to act; `--done` is now within one step of it, so **colour is no longer what distinguishes a done row** - the hollow dot and the dropped chip are (ADR-072). The amber and red are dark enough to read as text rather than as warning-light decoration, which is deliberate: this product should never look like it is flashing at a pregnant person.
 
 Colour never carries meaning alone. The two tracks also differ by label and by a 3px left border; urgency also differs by a written phrase ("in 9 days").
+
+## 2b. Colour — dark
+
+Added 2026-11-18 (ADR-087). Until then there was **no dark scheme at all**: no `prefers-color-scheme`
+rule anywhere in the product and no `color-scheme` declaration, so a phone set to dark rendered a
+page that had never been designed for it, with a white `#fff` hard-coded into the primary button.
+
+| Token | Hex | Note |
+| --- | --- | --- |
+| `--paper` | `#0E1619` | Cool near-black. Not `#000`: pure black halates under light text, and it would lose the one thing the light scheme is built on — that the paper is cool rather than cream |
+| `--surface` | `#172227` | |
+| `--ink` | `#E6EDEF` | |
+| `--ink-2` | `#AEBFC6` | |
+| `--ink-3` | `#92A4AC` | Still restricted to 13px metadata |
+| `--rule` | `#2A383D` | |
+| `--de` | `#5CCBBA` | Lifted, not re-hued — still the German green at a glance |
+| `--de-soft` | `#12302C` | |
+| `--in` | `#B0A4F2` | Still the consular violet |
+| `--in-soft` | `#231F3D` | |
+| `--warn` | `#E3A74A` | |
+| `--warn-soft` | `#2E2310` | |
+| `--stop` | `#F49490` | |
+| `--stop-soft` | `#331715` | |
+| `--done` | `#8D9FA7` | Within one step of `--ink-3`, so colour still never marks a done row (ADR-072) |
+| `--on-de` | `#05221E` | New in both schemes. The label on a `--de` fill — the one pairing a dark set cannot inherit, because in dark `--de` is a light teal and white on it reads at about 1.4:1 |
+| `--accent` | `#8AA6FF` | Still 23° off the dark scheme's `--in` (226 against 249) |
+| `--on-accent` | `#0B1430` | |
+| `--skeleton` | `#1E2C31` | The wait-state bars. A hard-coded light grey is a bright flash in a dark room |
+| `--art-far` | `#6B5BB5` | The stork's far wing. The body is `#FFFFFF` in **both** schemes, so this must stay darker than white in both — `--ink` goes near-white here and the wing dissolves into the body at about 1.14:1. It must also separate from the dark violet sky, which rules out `--in-soft`. Found by looking at the rendered page; no contrast arithmetic would have caught it, because the pairing is picture against picture |
+
+**These are measured, not claimed.** §2 above carried the sentence "every pairing clears WCAG AA"
+for three weeks while it was false. `tests/ui/contrast.test.ts` now computes all 21 pairings from
+the stylesheet itself, in both schemes, and fails with the pairing and the number if any hex moves.
+The worst pairing in dark is **5.91:1**; in light it is **4.53:1**.
+
+The amber and the red are lifted the same amount as everything else and no further. This product
+must never look like it is flashing at a pregnant person, and that is more true in a dark room at
+four in the morning, which is when this screen will actually be read.
 
 ## 3. Type
 
@@ -123,7 +166,31 @@ The today band is the only full-bleed element and the only place with a 2px rule
 
 ## 6. Motion
 
-One transition: the birth-date diff on F2b, where the dates that changed animate from old value to new over 400ms. That interaction is the product proving it works, so it earns the motion budget. Nothing else moves. `prefers-reduced-motion` replaces it with a static before/after.
+**The brochure may move. The instrument may not.** (Amended 2026-11-18, ADR-086.)
+
+Motion is permitted on `/` before any due date has been entered. `/` is the only screen in the
+product whose job is *"this is for me"* rather than *"this is accurate"*: nothing on it is counted
+from a due date, nothing on it cites a statute, and nobody acts on it. Warmth and a cartoon
+register are allowed there, and stop at the CTA.
+
+Everywhere else the original rule stands unchanged. `/timeline`, `/item/[id]`, `/birth`, `/ask` and
+`/share/[token]` have **one** transition: the birth-date diff on F2b, where the dates that changed
+animate from old value to new over 400ms. That interaction is the product proving it works, so it
+earns the motion budget. Nothing else moves.
+
+**Control feedback is not motion.** Amended 2026-11-18. A button answering the pointer or the
+thumb that is on it — hover, pressed, focus — within 160ms is feedback, not decoration: it never
+starts on its own initiative, and its absence is a defect rather than restraint. Hover rules sit
+behind `@media (hover: hover)`, because on a touch screen `:hover` sticks after the tap and leaves
+the last control pressed. There are still **no route transitions anywhere**.
+
+`prefers-reduced-motion` replaces the diff with a static before/after, collapses the landing
+sequence to its held final frame, and removes the control feedback above with it.
+
+This is a fence, not a repeal, and it is enforced rather than trusted: every animated selector for
+the landing is scoped under `.landing`, and `tests/ui/landing.test.ts` fails if one escapes — the
+fence is otherwise one `className` away from leaking onto the screen a frightened person reads for
+a date.
 
 ## 7. Voice
 

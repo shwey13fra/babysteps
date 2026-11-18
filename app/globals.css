@@ -31,6 +31,39 @@
   --stop-soft: #faeae9;
   --done: #5c7077;
 
+  /* Text on a --de fill. Was a hard-coded #fff on .btn-primary, which is the
+     one pairing a dark set cannot simply invert: in dark mode --de is a light
+     teal and white on it reads at 1.4:1. ADR-087. */
+  --on-de: #ffffff;
+
+  /* THE ACTION COLOUR, product-wide: buttons, links, focus, selected states.
+     Ruled 2026-11-18.
+
+     It is deliberately NOT --de and NOT --in. Those two are the GERMAN TRACK
+     and the CONSULAR TRACK, and design-system.md §2 calls that split the
+     product's differentiator — painting actions in either one would make "this
+     deadline belongs to the German office" and "this is a button" the same
+     colour. So the chrome gets its own hue, measured 26 degrees off the
+     consular violet (224 against 250) so the two never read as the same thing
+     on a timeline row that carries both. */
+  --accent: #2d4ea8;
+  --on-accent: #ffffff;
+  /* The wait-state bars. Not a semantic colour, but it was hard-coded, and a
+     hard-coded light grey is a bright flash in a dark room. */
+  --skeleton: #edf1f1;
+  /* The stork's far wing, the one behind the body. The ONLY illustration
+     colour that cannot be a text token: the stork's body is #FFFFFF in both
+     schemes, so this has to stay darker than white in both, and --ink does not
+     (it is near-white in dark, where the wing then dissolves into the body at
+     about 1.14:1). Added 2026-11-18 with the dark scheme, not before. */
+  --art-far: #15242b;
+
+  /* Tells the browser both schemes are real, so its own chrome — the date
+     picker, scrollbars, form controls, the flash before first paint — follows
+     the page instead of guessing. The date input on /intake and /birth is a UA
+     widget we do not draw ourselves, so this is not cosmetic. */
+  color-scheme: light dark;
+
   /* §4: the 56px date gutter is the one structural decision that makes the
      timeline read as a deadline instrument rather than a task list. */
   --gutter: 56px;
@@ -43,6 +76,66 @@
     -apple-system, sans-serif;
   --mono: var(--font-plex-mono), var(--font-plex-mono-ext), ui-monospace, "SF Mono", Menlo,
     monospace;
+}
+
+/* --------------------------------------------------------------------------
+   §2b Colour — dark
+   --------------------------------------------------------------------------
+
+   ADR-087. Added 2026-11-18, having not existed at all: there was no
+   prefers-color-scheme rule anywhere in the product, and no color-scheme
+   declaration, so a phone set to dark was rendering a page that had never been
+   designed for it.
+
+   NOT AN INVERSION. Every value below was chosen and then MEASURED, because
+   ADR-073 is what happens when a contrast claim is written down instead:
+   --ink-3 was asserted to clear AA and was at 3.13:1 for three weeks.
+   tests/ui/contrast.test.ts now computes all 21 pairings from the stylesheet
+   itself, in both schemes, so neither set can drift. The worst pairing here is
+   5.91:1; in light it is 4.53:1.
+
+   The two track colours are lifted rather than re-hued, so --de is still the
+   German green and --in is still the consular violet at a glance. The amber and
+   the red are lifted the same way and no further: this product must never look
+   like it is flashing at a pregnant person, and that is MORE true in a dark
+   room at four in the morning, which is when this screen will actually be read.
+
+   The ground is a cool near-black rather than pure black. Pure black with light
+   text halates, and #000 would also drop the one thing the light scheme is
+   built on — that the paper is cool rather than cream.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e1619;
+    --surface: #172227;
+    --ink: #e6edef;
+    --ink-2: #aebfc6;
+    --ink-3: #92a4ac;
+    --rule: #2a383d;
+    --de: #5ccbba;
+    --de-soft: #12302c;
+    --in: #b0a4f2;
+    --in-soft: #231f3d;
+    --warn: #e3a74a;
+    --warn-soft: #2e2310;
+    --stop: #f49490;
+    --stop-soft: #331715;
+    /* ADR-072 holds in both schemes: --done sits within one step of --ink-3, so
+       colour is NOT what distinguishes a done row. The hollow dot and the
+       dropped chip are. */
+    --done: #8d9fa7;
+    /* --de is now a light teal, so the primary button's label goes dark. */
+    --on-de: #05221e;
+    /* Still 23 degrees off the dark scheme's --in (226 against 249). */
+    --accent: #8aa6ff;
+    --on-accent: #0b1430;
+    --skeleton: #1e2c31;
+    /* Mid violet: it has to separate from the white body AND from the dark
+       violet sky behind it. --ink would vanish into the body, --in-soft into
+       the sky. */
+    --art-far: #6b5bb5;
+  }
 }
 
 *,
@@ -190,30 +283,127 @@ code,
 
 .btn-primary {
   font: 500 15px/20px var(--sans);
-  background: var(--de);
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   border: 0;
-  border-radius: 10px;
-  padding: 11px 16px;
+  /* A pill. The reference the human gave (a healthcare landing by Musemind)
+     uses fully-rounded primary actions, and at full width on a phone a pill
+     reads as a thing to press in a way a 10px rectangle does not. The style
+     is followed; nothing was copied. */
+  border-radius: 999px;
+  padding: 13px 22px;
   cursor: pointer;
   width: 100%;
-  /* 44px minimum touch target. */
-  min-height: 44px;
+  /* Was 44px, the accessibility floor. 48 is the floor plus room. */
+  min-height: 48px;
+  box-shadow: 0 1px 2px rgb(21 36 43 / 8%);
+  transition:
+    background-color 160ms ease-out,
+    box-shadow 160ms ease-out,
+    transform 120ms ease-out;
 }
 
 .btn-ghost {
   font: 500 15px/20px var(--sans);
   background: transparent;
-  color: var(--de);
+  color: var(--accent);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 10px 14px;
+  border-radius: 999px;
+  padding: 12px 20px;
   cursor: pointer;
-  min-height: 44px;
+  min-height: 48px;
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    transform 120ms ease-out;
+}
+
+/* --- the way back, top-left ---------------------------------------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  /* Reserves the row even on step one, where there is nothing to go back to,
+     so the progress bar below does not jump up and down between questions. */
+  min-height: 48px;
+  padding: 6px 10px 0;
+}
+
+.back-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* The target floor. A bare chevron is about 20px and nowhere near it. */
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    background-color 140ms ease-out,
+    color 140ms ease-out,
+    transform 120ms ease-out;
+}
+
+.back-arrow svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+@media (hover: hover) {
+  .back-arrow:hover {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--ink);
+  }
+}
+
+.back-arrow:active {
+  transform: scale(0.92);
+}
+
+/* --------------------------------------------------------------------------
+   Control feedback
+   --------------------------------------------------------------------------
+
+   §6 governs MOTION — content that moves on its own. This is FEEDBACK: a
+   control answering the finger or the pointer that is on it, within 160ms, and
+   never on its own initiative. Ruled 2026-11-18 alongside ADR-086, which is
+   untouched: no route transitions, and the instrument still does not move.
+
+   Hover is behind `@media (hover: hover)`. On a touch screen a :hover rule
+   sticks after the tap and leaves the last-pressed control looking pressed. */
+
+@media (hover: hover) {
+  .btn-primary:hover {
+    background: color-mix(in srgb, var(--accent) 88%, var(--ink));
+    box-shadow: 0 3px 10px rgb(21 36 43 / 14%);
+    transform: translateY(-1px);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+
+  .choice:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--rule));
+  }
+}
+
+/* Pressed. Applies on touch as well, which is where it matters most: it is the
+   only confirmation a thumb gets that the tap landed. */
+.btn-primary:active,
+.btn-ghost:active,
+.choice:active {
+  transform: scale(0.985);
 }
 
 a {
-  color: var(--de);
+  color: var(--accent);
 }
 
 /* --------------------------------------------------------------------------
@@ -268,7 +458,7 @@ a {
    -------------------------------------------------------------------------- */
 
 :focus-visible {
-  outline: 2px solid var(--de);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -448,8 +638,13 @@ a {
   text-decoration: none;
 }
 
-.item h3 a:hover {
-  text-decoration: underline;
+/* Guarded like every other hover rule (§6, amended 2026-11-18). Pre-dates that
+   amendment: on a touch screen this left the last-tapped row title underlined
+   until something else was tapped. */
+@media (hover: hover) {
+  .item h3 a:hover {
+    text-decoration: underline;
+  }
 }
 
 .item .line {
@@ -556,7 +751,10 @@ a {
 .prompt {
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-left: 3px solid var(--de);
+  /* The prompt asks the reader to do something, so it is chrome, not a track
+     marker. The 3px left border on an ITEM row means jurisdiction; here it
+     means "this is the thing to act on". */
+  border-left: 3px solid var(--accent);
   border-radius: 10px;
   padding: 13px 15px;
   margin: 0 18px 20px;
@@ -605,7 +803,7 @@ a {
   display: block;
   height: 11px;
   border-radius: 3px;
-  background: #edf1f1;
+  background: var(--skeleton);
   margin-bottom: 9px;
 }
 
@@ -639,7 +837,7 @@ a {
 }
 
 .dots i.on {
-  background: var(--de);
+  background: var(--accent);
 }
 
 .choice {
@@ -648,13 +846,19 @@ a {
   text-align: left;
   background: var(--surface);
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  padding: 14px 15px;
-  margin: 0 0 9px;
+  /* Not a pill: these hold two lines of text, and a pill around a paragraph
+     reads as a tag rather than as a choice. */
+  border-radius: 14px;
+  padding: 15px 16px;
+  margin: 0 0 10px;
   font: 400 15px/21px var(--sans);
   color: var(--ink);
   cursor: pointer;
-  min-height: 44px;
+  min-height: 48px;
+  transition:
+    border-color 140ms ease-out,
+    box-shadow 140ms ease-out,
+    transform 120ms ease-out;
 }
 
 .choice b {
@@ -669,8 +873,8 @@ a {
 }
 
 .choice[aria-pressed="true"] {
-  border-color: var(--de);
-  box-shadow: inset 0 0 0 1px var(--de);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .field {
@@ -690,34 +894,42 @@ a {
   font: 400 17px/24px var(--sans);
   padding: 12px 14px;
   border: 1px solid var(--rule);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--surface);
   color: var(--ink);
-  min-height: 44px;
+  min-height: 48px;
+  transition: border-color 140ms ease-out;
 }
 
-.field .err {
+.field input:focus {
+  border-color: var(--accent);
+}
+
+/* Was `.field .err` until 2026-11-18, which is a DESCENDANT selector and so
+   never matched `<span class="field err">` — one element carrying both classes.
+   Two of the product's four error sites are written that way (the intake choice
+   screens and the intake review screen), and both have been rendering their
+   error as ordinary 15px --ink body text since they were built. Measured, not
+   reasoned: a probe element returned rgb(21,36,43) at 15px/24px where it should
+   have returned rgb(150,40,42) at 13px/18px.
+
+   The same shape as the <use> shadow tree and the fill-mode: the class was
+   written, the rule existed, and the two were never connected. Nothing errored
+   and the screen looked plausible, because an error message in body text still
+   reads as a sentence. */
+.err {
   display: block;
   font: 400 13px/18px var(--sans);
   color: var(--stop);
   margin-top: 6px;
 }
 
-.nav {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: 18px;
-}
-
-.nav .back {
-  font: 500 15px/20px var(--sans);
-  background: transparent;
-  color: var(--ink-2);
-  border: 0;
-  padding: 11px 4px;
-  cursor: pointer;
-  min-height: 44px;
+/* The error containers are permanent live regions now (role="alert"): a span
+   inserted into the DOM is announced unreliably, while text changing inside a
+   region that is already there is announced consistently. Empty, it must cost
+   nothing — no line box and no margin. */
+.err:empty {
+  margin-top: 0;
 }
 
 /* ==========================================================================
@@ -1031,7 +1243,7 @@ a {
    ========================================================================== */
 
 .banner {
-  border-left: 3px solid var(--de);
+  border-left: 3px solid var(--accent);
   background: var(--surface);
   border-radius: 10px;
   padding: 12px 14px;
@@ -1059,4 +1271,610 @@ a {
 
 .banner.stale span {
   color: var(--warn);
+}
+
+/* ==========================================================================
+   Phase 7 stage H — the landing sequence (`/` only)
+   ==========================================================================
+
+   ADR-086: the brochure may move, the instrument may not. EVERY animated
+   declaration below is scoped under `.landing[data-motion="playing"]`, and
+   tests/ui/landing.test.ts fails if one escapes that scope. The fence between
+   this screen and /timeline is otherwise one selector away from leaking.
+
+   THE BASE STATE IS THE RESTED STATE. Nothing here needs a separate block for
+   `prefers-reduced-motion`, for the Skip button, or for a returning visitor:
+   the plain, un-animated rules below already paint the held final frame, and an
+   animation is only ever added on top of it while the sequence is playing. So
+   the global reduced-motion rule (`animation: none`) lands on the right picture
+   by construction rather than by a second description of it that could drift.
+
+   TIMING IS NOT WRITTEN TWICE. Every delay and duration is a custom property
+   here and a field of TIMING in lib/ui/landing.ts, and the test reads this file
+   back and asserts the two agree. A number that lives only inside a keyframe
+   block is unguardable — which is how 2026-11-17 shipped an animation that
+   painted a second baby and reported success.
+   -------------------------------------------------------------------------- */
+
+.landing {
+  /* Beat 1-3: the stork crosses, drops, the baby falls out of frame. */
+  --t-cross-delay: 0ms;
+  --t-cross-dur: 2900ms;
+  --t-release-delay: 0ms;
+  --t-release-dur: 2900ms;
+  --t-fall-delay: 1775ms;
+  --t-fall-dur: 1160ms;
+  /* The clouds leave when the stork does. */
+  --t-clouds-delay: 0ms;
+  --t-clouds-dur: 3400ms;
+  /* Beat 4-5: the paperwork springs out of the floor, then disappears. */
+  --t-spring-delay: 2950ms;
+  --t-spring-dur: 700ms;
+  --t-vanish-delay: 4180ms;
+  --t-vanish-dur: 700ms;
+  /* Beat 6: the sheet rises and BabySteps thickens into place. The gap after
+     the paperwork vanishes is deliberate — it is what makes the wordmark land
+     rather than arrive in a crowd. */
+  --t-sheet-delay: 4820ms;
+  --t-sheet-dur: 900ms;
+  --t-wordmark-delay: 4900ms;
+  --t-wordmark-dur: 1000ms;
+  --t-tag-delay: 5260ms;
+  --t-tag-dur: 480ms;
+  --t-next-delay: 5400ms;
+  --t-next-dur: 600ms;
+  --t-fine-delay: 5560ms;
+  --t-fine-dur: 480ms;
+  --t-dots-delay: 5640ms;
+  --t-dots-dur: 480ms;
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* The legal pack requires the disclaimer in the footer of EVERY route, so it
+     cannot be dropped from `/`. svh rather than dvh: with the browser chrome
+     showing, screen one fills the viewport exactly and the footer sits honestly
+     below the fold instead of being hidden. Ruled 2026-11-18. */
+  min-height: 100svh;
+  /* The scene is centred in the viewport rather than sitting on the bottom
+     edge. The sky is a fixed band, not a greedy flex child: letting it take
+     all the free space pushed the wordmark to the floor and left a large empty
+     violet area above it, which is only correct while the stork is in it. */
+  justify-content: center;
+  /* One continuous scene. The sky does not stop and a white panel start — the
+     violet resolves into the page ground, so the wordmark sits IN the picture
+     and the footer below it is not a seam. */
+  background: linear-gradient(180deg, var(--in-soft) 0%, var(--in-soft) 46%, var(--paper) 100%);
+}
+
+/* --- the sky ------------------------------------------------------------- */
+
+.l-sky {
+  position: relative;
+  /* Tied to the viewport so the composition holds on a short phone, capped so
+     it does not sprawl on a desktop. */
+  flex: 0 0 auto;
+  height: min(340px, 46svh);
+  overflow: hidden;
+}
+
+/* Screens two and three keep the sky as a band. The stork has done its job on
+   screen one and does not follow the reader into the boundary. */
+.landing[data-screen="boundary"] .l-sky,
+.landing[data-screen="question"] .l-sky {
+  flex: 0 0 104px;
+  min-height: 0;
+}
+
+.landing[data-screen="boundary"] .l-stage,
+.landing[data-screen="question"] .l-stage {
+  display: none;
+}
+
+/* The clouds sit behind the stork — they are earlier in the DOM than
+   `.l-stage`, so they paint under it — and they exist to give it something to
+   fly against. When it goes, they go. The static rule is therefore opacity 0:
+   an empty sky, which is exactly what the sequence ends on. */
+.l-cloud {
+  position: absolute;
+  background: #fff;
+  border-radius: 999px;
+  opacity: 0;
+}
+
+.l-cloud::before {
+  content: "";
+  position: absolute;
+  background: #fff;
+  border-radius: 999px;
+}
+
+.l-cloud-a {
+  width: 150px;
+  height: 30px;
+  top: 206px;
+  left: 6%;
+  /* The nearer cloud, so it travels further in the same time. */
+  --drift: -170px;
+}
+
+.l-cloud-a::before {
+  width: 70px;
+  height: 48px;
+  top: -20px;
+  left: 26px;
+}
+
+.l-cloud-b {
+  width: 96px;
+  height: 22px;
+  top: 38px;
+  left: 54%;
+  --drift: -96px;
+}
+
+.l-cloud-b::before {
+  width: 46px;
+  height: 34px;
+  top: -14px;
+  left: 18px;
+}
+
+/* One fixed-width stage so every coordinate below is deterministic rather than
+   a function of the viewport. The sky clips it; the stage itself does not. */
+.l-stage {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 380px;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+/* --- the stork ----------------------------------------------------------- */
+
+.l-bird {
+  position: absolute;
+  left: 0;
+  top: 56px;
+  width: 250px;
+  height: 156px;
+  /* THE INVARIANT: this transform and the 100% frame of `l-cross` must be the
+     same value. The sequence ends on this frame, so the static rule has to BE
+     that frame — otherwise settling to it moves the bird.
+
+     It did. Until 2026-11-18 the animation ended off-frame and this rule said
+     translate(74px, 2px), mid-sky: measured as a 545px jump across a 560px
+     frame at t=6.12s, when the sequence finished and the stork teleported back
+     into the middle of the sky and sat there.
+
+     The stork LEAVES, so this is the off-frame position. The sky is meant to
+     be empty once the sequence is over. */
+  transform: translate(620px, -70px);
+}
+
+.l-bird path,
+.l-bird circle {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.l-wing-near,
+.l-wing-far {
+  transform-box: fill-box;
+  transform-origin: 74% 70%;
+}
+
+.l-sling {
+  transform-box: fill-box;
+  transform-origin: 50% 2%;
+}
+
+/* Rested: the sling is already gone, so no baby is painted without the motion
+   that explains where it went. */
+.l-carry {
+  opacity: 0;
+}
+
+.l-falling {
+  position: absolute;
+  /* Lands exactly where the sling is at the moment of release: the bird
+     translated 74px, with the baby centred 216px into a 250px-wide drawing. */
+  left: 270px;
+  top: 137px;
+  width: 40px;
+  opacity: 0;
+}
+
+.l-falling path,
+.l-falling circle {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* --- the paperwork ------------------------------------------------------- */
+
+.l-swarm {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 210px;
+  pointer-events: none;
+}
+
+/* 42px, not 30px. At 30 they read as specks in a thin line rather than as a
+   pile of officialdom springing up, which is the one thing this beat has to
+   communicate before it disappears again. */
+.l-bit {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  opacity: 0;
+  transform-origin: 50% 100%;
+}
+
+.l-bit svg {
+  display: block;
+  width: 42px;
+  height: 42px;
+}
+
+/* A shallow arch, peaking in the middle — a pile, not a row. */
+.l-bit:nth-child(1) { left: 4%; bottom: 26px; }
+.l-bit:nth-child(2) { left: 16%; bottom: 74px; }
+.l-bit:nth-child(3) { left: 29%; bottom: 112px; }
+.l-bit:nth-child(4) { left: 42%; bottom: 132px; }
+.l-bit:nth-child(5) { left: 55%; bottom: 124px; }
+.l-bit:nth-child(6) { left: 67%; bottom: 92px; }
+.l-bit:nth-child(7) { left: 78%; bottom: 52px; }
+.l-bit:nth-child(8) { left: 87%; bottom: 18px; }
+
+/* The way back, mirroring Skip across the top of the scene. */
+.landing .back-arrow {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+/* --- the skip control ---------------------------------------------------- */
+
+/* The prototype skipped on a click anywhere on a div: no keyboard path, no
+   accessible name, no visible control. Auto-advancing content needs a real
+   one. Click-anywhere survives as well, because tired thumbs use it. */
+.l-skip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font: 400 13px/18px var(--sans);
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  padding: 13px 14px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+/* --- the sheet ----------------------------------------------------------- */
+
+.l-sheet {
+  position: relative;
+  padding: 4px 24px 24px;
+  /* Centred on the landing ONLY. design-system.md §3 sets left-aligned
+     everywhere, and that still governs the timeline, the item pages and the
+     answers — a date gutter cannot be centred. This is the brochure, it is one
+     short line per row, and ADR-086's fence is what makes the exception
+     containable: it stops at the CTA, like the motion and the warmth. */
+  text-align: center;
+}
+
+/* AND THE CHILDREN HAVE TO BE NAMED, which is not obvious and was wrong for
+   two rounds: §3 is enforced by `body, p, li, h1, h2, h3, h4 { text-align:
+   left }`, a selector that matches these elements DIRECTLY. A matching rule
+   always beats an inherited value, so `text-align: center` on the parent never
+   reached a single word of the text — the block above was inherited by the
+   container and overridden on every child inside it. Reported centred and was
+   not; measured afterwards, `.l-sheet` computed `center` while its own `<h1>`
+   and `<p>` computed `left`. */
+.landing .l-wordmark,
+.landing .l-heading,
+.landing .l-body,
+.landing .l-fine {
+  text-align: center;
+}
+
+/* §3: left-aligned everywhere. The prototype centred this sheet, which is the
+   house style of every onboarding carousel and not of this product. Keeping it
+   left means the landing is recognisably the same instrument as the timeline
+   the reader meets ninety seconds later. */
+.l-wordmark {
+  font: 600 30px/36px var(--sans);
+  letter-spacing: 0.012em;
+  margin: 0 0 8px;
+}
+
+.l-heading {
+  /* §3 screen title. */
+  font: 600 27px/32px var(--sans);
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+
+.landing[data-screen="promise"] .l-heading {
+  /* On screen one the heading is the promise itself, under the wordmark. */
+  font: 400 17px/24px var(--sans);
+  letter-spacing: 0;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+}
+
+.l-body {
+  font: 400 15px/24px var(--sans);
+  color: var(--ink-2);
+  margin: 0 0 10px;
+}
+
+.landing .l-next {
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  /* The design fixes this at 48px, full width, and it never moves after it
+     lands. It is also in the DOM and focusable from the first frame: a parent
+     who cannot act for six seconds is the failure this was built to avoid. */
+  margin-top: 10px;
+  /* Colour, radius, padding, height and feedback all come from .btn-primary
+     now. The landing briefly carried its own violet override; since the whole
+     product moved onto --accent on 2026-11-18 there is nothing left to
+     override, and one CTA that looks the same everywhere is the point. */
+}
+
+.l-fine {
+  font: 400 13px/18px var(--sans);
+  /* --ink-2, NOT --ink-3. Measured on the violet ground: --ink-3 is 4.03:1
+     there, under AA. It clears 4.53 on --paper, which is the only ground it
+     was ever checked against, so moving this text onto the sky was enough to
+     break it. --ink-2 is 5.52. */
+  color: var(--ink-2);
+  margin: 12px 0 0;
+}
+
+.l-nav {
+  display: flex;
+  justify-content: center;
+}
+
+.landing .l-dots {
+  width: 100%;
+  max-width: 190px;
+  padding: 20px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Everything below this line moves. Nothing below this line is reachable from
+   any route but `/`, and the test proves it.
+   -------------------------------------------------------------------------- */
+
+/* One finite pass, not an `infinite` drift: an infinite animation has no final
+   frame, so nothing can guarantee it matches the static rule. This one ends at
+   opacity 0, which the static rule also gives, so settling moves nothing.
+   Linear, because a constant-rate drift is what parallax is. */
+.landing[data-motion="playing"] .l-cloud {
+  animation: l-cloud-pass var(--t-clouds-dur) var(--t-clouds-delay) linear both;
+}
+
+.landing[data-motion="playing"] .l-bird {
+  animation: l-cross var(--t-cross-dur) var(--t-cross-delay) both;
+}
+
+.landing[data-motion="playing"] .l-wing-near {
+  animation: l-flap-near 725ms ease-in-out 4 both;
+}
+
+.landing[data-motion="playing"] .l-wing-far {
+  animation: l-flap-far 725ms ease-in-out 4 both;
+}
+
+/* The sling is gone at 1767ms, so one pass is all that is ever seen. */
+.landing[data-motion="playing"] .l-sling {
+  animation: l-swing 2500ms ease-in-out 1 both;
+}
+
+.landing[data-motion="playing"] .l-carry {
+  animation: l-release var(--t-release-dur) var(--t-release-delay) linear both;
+}
+
+/* `forwards`, NEVER `both`. With `both` the browser paints frame 0 during the
+   delay, which on 2026-11-17 hung a second, motionless baby in the sky from
+   page load — through every frame that was looked at, in every version shown.
+   The test asserts this fill mode, because nothing else can. */
+.landing[data-motion="playing"] .l-falling {
+  animation: l-fall var(--t-fall-dur) var(--t-fall-delay) forwards;
+}
+
+.landing[data-motion="playing"] .l-bit {
+  animation: l-spring var(--t-spring-dur) var(--d) cubic-bezier(0.18, 1.25, 0.3, 1) both;
+}
+
+.landing[data-motion="playing"] .l-swarm {
+  animation: l-vanish var(--t-vanish-dur) var(--t-vanish-delay) ease-in forwards;
+}
+
+.landing[data-motion="playing"] .l-sheet {
+  animation: l-rise var(--t-sheet-dur) var(--t-sheet-delay) cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.landing[data-motion="playing"] .l-wordmark {
+  animation: l-bolden var(--t-wordmark-dur) var(--t-wordmark-delay) cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.landing[data-motion="playing"] .l-heading {
+  animation: l-fade-up var(--t-tag-dur) var(--t-tag-delay) ease-out both;
+}
+
+.landing[data-motion="playing"] .l-next {
+  animation: l-fade-up var(--t-next-dur) var(--t-next-delay) ease-out both;
+}
+
+.landing[data-motion="playing"] .l-fine {
+  animation: l-fade-up var(--t-fine-dur) var(--t-fine-delay) ease-out both;
+}
+
+.landing[data-motion="playing"] .l-dots {
+  animation: l-fade-up var(--t-dots-dur) var(--t-dots-delay) ease-out both;
+}
+
+/* Decelerating on arrival, accelerating on departure — motion eases out when a
+   thing is coming to a point and eases in when it is leaving. */
+@keyframes l-cloud-pass {
+  0% { opacity: 0; transform: translateX(0); }
+  7% { opacity: 0.9; }
+  /* Holds while the stork is in the frame, then leaves with it. */
+  76% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateX(var(--drift)); }
+}
+
+@keyframes l-cross {
+  0% { transform: translate(-290px, 10px); animation-timing-function: cubic-bezier(0.22, 0.62, 0.3, 1); }
+  48% { transform: translate(44px, 0); animation-timing-function: ease-in-out; }
+  /* RELEASE_AT — 61% of 2900ms is 1769ms, beat 2. `.l-falling`'s own left and
+     top were computed from THIS frame, so it must not move without them. */
+  61% { transform: translate(74px, 2px); animation-timing-function: ease-out; }
+  /* Lighter without the baby, so the stork rises as it goes. */
+  70% { transform: translate(122px, -20px); animation-timing-function: cubic-bezier(0.45, 0, 0.9, 0.5); }
+  100% { transform: translate(620px, -70px); }
+}
+
+/* Each of these STARTS and ENDS at neutral, and runs a whole number of times
+   inside the crossing (725ms x 4 = 2900ms, exactly the cross's duration). An
+   `infinite alternate` flap ends wherever it happens to be when the sequence
+   stops, which is not the static rule's neutral wing — the same invariant the
+   bird broke, one layer down. */
+@keyframes l-flap-near {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-26deg); }
+  75% { transform: rotate(22deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes l-flap-far {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-21deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes l-swing {
+  0% { transform: rotate(-4deg); }
+  50% { transform: rotate(4deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes l-release {
+  0%, 60.9% { opacity: 1; }
+  61%, 100% { opacity: 0; }
+}
+
+@keyframes l-fall {
+  0% { opacity: 1; transform: translate(0, 0) rotate(-4deg); animation-timing-function: cubic-bezier(0.35, 0, 0.8, 0.45); }
+  55% { opacity: 1; transform: translate(30px, 104px) rotate(7deg); }
+  100% { opacity: 0; transform: translate(52px, 260px) rotate(14deg); }
+}
+
+@keyframes l-spring {
+  0% { opacity: 0; transform: translateY(48px) scaleY(0.5) scaleX(1.22); }
+  20% { opacity: 1; transform: translateY(-24px) scaleY(1.2) scaleX(0.86); }
+  40% { transform: translateY(7px) scaleY(0.92) scaleX(1.06); }
+  58% { transform: translateY(-11px) scaleY(1.07) scaleX(0.97); }
+  76% { transform: translateY(3px) scaleY(0.98) scaleX(1.01); }
+  90% { transform: translateY(-3px) scaleY(1.01) scaleX(1); }
+  100% { opacity: 1; transform: translateY(0) scaleY(1) scaleX(1); }
+}
+
+@keyframes l-vanish {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-14px) scale(0.9); }
+}
+
+/* Was translateY(104%) — the whole white card sliding up off the bottom edge,
+   which is what made it read as a separate panel arriving rather than as part
+   of the scene. Now it simply settles into place. */
+@keyframes l-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 400 to 600, not the prototype's 300 to 700. app/fonts.ts self-hosts exactly
+   three weights and argues against more ("extra weight is bytes on a phone in
+   a waiting room"), so 300 and 700 would both be synthesised by the browser —
+   a faux-light and a faux-bold standing in for the one typographic moment the
+   product has. The letter-spacing carries most of the effect regardless.
+
+   It no longer slides up from below. It RESOLVES: out of focus and wide, into
+   focus and set, over a full second. A blur settling is what reading something
+   come into being looks like; a translate is what a notification looks like. */
+@keyframes l-bolden {
+  0% { opacity: 0; font-weight: 400; letter-spacing: 0.16em; filter: blur(7px); transform: scale(1.04); }
+  45% { opacity: 1; }
+  100% { opacity: 1; font-weight: 600; letter-spacing: 0.012em; filter: blur(0); transform: scale(1); }
+}
+
+@keyframes l-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- how to start: the practical route, added 2026-11-18 ----------------- */
+
+.howto {
+  list-style: none;
+  counter-reset: howto;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+.howto li {
+  counter-increment: howto;
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 14px;
+  font: 400 15px/24px var(--sans);
+  color: var(--ink);
+}
+
+/* Numbered because the order carries information: the directory first, the
+   referral last, because it is what you do when the first two fail. */
+.howto li::before {
+  content: counter(howto);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 500 12px/20px var(--sans);
+  text-align: center;
+}
+
+.howto-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  font: 400 13px/18px var(--mono);
+}
+
+/* The same promise the source chip makes: a link never appears without the
+   date somebody last looked at it. */
+.howto-link em {
+  font-style: normal;
+  font-family: var(--sans);
+  color: var(--ink-3);
 }

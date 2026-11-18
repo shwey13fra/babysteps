@@ -14,6 +14,9 @@
 
 import { IntakeProfile } from "../schemas";
 import type { IntakeProfile as Profile } from "../schemas";
+// Moved out on 2026-11-18 when the landing became the second caller. See
+// lib/ui/storage.ts — the probe is shared, never copied (CLAUDE.md rule 1).
+import { storage } from "./storage";
 
 /**
  * Versioned, so a future schema change can be detected rather than guessed at.
@@ -40,20 +43,6 @@ export type StoredProfile = {
    */
   completed: string[];
 };
-
-function storage(): Storage | null {
-  try {
-    if (typeof window === "undefined") return null;
-    const s = window.localStorage;
-    // Touch it: Safari in private mode throws only on use, not on access.
-    const probe = "__babysteps_probe__";
-    s.setItem(probe, "1");
-    s.removeItem(probe);
-    return s;
-  } catch {
-    return null;
-  }
-}
 
 /** Crypto-grade where available; a plain fallback where it is not. */
 function newId(): string {
@@ -224,7 +213,11 @@ export function clearProfile(): void {
   }
 }
 
-/** True when this browser can keep answers at all. Drives an honest warning. */
-export function storageAvailable(): boolean {
-  return storage() !== null;
-}
+/**
+ * True when this browser can keep answers at all. Drives an honest warning.
+ *
+ * Re-exported from lib/ui/storage.ts rather than redefined, so the existing
+ * `import { storageAvailable } from "@/lib/ui/profile-store"` in app/intake
+ * keeps working and there is still only one probe in the codebase.
+ */
+export { storageAvailable } from "./storage";
