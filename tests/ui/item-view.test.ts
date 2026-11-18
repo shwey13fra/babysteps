@@ -55,7 +55,27 @@ describe("rule 12: a soft or advisory deadline is never called law", () => {
   it("says plainly that a soft deadline is not a legal one", () => {
     const line = deadlineKindLine("soft", "The Elterngeldstelle decides");
     expect(line.text).toContain("not a legal deadline");
-    expect(line.text).toMatch(/costs.*money|money/i);
+    // The COST is named by the label and by the rule's own consequence_en,
+    // not by this generic line — see the next block for why.
+    expect(line.label).toBe("Missing it costs money");
+  });
+
+  it("never asserts what a soft deadline costs, because it cannot know", () => {
+    // Until 2026-11-18 this line said "What it costs is money — months you
+    // stop being paid for". True of Elterngeld, which it was written for;
+    // false of `baby_health_insurance`, where the thing at stake is FREE
+    // family cover, so there is no monthly payment to stop. The rule's own
+    // note contradicted it one sentence later. Found by a human reading the
+    // calendar event it generated, not by this suite.
+    const line = deadlineKindLine("soft", "Your Krankenkasse");
+    expect(line.text).not.toMatch(/months you stop being paid|stop being paid for/i);
+    expect(line.text).not.toMatch(/paid|payment|cash/i);
+  });
+
+  it("CONTROL: that matcher catches the sentence it was written for", () => {
+    expect("What it costs is money — months you stop being paid for.").toMatch(
+      /months you stop being paid|stop being paid for/i,
+    );
   });
 
   it("calls an advisory item practice rather than a rule", () => {
@@ -79,7 +99,17 @@ describe("every kind names who decides", () => {
     // item page never says what the reader is entitled to.
     const line = deadlineKindLine(kind, "The Elterngeldstelle decides your application");
     expect(line.text).toContain("Elterngeldstelle");
-    expect(line.text).toContain("the decision in your case is theirs");
+    expect(line.text).toContain("The decision in your case is theirs.");
+  });
+
+  it("leaves a whole sentence, not a verbless fragment", () => {
+    // `authority_en` is not reliably a noun phrase — hebamme_search_start's is
+    // a clause — so the old dash form ("Your Krankenkasse — and the decision
+    // in your case is theirs.") left no verb for the noun-phrase ones. A full
+    // stop reads correctly for both shapes.
+    const line = deadlineKindLine("soft", "Your Krankenkasse");
+    expect(line.text).toContain("Your Krankenkasse. The decision in your case is theirs.");
+    expect(line.text).not.toContain("— and the decision");
   });
 
   it("does not double a full stop when the authority ends in one", () => {

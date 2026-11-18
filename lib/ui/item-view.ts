@@ -28,6 +28,22 @@ export type KindLine = {
  * - `soft` costs money rather than the right itself - the Elterngeld
  *   three-month rule is the example: there is no date after which you cannot
  *   apply, only months you stop being paid for.
+ *
+ *   THAT EXAMPLE USED TO BE IN THE OUTPUT, and it was a lie on three of the
+ *   four rules that reach this branch. "What it costs is money - months you
+ *   stop being paid for" was written for Elterngeld and then said about every
+ *   soft deadline, including `baby_health_insurance`, where the thing at stake
+ *   is FREE family cover: there is no monthly payment, so there are no months
+ *   to stop being paid. The rule's own note contradicted it one sentence later
+ *   ("Family cover for a newborn is free"). Removed 2026-11-18, found by a
+ *   human reading the calendar event it generated.
+ *
+ *   Nothing was lost with it. Every soft rule already states its own cost in
+ *   `consequence_en`, which renders two paragraphs above this line: "a month
+ *   you cannot claim later", "lost permanently", "it does delay the cash",
+ *   "the bills land on you". A generic sentence cannot know which of those is
+ *   true, so it does not try - it says only what holds for all four, which is
+ *   that the date is not statutory.
  * - `advisory` is practice. A hospital's booking window is not law and the
  *   clinic decides.
  *
@@ -51,9 +67,7 @@ export function deadlineKindLine(
   if (kind === "soft") {
     return {
       label: "Missing it costs money",
-      text:
-        `This is not a legal deadline and nothing stops you applying after it. What it costs is ` +
-        `money — months you stop being paid for.${note} ${decides(authority_en)}`,
+      text: `This is not a legal deadline and nothing stops you applying after it.${note} ${decides(authority_en)}`,
     };
   }
 
@@ -63,9 +77,21 @@ export function deadlineKindLine(
   };
 }
 
+/**
+ * Names who decides, which is the RDG/StBerG boundary: state the rule, then
+ * name the authority.
+ *
+ * Two sentences, not one joined by a dash. `authority_en` is not reliably a
+ * noun phrase — `hebamme_search_start`'s is a whole clause, "You find the
+ * midwife yourself; your Krankenkasse covers the care" — so anything of the
+ * form "<authority> decides" produces nonsense for some rules. The dash form
+ * tolerated that but left a verbless fragment on the rest: "Your Krankenkasse
+ * — and the decision in your case is theirs." A full stop reads correctly for
+ * both shapes.
+ */
 function decides(authority_en: string): string {
   const a = authority_en.trim().replace(/\.$/, "");
-  return `${a} — and the decision in your case is theirs.`;
+  return `${a}. The decision in your case is theirs.`;
 }
 
 /**
