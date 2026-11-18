@@ -113,6 +113,38 @@ The playbook tells Claude Code to author the rules "per the brief §4 example", 
   review_after: 2026-12-10           # consular rules: 90 days. Statute: 365 days.
 ```
 
+### `how_to` — added 2026-11-18
+
+An optional, ordered list of practical steps, each of which may carry a link and the day that link
+was checked:
+
+```yaml
+  how_to:
+    - step_en: >
+        Search the Deutscher Hebammenverband's directory by postcode. It filters
+        for midwives with free capacity and for the ones who do home visits.
+      url: https://www.hebammensuche.de/
+      checked_on: 2026-11-18
+    - step_en: >
+        Ask your Krankenkasse. They pay for the care and are often the quickest
+        route to a list of midwives still taking bookings in your area.
+```
+
+**Why it was added.** A rule could say *when* a thing is due, *who* decides it and *what* to bring,
+and had nowhere to say *how* a parent starts. `hebamme_search_start` read "You find the midwife
+yourself; your Krankenkasse covers the care" — true, and useless to someone who does not know where
+to look. `/ask` could not fill the gap either: the corpus is statute text, so it will never contain
+a directory or a referral route, and rule 8 forbids an answer without a citation. See ADR-088.
+
+**What it may not contain.** A step is a route, never a prediction about this reader — "search this
+directory" and "ask your Frauenarzt to refer you" are navigation; "you will get a midwife" is the
+individual-case assessment rule 13 forbids. A step on an `advisory` deadline must not borrow
+statutory language (rule 12). Both are enforced in `tests/timeline/how-to.test.ts`, with controls.
+
+**A url cannot be added without `checked_on`** — the zod refinement rejects either one alone. These
+are third-party pages that rot faster than statute, not slower, so they need the date more than the
+`source_url` above them does.
+
 Two fields worth arguing for. `kind` on the deadline separates "the law says you lose the right" from "you lose money" from "do this early or it gets hard" — the UI colours them differently and the answer layer must never call a soft deadline a legal one, which is exactly the mistake golden case A-02 tests for. And `review_after` gives the freshness job something to sort on, which is the beginning of the law-change alerting in PRD 2.5.
 
 ---

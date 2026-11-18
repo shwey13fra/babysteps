@@ -42,6 +42,19 @@
   documents:
     - Proof of statutory health insurance
     - Maternity record (Mutterpass), once issued
+  how_to:
+    - step_en: >
+        Search the Deutscher Hebammenverband's directory by postcode. It filters
+        for midwives with free capacity and for the ones who do home visits.
+      url: https://www.hebammensuche.de/
+      checked_on: 2026-11-18
+    - step_en: >
+        Ask your Krankenkasse. They pay for the care and are often the quickest
+        route to a list of midwives still taking bookings in your area.
+    - step_en: >
+        If a search turns nothing up, ask your Frauenarzt to refer you. In many
+        areas that is the route that actually works, because practices know who
+        has space before a directory does.
   source_ref: SGB V §24d
   source_url: https://www.gesetze-im-internet.de/sgb_5/__24d.html
   verified_on: null

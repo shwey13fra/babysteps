@@ -79,6 +79,30 @@ export default async function ItemPage({ params }: { params: Promise<{ id: strin
         <h2 className="sub-title">If you leave it too late</h2>
         <p className="lede">{rule.consequence_en}</p>
 
+        {/* How a parent actually starts. Navigation, never entitlement: these
+            are routes to an office or a directory, and rule 13 still forbids
+            saying what this reader will get from any of them. Each link shows
+            the date it was checked, because a third-party directory rots on its
+            own schedule and not the statute's. */}
+        {rule.how_to && rule.how_to.length > 0 ? (
+          <>
+            <h2 className="sub-title">How to start</h2>
+            <ol className="howto">
+              {rule.how_to.map((s) => (
+                <li key={s.step_en}>
+                  <span>{s.step_en}</span>
+                  {s.url && s.checked_on ? (
+                    <a className="howto-link" href={s.url} target="_blank" rel="noreferrer noopener">
+                      {new URL(s.url).host.replace(/^www\./, "")}
+                      <em>checked {s.checked_on}</em>
+                    </a>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : null}
+
         {rule.documents.length > 0 ? (
           <>
             <h2 className="sub-title">Take with you</h2>

@@ -19,6 +19,38 @@ const Condition = z
 
 export type Condition = z.infer<typeof Condition>;
 
+/**
+ * One step in "How to actually do this".
+ *
+ * WHY THIS FIELD EXISTS. Until 2026-11-18 a rule could say WHEN a thing is due,
+ * WHO decides it and WHAT to bring, and had nowhere to say HOW a parent starts.
+ * `hebamme_search_start` read "You find the midwife yourself; your Krankenkasse
+ * covers the care" — true, and useless to someone who does not know where to
+ * look. `/ask` could not fill the gap either: the corpus is statute text, so it
+ * will never contain a directory or a referral route, and rule 8 forbids an
+ * answer without a citation. The single most useful sentence in the product had
+ * no home in the data model.
+ *
+ * A step is navigation, never entitlement. "Search this directory" and "ask
+ * your Frauenarzt to refer you" are routes; "you will get a midwife" or "you
+ * are entitled to X" are the individual-case assessment rule 13 forbids.
+ *
+ * A url carries its own `checked_on`, because these are third-party pages that
+ * rot independently of the statute above them. The refinement makes that
+ * structural: a link cannot be added without the date it was checked.
+ */
+const HowToStep = z
+  .object({
+    step_en: z.string().min(1),
+    url: z.string().min(1).optional(),
+    checked_on: z.iso.date().optional(),
+  })
+  .refine((s) => (s.url === undefined) === (s.checked_on === undefined), {
+    message: "a how_to step with a url must carry checked_on, and a checked_on needs a url",
+  });
+
+export type HowToStep = z.infer<typeof HowToStep>;
+
 const RuleShape = z.object({
   id: z.string().min(1),
   track: Track,
@@ -39,6 +71,8 @@ const RuleShape = z.object({
   authority_local: z.string().min(1).optional(),
   consequence_en: z.string().min(1),
   documents: z.array(z.string().min(1)),
+  /** Ordered. Optional, because most rules are an office and a form, not a search. */
+  how_to: z.array(HowToStep).nonempty().optional(),
   source_ref: z.string().min(1),
   source_url: z.string().min(1),
   verified_on: z.iso.date().nullable(),
